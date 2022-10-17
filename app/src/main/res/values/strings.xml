@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Molkky</string>
+    <string name="start">Aloita peli</string>
+    <string name="random">Arvo heittojärjestys</string>
+    <string name="addPlayer">Lisää pelaaja</string>
+    <string name="insert_player">Anna pelaajan nimi</string>
+    <string name="first">%1$s heittää ensimmäisenä.</string>
+</resources>

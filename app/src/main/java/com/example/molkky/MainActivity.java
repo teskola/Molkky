@@ -1,0 +1,158 @@
+package com.example.molkky;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    private boolean random = false;
+    private int start_position = -1;
+    private TextView firstTextView;
+    private RecyclerView recyclerview;
+    private EditText editPlayerName;
+    private ArrayList<String> playersList = new ArrayList<String>();
+    private CheckBox randomCheckBox;
+    private Button startButton;
+
+    public void setStarter(int position) {
+        start_position = position;
+        firstTextView.setText(getString(R.string.first, playersList.get(position)));
+        if (!random) showFirstTextView();
+    }
+
+    public void addPlayer (AddPlayersAdapter adapter) {
+        playersList.add(0, editPlayerName.getText().toString());
+        if (playersList.size() > 1) {
+            startButton.setEnabled(true);
+        }
+        editPlayerName.setText("");
+        adapter.notifyItemInserted(0);
+        if (!random) {
+            adapter.setSelected_position(adapter.getSelected_position() + 1);
+            setStarter(adapter.getSelected_position());
+        }
+        recyclerview.getLayoutManager().scrollToPosition(0);
+
+    }
+
+    public void deletePlayer (AddPlayersAdapter adapter, int position) {
+        playersList.remove(position);
+        if (playersList.size() < 2) {
+            startButton.setEnabled(false);
+        }
+        start_position = adapter.getSelected_position();
+        if (playersList.isEmpty() || start_position == recyclerview.NO_POSITION) {
+            hideFirstTextView();
+        }
+        adapter.notifyItemRemoved(position);
+    }
+
+    public void randomSelected(AddPlayersAdapter adapter) {
+        hideFirstTextView();
+        random = true;
+        int selPos = adapter.getSelected_position();
+        adapter.setSelected_position(recyclerview.NO_POSITION);
+        adapter.notifyItemChanged(selPos);
+    }
+
+    public void showFirstTextView() {
+        firstTextView.setVisibility(View.VISIBLE);
+    }
+
+    public void hideFirstTextView() {
+        firstTextView.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            playersList = savedInstanceState.getStringArrayList("PLAYERS");
+            start_position = savedInstanceState.getInt("SELECTED_POSITION");
+            random = savedInstanceState.getBoolean("RANDOM");
+        }
+
+        setContentView(R.layout.activity_main);
+        startButton = findViewById(R.id.startButton);
+        recyclerview = findViewById(R.id.recyclerView);
+        editPlayerName = findViewById(R.id.editTextPlayerName);
+        firstTextView = findViewById(R.id.firstTextView);
+        randomCheckBox = findViewById(R.id.randomCheckBox);
+        AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList);
+        myAdapter.setSelected_position(start_position);
+        recyclerview.setAdapter(myAdapter);
+        recyclerview.setLayoutManager(new LinearLayoutManager(this));
+
+        if (random) {
+            randomCheckBox.setChecked(true);
+            randomSelected(myAdapter);
+        } else if (start_position > RecyclerView.NO_POSITION) {
+            setStarter(start_position);
+        }
+        if (playersList.size() > 1) {
+            startButton.setEnabled(true);
+        }
+        // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
+
+        editPlayerName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                boolean handled = false;
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    addPlayer(myAdapter);
+                    handled = true;
+                }
+                return handled;
+            }
+        });
+        randomCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                if (checked) {
+                    randomSelected(myAdapter);
+                } else {
+                    random = false;
+                    if (myAdapter.getSelected_position() > -1) {
+                        showFirstTextView();
+                    }
+                }
+            }
+        });
+
+        myAdapter.setOnItemClickListener(new AddPlayersAdapter.OnItemClickListener() {
+            @Override
+            public void onSelectClick(int position) {
+                setStarter(position);
+            }
+
+            @Override
+            public void onDeleteClick(int position) {
+                deletePlayer(myAdapter, position);
+            }
+        });
+
+    }
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putStringArrayList("PLAYERS", playersList);
+        savedInstanceState.putBoolean("RANDOM", random);
+        savedInstanceState.putInt("SELECTED_POSITION", start_position);
+    }
+
+}
