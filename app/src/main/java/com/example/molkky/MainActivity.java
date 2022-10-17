@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
-    private ArrayList<String> playersList = new ArrayList<String>();
+    private ArrayList<String> playersList = new ArrayList<>();
     private CheckBox randomCheckBox;
     private Button startButton;
 
@@ -41,11 +42,11 @@ public class MainActivity extends AppCompatActivity {
         }
         editPlayerName.setText("");
         adapter.notifyItemInserted(0);
-        if (!random) {
+        if (!random && adapter.getSelected_position() != RecyclerView.NO_POSITION) {
             adapter.setSelected_position(adapter.getSelected_position() + 1);
             setStarter(adapter.getSelected_position());
         }
-        recyclerview.getLayoutManager().scrollToPosition(0);
+        Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
 
     }
 
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             startButton.setEnabled(false);
         }
         start_position = adapter.getSelected_position();
-        if (playersList.isEmpty() || start_position == recyclerview.NO_POSITION) {
+        if (playersList.isEmpty() || start_position == RecyclerView.NO_POSITION) {
             hideFirstTextView();
         }
         adapter.notifyItemRemoved(position);
@@ -65,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
         hideFirstTextView();
         random = true;
         int selPos = adapter.getSelected_position();
-        adapter.setSelected_position(recyclerview.NO_POSITION);
+        adapter.setSelected_position(RecyclerView.NO_POSITION);
+        start_position = RecyclerView.NO_POSITION;
         adapter.notifyItemChanged(selPos);
     }
 
@@ -101,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
         if (random) {
             randomCheckBox.setChecked(true);
             randomSelected(myAdapter);
-        } else if (start_position > RecyclerView.NO_POSITION) {
-            setStarter(start_position);
+        } else if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+            setStarter(myAdapter.getSelected_position());
         }
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                     randomSelected(myAdapter);
                 } else {
                     random = false;
-                    if (myAdapter.getSelected_position() > -1) {
+                    if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
                         showFirstTextView();
                     }
                 }
