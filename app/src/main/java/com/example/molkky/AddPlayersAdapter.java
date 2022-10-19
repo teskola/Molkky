@@ -69,7 +69,7 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            playerName = itemView.findViewById(R.id.nameTextView);
+            playerName = itemView.findViewById(R.id.playerTextView);
             removePlayer = itemView.findViewById(R.id.removePlayerButton);
             playerView = itemView.findViewById(R.id.playerView);
             playerView.setOnClickListener(new View.OnClickListener() {

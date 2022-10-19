@@ -3,45 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <ImageButton
-        android:id="@+id/playerImage"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/image_background"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/player" />
+    android:layout_height="wrap_content"
+    android:background="@color/light_gray"
+    android:paddingBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/playerView"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:background="@drawable/default_background"
-        app:layout_constraintBottom_toBottomOf="@+id/playerImage"
+        android:layout_height="75dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginRight="1dp"
+        android:background="@drawable/beige_background"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/playerImage"
-        app:layout_constraintTop_toTopOf="@+id/playerImage">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/nameTextView"
+            android:id="@+id/playerTextView"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:fontFamily="@font/josefin_sans"
-            android:gravity="center_vertical"
+            android:gravity="center|start"
             android:padding="10dp"
             android:textColor="@color/black"
-            android:textSize="24sp"
+            android:textSize="28sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/removePlayerButton"
             app:layout_constraintStart_toStartOf="parent"
@@ -49,16 +36,14 @@
 
         <ImageButton
             android:id="@+id/removePlayerButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/default_background"
-            android:paddingLeft="10dp"
-            android:paddingTop="10dp"
-            android:paddingRight="10dp"
-            android:scaleType="fitEnd"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/beige_background"
+            android:paddingLeft="15dp"
+            android:paddingTop="15dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/player_remove" />
+            app:srcCompat="@drawable/remove_player" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
