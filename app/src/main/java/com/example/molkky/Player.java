@@ -21,6 +21,10 @@ public class Player implements Comparable<Player> {
         return name;
     }
 
+    public ArrayList<Integer> getTosses() {
+        return tosses;
+    }
+
     public int getTossesSize() { return tosses.size();}
 
     public int getToss(int position) { return tosses.get(position);}

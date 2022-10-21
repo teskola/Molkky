@@ -1,8 +1,13 @@
 package com.example.molkky;
 
+import android.annotation.SuppressLint;
+import android.text.SpannableString;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,28 +43,13 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         holder.playerNameTextView.setText(players.get(position).getName());
         holder.totalPointsTextView.setText(String.valueOf(total));
         if (showTosses) {
-            int size = players.get(position).getTossesSize();
-            if (size > 0) {
-                int value = players.get(position).getToss(size - 1);
-                holder.points0TV.setText(String.valueOf(value));
-            } else {
-                holder.points0TV.setText("");
-            }
-            if (size > 1) {
-                int value = players.get(position).getToss(size - 2);
-                holder.points1TV.setText(String.valueOf(value));
-            } else {
-                holder.points1TV.setText("");
-            }
-            if (size > 2) {
-                int value = players.get(position).getToss(size - 3);
-                holder.points2TV.setText(String.valueOf(value));
-            } else {
-                holder.points2TV.setText("");
-            }
+            holder.pointsTV.setVisibility(View.VISIBLE);
+            holder.pointsTV.setText(buildTossesString(position));
         }
-        holder.playerCardView.setBackgroundResource(MyViewHolder.selectBackground(players.get(position), onlyGray));
+        else
+            holder.pointsTV.setVisibility(View.GONE);
 
+        holder.playerCardView.setBackgroundResource(MyViewHolder.selectBackground(players.get(position), onlyGray));
     }
 
     @Override
@@ -68,23 +58,32 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView playerNameTextView;
-        TextView totalPointsTextView;
-        TextView points0TV;
-        TextView points1TV;
-        TextView points2TV;
-        View playerCardView;
+        private TextView playerNameTextView;
+        private TextView totalPointsTextView;
+        private TextView pointsTV;
+        private View playerCardView;
 
 
+        @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             playerCardView = itemView.findViewById(R.id.playerCardView);
             playerNameTextView = itemView.findViewById(R.id.playerNameTextView);
             totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
-            points0TV = itemView.findViewById(R.id.points0TV);
-            points1TV = itemView.findViewById(R.id.points1TV);
-            points2TV = itemView.findViewById(R.id.points2TV);
+            pointsTV = itemView.findViewById(R.id.pointsTV);
+
+           // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
+
+            pointsTV.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    view.getParent().requestDisallowInterceptTouchEvent(true);
+                    return false;
+                }
+            });
+            pointsTV.setMovementMethod(new ScrollingMovementMethod());
         }
+
 
         public static int selectBackground (Player player, boolean onlyGray) {
             final int GOLD = R.drawable.gold_background;
@@ -129,4 +128,19 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             return BEIGE;
         }
     }
+
+    public String buildTossesString(int position) {
+        ArrayList<Integer> tosses = players.get(position).getTosses();
+        StringBuilder sb = new StringBuilder();
+        for (Integer toss : tosses) {
+            if (toss < 10)
+                sb.append(" ").append(toss);
+            else
+                sb.append(toss);
+            sb.append("    ");
+        }
+        return sb.toString();
+    }
+
+
 }

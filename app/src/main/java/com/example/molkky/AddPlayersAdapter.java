@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -75,6 +76,7 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
             playerName = itemView.findViewById(R.id.playerTextView);
             removePlayer = itemView.findViewById(R.id.removePlayerButton);
             playerView = itemView.findViewById(R.id.playerView);
+
             playerName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

@@ -5,11 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -33,8 +36,10 @@ public class GameActivity extends AppCompatActivity {
     private ImageView trophyImageView;
     private Button okButton;
     private RecyclerView verticalRecyclerView;
+    private ScrollView childScroll;
 
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +52,6 @@ public class GameActivity extends AppCompatActivity {
         trophyImageView = findViewById(R.id.trophyImageView);
         okButton = findViewById(R.id.okButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
-
 
         if (getIntent().getStringExtra("json") != null) {
             String json = getIntent().getStringExtra("json");
@@ -74,6 +78,15 @@ public class GameActivity extends AppCompatActivity {
             verticalRecyclerView.setAdapter(verticalAdapter);
             verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         }
+
+        verticalRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                findViewById(R.id.childScroll).getParent().requestDisallowInterceptTouchEvent(false);
+                return false;
+            }
+        });
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -90,6 +103,8 @@ public class GameActivity extends AppCompatActivity {
                 okButton.setEnabled(true);
             }
         });
+
+        // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -201,6 +216,7 @@ public class GameActivity extends AppCompatActivity {
         trophyImageView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.INVISIBLE);
         nameTextView.setBackgroundResource(R.drawable.gold_background);
+        nameTextView.setText(game.getPlayer(0).getName());
         congratulationsTextView.setText(getString(R.string.congratulations, game.getPlayer(0).getName()));
         congratulationsTextView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
