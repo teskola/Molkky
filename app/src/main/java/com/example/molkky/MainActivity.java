@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -37,6 +38,17 @@ public class MainActivity extends AppCompatActivity {
     private CheckBox randomCheckBox;
     private Button startButton;
     private ImageButton addButton;
+
+    // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (getCurrentFocus() != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+        return super.dispatchTouchEvent(ev);
+    }
 
     public void setStarter(int position) {
         start_position = position;
@@ -78,15 +90,6 @@ public class MainActivity extends AppCompatActivity {
         adapter.setSelected_position(RecyclerView.NO_POSITION);
         start_position = RecyclerView.NO_POSITION;
         adapter.notifyItemChanged(selPos);
-    }
-    public void hideKeyboard(View view) {
-        https://stackoverflow.com/questions/1109022/how-to-close-hide-the-android-soft-keyboard-programmatically
-
-        view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
     }
 
     public void showFirstTextView() {
@@ -153,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                hideKeyboard(addButton);
+
                 if (editPlayerName.getText().length() > 0) {
                     addPlayer(myAdapter);
                 }
