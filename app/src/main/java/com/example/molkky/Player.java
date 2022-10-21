@@ -5,16 +5,16 @@ import java.util.ArrayList;
 public class Player implements Comparable<Player> {
     private String name;
     private ArrayList<Integer> tosses;
-    private boolean IAmDropped;
 
     public Player(String name) {
         this.name = name;
         this.tosses = new ArrayList<>();
-        this.IAmDropped = false;
     }
 
     public boolean isDropped() {
-        return IAmDropped;
+        return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
+                && getToss(tosses.size() - 2) == 0
+                && getToss(tosses.size() - 3) == 0;
     }
 
     public String getName() {
@@ -27,13 +27,6 @@ public class Player implements Comparable<Player> {
 
     public void addToss(int points) {
         tosses.add(points);
-        int size = tosses.size();
-        if (points == 0 && size > 2) {
-            if (tosses.get(size - 2) == 0 &&
-                    tosses.get(size-3) == 0) {
-                IAmDropped = true;
-            }
-        }
     }
 
     public int removeToss() {
@@ -73,14 +66,13 @@ public class Player implements Comparable<Player> {
 
     @Override
     public int compareTo(Player player) {
-        if (Boolean.compare(this.IAmDropped, player.IAmDropped) == 0)
+        if (Boolean.compare(this.isDropped(), player.isDropped()) == 0)
         return Integer.compare(player.countAll(), this.countAll());
         else
-            return Boolean.compare(this.IAmDropped, player.IAmDropped);
+            return Boolean.compare(this.isDropped(), player.isDropped());
     }
 
-    public void clear() {
-        IAmDropped = false;
+    public void clearTosses() {
         tosses.clear();
     }
 

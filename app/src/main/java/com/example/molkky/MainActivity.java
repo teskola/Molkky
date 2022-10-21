@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                hideKeyboard(editPlayerName);
+                hideKeyboard(addButton);
                 if (editPlayerName.getText().length() > 0) {
                     addPlayer(myAdapter);
                 }

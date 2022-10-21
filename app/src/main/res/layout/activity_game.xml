@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="@+id/pointsTextView">
 
         <TextView
-            android:id="@+id/winnerTextView"
+            android:id="@+id/nextPlayerTextView"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@drawable/beige_white_background"
@@ -81,6 +81,7 @@
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:progress="6"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pointsTextView" />
@@ -92,6 +93,7 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/start_button"
         android:enabled="false"
+        android:padding="10dp"
         android:text="@string/ok"
         app:layout_constraintBottom_toTopOf="@+id/leftNavigationButton"
         app:layout_constraintEnd_toEndOf="parent"
@@ -130,5 +132,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/seekBar" />
+
+    <ImageView
+        android:id="@+id/trophyImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        android:padding="20dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/pointsTextView"
+        app:layout_constraintEnd_toEndOf="@+id/pointsTextView"
+        app:layout_constraintStart_toStartOf="@+id/pointsTextView"
+        app:layout_constraintTop_toTopOf="@+id/pointsTextView"
+        app:srcCompat="@drawable/trophy" />
+
+    <TextView
+        android:id="@+id/congratulationsTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fontFamily="@font/josefin_sans"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:text="@string/congratulations"
+        android:textColor="@color/black"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/seekBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/seekBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

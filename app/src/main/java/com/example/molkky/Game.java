@@ -52,6 +52,6 @@ public class Game {
     }
     public void clear() {
         for (Player player : players)
-            player.clear();
+            player.clearTosses();
     }
 }

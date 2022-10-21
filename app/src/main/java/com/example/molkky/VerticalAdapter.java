@@ -87,6 +87,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         }
 
         public static int selectBackground (Player player, boolean onlyGray) {
+            final int GOLD = R.drawable.gold_background;
             final int PURPLE = R.drawable.purple_background;
             final int GRAY = R.drawable.gray_background;
             final int GREEN = R.drawable.green_background;
@@ -96,11 +97,12 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             final int ORANGE = R.drawable.orange_background;
             final int BEIGE = R.drawable.beige_white_background;
 
-            int size = player.getTossesSize();
-            if (size > 2 && player.getToss(size -1) == 0
-                    && player.getToss(size -2) == 0
-                    && player.getToss(size -3) == 0)
+            if (player.isDropped())
                 return GRAY;
+            if (player.countAll() == 50)
+                return GOLD;
+
+            int size = player.getTossesSize();
             if (!onlyGray) {
                 int misses = 0;
                 if (size > 1 && player.getToss(size - 1) == 0 && player.getToss(size - 2) == 0)

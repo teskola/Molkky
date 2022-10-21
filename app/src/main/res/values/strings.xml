@@ -9,4 +9,5 @@
     <string name="add">Lisää</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
     <string name="new_game">Aloita uusi peli</string>
+    <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon! Tilastoja painamalla pelaajan nimeä.</string>
 </resources>
