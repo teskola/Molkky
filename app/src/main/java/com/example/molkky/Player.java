@@ -2,7 +2,7 @@ package com.example.molkky;
 
 import java.util.ArrayList;
 
-public class Player {
+public class Player implements Comparable<Player> {
     private String name;
     private ArrayList<Integer> tosses;
     private boolean IAmDropped;
@@ -23,8 +23,9 @@ public class Player {
 
     public int getTossesSize() { return tosses.size();}
 
+    public int getToss(int position) { return tosses.get(position);}
+
     public void addToss(int points) {
-        IAmDropped = false;         // varmistetaan, ettei undo() metodin jälkeen jää väärä putoamis-status roikkumaan
         tosses.add(points);
         int size = tosses.size();
         if (points == 0 && size > 2) {
@@ -54,6 +55,33 @@ public class Player {
 
     public int countAll() {
         return count (tosses.size() - 1);
+    }
+
+    /*
+    * If player has a chance to win with next toss, returns the value needed.
+    * Else, returns 0.
+    * */
+
+    public int pointsToWin() {
+        int toWin = 0;
+        int total = countAll();
+        if (total < 38)
+            return toWin;
+        else
+            return 50 - total;
+    }
+
+    @Override
+    public int compareTo(Player player) {
+        if (Boolean.compare(this.IAmDropped, player.IAmDropped) == 0)
+        return Integer.compare(player.countAll(), this.countAll());
+        else
+            return Boolean.compare(this.IAmDropped, player.IAmDropped);
+    }
+
+    public void clear() {
+        IAmDropped = false;
+        tosses.clear();
     }
 
 }

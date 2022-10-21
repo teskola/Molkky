@@ -19,29 +19,33 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ArrayList<Player> playersList = new ArrayList<>();
     private boolean random = false;
     private int start_position = -1;
+
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
-    private ArrayList<String> playersList = new ArrayList<>();
     private CheckBox randomCheckBox;
     private Button startButton;
     private ImageButton addButton;
 
     public void setStarter(int position) {
         start_position = position;
-        firstTextView.setText(getString(R.string.first, playersList.get(position)));
+        firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
         if (!random) showFirstTextView();
     }
 
     public void addPlayer (AddPlayersAdapter adapter) {
-        playersList.add(0, editPlayerName.getText().toString());
+        playersList.add(0, new Player(editPlayerName.getText().toString()));
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
@@ -96,11 +100,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (savedInstanceState != null) {
-            playersList = savedInstanceState.getStringArrayList("PLAYERS");
+            playersList = new ArrayList<>();
+            Player[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), Player[].class);
+            Collections.addAll(playersList, players);
             start_position = savedInstanceState.getInt("SELECTED_POSITION");
             random = savedInstanceState.getBoolean("RANDOM");
+        }
+
+        if (getIntent().getStringExtra("json") != null) {
+            playersList = new ArrayList<>();
+            String json = getIntent().getStringExtra("json");
+            Player[] players = new Gson().fromJson(json, Player[].class);
+            Collections.addAll(playersList, players);
         }
 
         setContentView(R.layout.activity_main);
@@ -153,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 if (checked) {
                     randomSelected(myAdapter);
+
                 } else {
                     random = false;
                     if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
@@ -184,8 +197,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGame() {
+
         Intent intent = new Intent(this, GameActivity.class);
-        intent.putStringArrayListExtra("playersList", playersList);
+        String json = new Gson().toJson(playersList);
+        intent.putExtra("json", json);
         intent.putExtra("first", start_position);
         intent.putExtra("random", random);
         startActivity(intent);
@@ -194,14 +209,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putStringArrayList("PLAYERS", playersList);
+
+        String json = new Gson().toJson(playersList);
+        savedInstanceState.putString("PLAYERS", json);
         savedInstanceState.putBoolean("RANDOM", random);
         savedInstanceState.putInt("SELECTED_POSITION", start_position);
     }
-
-    @Override
-    public void onBackPressed() {
-        this.moveTaskToBack(true);
-    }
-
 }

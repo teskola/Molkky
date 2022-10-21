@@ -6,6 +6,7 @@
     <string name="first">%1$s heittää ensimmäisenä.</string>
     <string name="ok">ok</string>
     <string name="dash">-</string>
-    <string name="points">%1$d</string>
     <string name="add">Lisää</string>
+    <string name="points_to_win">Voitto heittämällä %1$d</string>
+    <string name="new_game">Aloita uusi peli</string>
 </resources>

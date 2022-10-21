@@ -1,6 +1,8 @@
 package com.example.molkky;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -19,26 +21,26 @@ import java.util.ArrayList;
 * */
 public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.MyViewHolder>{
 
-    public void setSelected_position(int selected_position) {
-        this.selected_position = selected_position;
-    }
-
-    public int getSelected_position() {
-        return selected_position;
-    }
-
     private int selected_position = RecyclerView.NO_POSITION;
+    private OnItemClickListener mListener;
+    private ArrayList<Player> playersList;
+
     public interface OnItemClickListener {
         void onSelectClick(int position);
         void onDeleteClick(int position);
     }
+    public void setSelected_position(int selected_position) {
+        this.selected_position = selected_position;
+    }
+    public int getSelected_position() {
+        return selected_position;
+    }
+
     public void setOnItemClickListener (OnItemClickListener listener) {
         mListener = listener;
     }
-    private OnItemClickListener mListener;
-    private ArrayList<String> playersList;
 
-    public AddPlayersAdapter(ArrayList<String> playersList) {
+    public AddPlayersAdapter(ArrayList<Player> playersList) {
         this.playersList = playersList;
     }
 
@@ -52,7 +54,7 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
 
     @Override
     public void onBindViewHolder(@NonNull AddPlayersAdapter.MyViewHolder holder, int position) {
-        holder.playerName.setText(playersList.get(position));
+        holder.playerName.setText(playersList.get(position).getName());
         holder.playerView.setSelected(selected_position == position);
     }
 
@@ -67,12 +69,13 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
         private ImageView removePlayer;
         private View playerView;
 
+        @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             playerName = itemView.findViewById(R.id.playerTextView);
             removePlayer = itemView.findViewById(R.id.removePlayerButton);
             playerView = itemView.findViewById(R.id.playerView);
-            playerView.setOnClickListener(new View.OnClickListener() {
+            playerName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     int position = getAbsoluteAdapterPosition();
@@ -84,20 +87,43 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
                     }
                 }
             });
-            removePlayer.setOnClickListener(new View.OnClickListener() {
+            removePlayer.setOnTouchListener(new View.OnTouchListener() {
                 @Override
-                public void onClick(View view) {
-                    if (mListener != null) {
-                        int position = getAbsoluteAdapterPosition();
-                        if (selected_position == position) {
-                            selected_position = RecyclerView.NO_POSITION;
-                        } else if (selected_position > position) {
-                            selected_position -= 1;
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    int background;
+                    if (playerView.isSelected())
+                        background = R.drawable.yellow_background;
+                    else
+                        background = R.drawable.beige_white_background;
+                    switch (motionEvent.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                        {
+                            playerView.setBackgroundResource(R.drawable.orange_background);
+                            break;
                         }
-                        if (position != RecyclerView.NO_POSITION) {
-                            mListener.onDeleteClick(position);
+                        case MotionEvent.ACTION_UP:
+                        {
+                            if (mListener != null) {
+                                int position = getAbsoluteAdapterPosition();
+                                if (selected_position == position) {
+                                    selected_position = RecyclerView.NO_POSITION;
+                                } else if (selected_position > position) {
+                                    selected_position -= 1;
+                                }
+                                if (position != RecyclerView.NO_POSITION) {
+                                    mListener.onDeleteClick(position);
+                                }
+                            }
+                            playerView.setBackgroundResource(R.drawable.beige_white_background);
+                            break;
+                        }
+                        case MotionEvent.ACTION_CANCEL:
+                        {
+                            playerView.setBackgroundResource(background);
+                            break;
                         }
                     }
+                    return true;
                 }
             });
         }

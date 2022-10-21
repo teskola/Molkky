@@ -10,12 +10,12 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/playerView"
         android:layout_width="0dp"
-        android:layout_height="75dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="1dp"
         android:layout_marginLeft="1dp"
         android:layout_marginEnd="1dp"
         android:layout_marginRight="1dp"
-        android:background="@drawable/beige_background"
+        android:background="@drawable/beige_white_background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -23,26 +23,26 @@
         <TextView
             android:id="@+id/playerTextView"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:fontFamily="@font/josefin_sans"
             android:gravity="center|start"
             android:padding="10dp"
             android:textColor="@color/black"
-            android:textSize="28sp"
+            android:textSize="24sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/removePlayerButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent" />
 
-        <ImageButton
+        <ImageView
             android:id="@+id/removePlayerButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@drawable/beige_background"
-            android:paddingLeft="15dp"
-            android:paddingTop="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/remove_player" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

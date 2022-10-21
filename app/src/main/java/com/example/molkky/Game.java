@@ -6,20 +6,19 @@ import java.util.Random;
 public class Game {
     private ArrayList<Player> players;
 
-    public Game(ArrayList<String> players, int turn, boolean random) {
-        this.players = new ArrayList<Player>();
+    public Game(ArrayList<Player> players, int turn, boolean random) {
         if (random) {
+            ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
                 Random rand = new Random();
                 int index = rand.nextInt(players.size());
-                this.players.add(new Player(players.get(index)));
+                randomized.add(players.get(index));
                 players.remove(index);
             }
+            this.players = randomized;
         }
         else {
-            for (String i : players) {
-                this.players.add(new Player(i));
-            }
+            this.players = players;
             setTurn(turn);
         }
     }
@@ -33,14 +32,14 @@ public class Game {
     }
 
     public void setTurn (int index) {
-        ArrayList<Player> transfered = new ArrayList<>();
+        ArrayList<Player> transferred = new ArrayList<>();
         for (int i=0; i < index ; i++) {
-            transfered.add(players.get(i));
+            transferred.add(players.get(i));
         }
         for (int i=0; i < index; i++) {
             players.remove(0);
         }
-        players.addAll(transfered);
+        players.addAll(transferred);
     }
 
     public boolean allDropped() {
@@ -51,31 +50,8 @@ public class Game {
         }
         return true;
     }
-
-    /*
-    * Undoes previous toss and returns its value. If can't remove a toss, because there are none,
-    * returns -1. Skips dropped players unless a player threw third zero last round.
-    *
-    * */
-
-    public int undo() {
-        int removed_toss_points = -1;
-        for (int i = 1; i < players.size(); i++) {
-            int previous = players.get(players.size()- i).getTossesSize();
-            int current = players.get(0).getTossesSize();
-            if (previous > current) {
-                removed_toss_points = players.get(players.size()-i).removeToss();
-                setTurn(players.size()-i);
-                return removed_toss_points;
-            }
-            else if ((previous > 0) && (previous == current) &&
-                    (!players.get(players.size()-i).isDropped())) {
-                removed_toss_points = players.get(players.size()-i).removeToss();
-                setTurn(players.size()-i);
-                return removed_toss_points;
-            }
-        }
-        return  removed_toss_points;
+    public void clear() {
+        for (Player player : players)
+            player.clear();
     }
-
 }

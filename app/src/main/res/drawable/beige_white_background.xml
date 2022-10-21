@@ -8,9 +8,13 @@
     </item>
     <item>
         <shape>
-            <solid android:color="@color/beige" />
+            <gradient
+                android:endColor="@color/white"
+                android:startColor="@color/beige"
+                />
             <corners android:radius="10dp" />
             <stroke android:width="1dip" android:color="@color/black" />
         </shape>
     </item>
 </selector>
+

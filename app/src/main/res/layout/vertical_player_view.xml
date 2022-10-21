@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_gravity="fill_vertical"
     android:paddingBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/playerCardView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="1dp"
@@ -19,14 +21,28 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/playerNameTextView"
+            android:id="@+id/points2TV"
             android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:fontFamily="@font/crimson_text_bold"
+            android:gravity="bottom|center"
+            android:minEms="1"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/points1TV"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/playerNameTextView"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/josefin_sans"
             android:padding="10dp"
-            android:text="TextView"
             android:textColor="@color/black"
             android:textSize="20sp"
+            app:layout_constraintEnd_toStartOf="@+id/points2TV"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,32 +50,41 @@
             android:id="@+id/totalPointsTextView"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
             android:fontFamily="@font/crimson_text_bold"
             android:gravity="center"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:text="42"
+            android:minEms="2"
             android:textSize="28sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ScrollView
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/points0TV"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
+            android:fontFamily="@font/crimson_text_bold"
+            android:gravity="bottom|center"
+            android:minEms="1"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/totalPointsTextView"
-            app:layout_constraintStart_toEndOf="@+id/playerNameTextView"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <LinearLayout
-                android:id="@+id/tossesView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-        </ScrollView>
+        <TextView
+            android:id="@+id/points1TV"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:fontFamily="@font/crimson_text_bold"
+            android:gravity="bottom|center"
+            android:minEms="1"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/points0TV"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
