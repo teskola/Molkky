@@ -4,10 +4,16 @@
     <string name="random">Arvo heittojärjestys</string>
     <string name="insert_player">Anna pelaajan nimi</string>
     <string name="first">%1$s heittää ensimmäisenä.</string>
-    <string name="ok">ok</string>
+    <string name="ok">OK</string>
     <string name="dash">-</string>
     <string name="add">Lisää</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
     <string name="new_game">Aloita uusi peli</string>
-    <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon! Tilastoja painamalla pelaajan nimeä.</string>
+    <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon!</string>
+    <string name="tosses">heitot: </string>
+    <string name="best">paras heitto: </string>
+    <string name="zeroes">nollat: </string>
+    <string name="mean">keskiarvo: </string>
+    <string name="mode">yleisin heitto: </string>
+    <string name="excesses">ylitykset: </string>
 </resources>

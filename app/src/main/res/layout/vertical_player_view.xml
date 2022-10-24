@@ -24,7 +24,7 @@
             android:id="@+id/playerNameTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ems="5"
+            android:ems="6"
             android:fontFamily="@font/josefin_sans"
             android:padding="10dp"
             android:textColor="@color/black"
@@ -52,19 +52,16 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/totalPointsTextView"
             app:layout_constraintStart_toEndOf="@+id/playerNameTextView"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0">
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/pointsTV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="monospace"
                 android:gravity="bottom|end"
                 android:singleLine="true"
-                android:text="666"
-                android:textSize="24sp"
                 tools:visibility="visible" />
         </ScrollView>
 

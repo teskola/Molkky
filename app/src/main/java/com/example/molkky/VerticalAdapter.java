@@ -1,13 +1,11 @@
 package com.example.molkky;
 
 import android.annotation.SuppressLint;
-import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,7 +17,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
     private final ArrayList<Player> players;
     private final boolean onlyGray;
     private final boolean showTosses;
-    
+
 
     public VerticalAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses) {
         this.showTosses = showTosses;
@@ -32,15 +30,15 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View view = inflater.inflate(R.layout.vertical_player_view, parent, false);
-
         return new MyViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
 
-        int total = players.get(position).countAll();
-        holder.playerNameTextView.setText(players.get(position).getName());
+        Player player = players.get(position);
+        int total = player.countAll();
+        holder.playerNameTextView.setText(player.getName());
         holder.totalPointsTextView.setText(String.valueOf(total));
         if (showTosses) {
             holder.pointsTV.setVisibility(View.VISIBLE);
@@ -48,8 +46,15 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         }
         else
             holder.pointsTV.setVisibility(View.GONE);
+        holder.playerCardView.setBackgroundResource(MyViewHolder.selectBackground(player, onlyGray));
 
-        holder.playerCardView.setBackgroundResource(MyViewHolder.selectBackground(players.get(position), onlyGray));
+//        holder.stats_TossesTV.setText(player.getTossesSize());
+//        holder.stats_bestTV.setText(Collections.max(player.getTosses()));
+//        holder.stats_meanTV.setText(String.valueOf(player.mean()));
+//        holder.stats_ZeroesTV.setText(String.valueOf(Collections.frequency(player.getTosses(), 0)));
+//        holder.stats_ModeTV.setText(String.valueOf(player.mode()));
+//        holder.stats_ExcessesTV.setText(String.valueOf(player.countExcesses()));
+
     }
 
     @Override
@@ -58,10 +63,22 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
-        private TextView playerNameTextView;
-        private TextView totalPointsTextView;
-        private TextView pointsTV;
-        private View playerCardView;
+
+        private final TextView playerNameTextView;
+        private final TextView totalPointsTextView;
+        private final TextView pointsTV;
+        private final View playerCardView;
+
+//        private View statsView;
+//        private TextView stats_TossesTV;
+//        private TextView stats_bestTV;
+//        private TextView stats_meanTV;
+//        private TextView stats_ZeroesTV;
+//        private TextView stats_ModeTV;
+//        private TextView stats_ExcessesTV;
+
+
+
 
 
         @SuppressLint("ClickableViewAccessibility")
@@ -72,17 +89,25 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
             pointsTV = itemView.findViewById(R.id.pointsTV);
 
+//            statsView = itemView.findViewById(R.id.statsView);
+//            stats_TossesTV = itemView.findViewById(R.id.stats_TossesTV);
+//            stats_bestTV = itemView.findViewById(R.id.stats_bestTV);
+//            stats_meanTV = itemView.findViewById(R.id.stats_meanTV);
+//            stats_ZeroesTV = itemView.findViewById(R.id.stats_ZeroesTV);
+//            stats_ModeTV = itemView.findViewById(R.id.stats_ModeTV);
+//            stats_ExcessesTV = itemView.findViewById(R.id.stats_ExcessesTV);
+
+
            // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
-            pointsTV.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    view.getParent().requestDisallowInterceptTouchEvent(true);
-                    return false;
-                }
+            pointsTV.setOnTouchListener((view, motionEvent) -> {
+                view.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
             });
             pointsTV.setMovementMethod(new ScrollingMovementMethod());
         }
+
+
 
 
         public static int selectBackground (Player player, boolean onlyGray) {
@@ -96,7 +121,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             final int ORANGE = R.drawable.orange_background;
             final int BEIGE = R.drawable.beige_white_background;
 
-            if (player.isDropped())
+            if (player.isEliminated())
                 return GRAY;
             if (player.countAll() == 50)
                 return GOLD;
@@ -108,7 +133,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
                     misses = 2;
                 else if (size > 0 && player.getToss(size - 1) == 0)
                     misses = 1;
-                if (size > 4 && player.countAll() == 25 && player.getToss(size - 1) != 0)
+                if (player.excessesTargetPoints(size - 1) == 1)
                     return PURPLE;
                 if (player.pointsToWin() == 0) {
                     if (misses == 2)
@@ -137,10 +162,8 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
                 sb.append(" ").append(toss);
             else
                 sb.append(toss);
-            sb.append("    ");
+            sb.append("  ");
         }
         return sb.toString();
     }
-
-
 }

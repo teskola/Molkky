@@ -26,7 +26,7 @@ import java.util.Stack;
 public class GameActivity extends AppCompatActivity {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
     private Game game;
-    private Stack<Integer> undoStack = new Stack<>();
+    private final Stack<Integer> undoStack = new Stack<>();
     private boolean gameEnded = false;
     private SeekBar seekBar;
     private TextView pointsTextView;
@@ -36,7 +36,6 @@ public class GameActivity extends AppCompatActivity {
     private ImageView trophyImageView;
     private Button okButton;
     private RecyclerView verticalRecyclerView;
-    private ScrollView childScroll;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -79,12 +78,9 @@ public class GameActivity extends AppCompatActivity {
             verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         }
 
-        verticalRecyclerView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                findViewById(R.id.childScroll).getParent().requestDisallowInterceptTouchEvent(false);
-                return false;
-            }
+        verticalRecyclerView.setOnTouchListener((view, motionEvent) -> {
+            findViewById(R.id.childScroll).getParent().requestDisallowInterceptTouchEvent(false);
+            return false;
         });
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -106,34 +102,31 @@ public class GameActivity extends AppCompatActivity {
 
         // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
-        okButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!gameEnded) {
-                    Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
-                    int points = Integer.parseInt(pointsTextView.getText().toString());
-                    game.getPlayer(0).addToss(points);
-                    if (game.getPlayer(0).countAll() == 50) {
-                        endGame();
-                    } else {
+        okButton.setOnClickListener(view -> {
+            if (!gameEnded) {
+                Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
+                int points = Integer.parseInt(pointsTextView.getText().toString());
+                game.getPlayer(0).addToss(points);
+                if (game.getPlayer(0).countAll() == 50) {
+                    endGame();
+                } else {
+                    game.setTurn(1);
+                    while (game.getPlayer(0).isEliminated()) {
                         game.setTurn(1);
-                        while (game.getPlayer(0).isDropped()) {
-                            game.setTurn(1);
-                            updateUI(false);
-                        }
-                        if (game.allDropped()) {
-                            endGame();
-                        }
-
-                        if (!undoStack.empty()) {
-                            undoStack.pop();
-                        }
-                    }
-                    if (!gameEnded)
                         updateUI(false);
-                } else
-                    startNewGame();
-            }
+                    }
+                    if (game.allDropped()) {
+                        endGame();
+                    }
+
+                    if (!undoStack.empty()) {
+                        undoStack.pop();
+                    }
+                }
+                if (!gameEnded)
+                    updateUI(false);
+            } else
+                startNewGame();
         });
 
 
@@ -149,7 +142,7 @@ public class GameActivity extends AppCompatActivity {
             for (int i = 1; i < game.getPlayers().size(); i++) {
                 Player previous = game.getPlayer(game.getPlayers().size() - i);
                 Player current = game.getPlayer(0);
-                if ((previous.getTossesSize() > current.getTossesSize()) || !previous.isDropped()) {
+                if ((previous.getTossesSize() > current.getTossesSize()) || !previous.isEliminated()) {
                     undoStack.push(game.getPlayer(game.getPlayers().size() - i).removeToss());
                     game.setTurn(game.getPlayers().size() - i);
                     updateUI(true);
@@ -181,10 +174,10 @@ public class GameActivity extends AppCompatActivity {
             nameTextView.setBackgroundResource(VerticalAdapter.MyViewHolder.selectBackground(game.getPlayer(0), false));
 
         if (undo) {
-            verticalRecyclerView.getAdapter().notifyItemRemoved(game.getPlayers().size() - 1);
+            Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(game.getPlayers().size() - 1);
             verticalRecyclerView.getAdapter().notifyItemInserted(0);
         } else {
-            verticalRecyclerView.getAdapter().notifyItemRemoved(0);
+            Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(0);
             verticalRecyclerView.getAdapter().notifyItemInserted(game.getPlayers().size() - 1);
             if (!gameEnded)
                 resetSeekBar();
@@ -270,5 +263,4 @@ public class GameActivity extends AppCompatActivity {
         intent.putExtra("json", json);
         startActivity(intent);
     }
-
 }

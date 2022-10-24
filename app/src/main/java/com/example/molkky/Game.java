@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Game {
-    private ArrayList<Player> players;
+    private final ArrayList<Player> players;
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
         if (random) {
@@ -36,15 +36,15 @@ public class Game {
         for (int i=0; i < index ; i++) {
             transferred.add(players.get(i));
         }
-        for (int i=0; i < index; i++) {
-            players.remove(0);
+        if (index > 0) {
+            players.subList(0, index).clear();
         }
         players.addAll(transferred);
     }
 
     public boolean allDropped() {
         for (int i=1; i < players.size(); i++) {
-            if (!players.get(i).isDropped()) {
+            if (!players.get(i).isEliminated()) {
                 return false;
             }
         }
