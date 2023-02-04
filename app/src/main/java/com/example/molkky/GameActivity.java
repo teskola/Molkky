@@ -26,7 +26,6 @@ import java.util.Stack;
 public class GameActivity extends AppCompatActivity {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
     private Game game;
-    private final Stack<Integer> undoStack = new Stack<>();
     private boolean gameEnded = false;
     private SeekBar seekBar;
     private TextView pointsTextView;
@@ -107,6 +106,7 @@ public class GameActivity extends AppCompatActivity {
                 Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
                 int points = Integer.parseInt(pointsTextView.getText().toString());
                 game.getPlayer(0).addToss(points);
+                if (!game.getPlayer(0).getUndoStack().empty()) game.getPlayer(0).getUndoStack().pop();
                 if (game.getPlayer(0).countAll() == 50) {
                     endGame();
                 } else {
@@ -117,10 +117,6 @@ public class GameActivity extends AppCompatActivity {
                     }
                     if (game.allDropped()) {
                         endGame();
-                    }
-
-                    if (!undoStack.empty()) {
-                        undoStack.pop();
                     }
                 }
                 if (!gameEnded)
@@ -143,12 +139,11 @@ public class GameActivity extends AppCompatActivity {
                 Player previous = game.getPlayer(game.getPlayers().size() - i);
                 Player current = game.getPlayer(0);
                 if ((previous.getTossesSize() > current.getTossesSize()) || !previous.isEliminated()) {
-                    undoStack.push(game.getPlayer(game.getPlayers().size() - i).removeToss());
+                    game.getPlayer(game.getPlayers().size() - i).getUndoStack().push(game.getPlayer(game.getPlayers().size() - i).removeToss());
                     game.setTurn(game.getPlayers().size() - i);
                     updateUI(true);
                     break;
                 }
-                undoStack.push(-1);
                 updateUI(true);
             }
         }
@@ -182,15 +177,12 @@ public class GameActivity extends AppCompatActivity {
             if (!gameEnded)
                 resetSeekBar();
         }
-        if (!undoStack.empty()) {
+        if (!game.getPlayer(0).getUndoStack().empty()) {
 
-            int points = undoStack.peek();
-            if (points > -1) {
-
-                seekBar.setProgress(points);
-                pointsTextView.setText(String.valueOf(points));
-                okButton.setEnabled(true);
-            }
+            int points = game.getPlayer(0).getUndoStack().peek();
+            seekBar.setProgress(points);
+            pointsTextView.setText(String.valueOf(points));
+            okButton.setEnabled(true);
         }
     }
 
@@ -235,7 +227,7 @@ public class GameActivity extends AppCompatActivity {
             }
             game.setTurn(game.getPlayers().size() - position);
             pointsTextView.setText(String.valueOf(game.getPlayer(0).removeToss()));
-            undoStack.push(0);
+            game.getPlayer(0).getUndoStack().push(0);
             seekBar.setProgress(0);
             nameTextView.setText(game.getPlayer(0).getName());
             int pointsToWin = game.getPlayer(0).pointsToWin();

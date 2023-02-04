@@ -2,14 +2,17 @@ package com.example.molkky;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Stack;
 
 public class Player implements Comparable<Player> {
     private final String name;
     private final ArrayList<Integer> tosses;
+    private Stack<Integer> undoStack;
 
     public Player(String name) {
         this.name = name;
         this.tosses = new ArrayList<>();
+        this.undoStack = new Stack<>();
     }
 
     public boolean isEliminated() {
@@ -20,6 +23,10 @@ public class Player implements Comparable<Player> {
 
     public String getName() {
         return name;
+    }
+
+    public Stack<Integer> getUndoStack() {
+        return undoStack;
     }
 
     public ArrayList<Integer> getTosses() {
@@ -81,6 +88,8 @@ public class Player implements Comparable<Player> {
         tosses.clear();
     }
 
+    public void clearUndoStack() {undoStack.clear();}
+
     public float mean() {
         int sum = 0;
         for (int i : tosses) {
@@ -88,6 +97,7 @@ public class Player implements Comparable<Player> {
         }
         return (float) sum / (float) tosses.size();
     }
+
 
     public int mode() {
         int max_freq = 0;

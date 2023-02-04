@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editPlayerName;
     private CheckBox randomCheckBox;
     private Button startButton;
+    private ImageButton selectButton;
     private ImageButton addButton;
 
     // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
@@ -126,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
         firstTextView = findViewById(R.id.firstTextView);
         randomCheckBox = findViewById(R.id.randomCheckBox);
         addButton = findViewById(R.id.addButton);
+        selectButton = findViewById(R.id.selectButton);
+
         AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList);
         myAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(myAdapter);
@@ -160,6 +163,13 @@ public class MainActivity extends AppCompatActivity {
                 if (editPlayerName.getText().length() > 0) {
                     addPlayer(myAdapter);
                 }
+            }
+        });
+
+        selectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
 

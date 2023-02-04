@@ -51,7 +51,9 @@ public class Game {
         return true;
     }
     public void clear() {
-        for (Player player : players)
+        for (Player player : players) {
             player.clearTosses();
+            player.clearUndoStack();
+        }
     }
 }
