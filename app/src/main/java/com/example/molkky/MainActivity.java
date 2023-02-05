@@ -19,6 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -31,14 +32,12 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Player> playersList = new ArrayList<>();
     private boolean random = false;
     private int start_position = -1;
+    private DBHandler dbHandler;
 
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
-    private CheckBox randomCheckBox;
     private Button startButton;
-    private ImageButton selectButton;
-    private ImageButton addButton;
 
     // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
 
@@ -56,9 +55,18 @@ public class MainActivity extends AppCompatActivity {
         firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
         if (!random) showFirstTextView();
     }
-
+/*
+*   Adds new player to list. If fails, returns false.
+* */
     public void addPlayer (AddPlayersAdapter adapter) {
-        playersList.add(0, new Player(editPlayerName.getText().toString()));
+        Player newPlayer = new Player(editPlayerName.getText().toString());
+        for (Player p : playersList) {
+            if (p.getName().equals(newPlayer.getName())) {
+                Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        playersList.add(0, newPlayer);
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
@@ -69,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
             setStarter(adapter.getSelected_position());
         }
         Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
-
     }
 
     public void deletePlayer (AddPlayersAdapter adapter, int position) {
@@ -125,11 +132,12 @@ public class MainActivity extends AppCompatActivity {
         editPlayerName = findViewById(R.id.editTextPlayerName);
         editPlayerName.setImeActionLabel(getResources().getString(R.string.add), EditorInfo.IME_ACTION_DONE);
         firstTextView = findViewById(R.id.firstTextView);
-        randomCheckBox = findViewById(R.id.randomCheckBox);
-        addButton = findViewById(R.id.addButton);
-        selectButton = findViewById(R.id.selectButton);
+        CheckBox randomCheckBox = findViewById(R.id.randomCheckBox);
+        ImageButton addButton = findViewById(R.id.addButton);
+        ImageButton selectButton = findViewById(R.id.selectButton);
 
-        AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList);
+        dbHandler = new DBHandler(MainActivity.this);
+        AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList, AddPlayersAdapter.ADD_PLAYER_VIEW);
         myAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(myAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
@@ -144,56 +152,37 @@ public class MainActivity extends AppCompatActivity {
             startButton.setEnabled(true);
         }
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
-        editPlayerName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                boolean handled = false;
-                if (actionId == EditorInfo.IME_ACTION_DONE && editPlayerName.getText().length() > 0) {
-                    addPlayer(myAdapter);
-                    handled = true;
-                }
-                return handled;
+        editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
+            boolean handled = false;
+            if (actionId == EditorInfo.IME_ACTION_DONE && editPlayerName.getText().length() > 0) {
+                addPlayer(myAdapter);
+                handled = true;
+            }
+            return handled;
+        });
+
+        addButton.setOnClickListener(view -> {
+
+            if (editPlayerName.getText().length() > 0) {
+                addPlayer(myAdapter);
             }
         });
 
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        selectButton.setOnClickListener(view -> selectPlayers());
 
-                if (editPlayerName.getText().length() > 0) {
-                    addPlayer(myAdapter);
-                }
-            }
-        });
+        randomCheckBox.setOnCheckedChangeListener((compoundButton, checked) -> {
+            if (checked) {
+                randomSelected(myAdapter);
 
-        selectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
-        randomCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                if (checked) {
-                    randomSelected(myAdapter);
-
-                } else {
-                    random = false;
-                    if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-                        showFirstTextView();
-                    }
+            } else {
+                random = false;
+                if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+                    showFirstTextView();
                 }
             }
         });
 
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startGame();
-            }
-        });
+        startButton.setOnClickListener(view -> startGame());
 
         myAdapter.setOnItemClickListener(new AddPlayersAdapter.OnItemClickListener() {
             @Override
@@ -217,6 +206,19 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("first", start_position);
         intent.putExtra("random", random);
         startActivity(intent);
+    }
+
+    private void selectPlayers() {
+        Intent intent = new Intent (this, SelectPlayersActivity.class);
+        if (!playersList.isEmpty()) {
+            String json = new Gson().toJson(playersList);
+            intent.putExtra("json", json);
+        }
+        if (dbHandler.playersTableSize() > 0) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

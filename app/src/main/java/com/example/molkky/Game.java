@@ -5,8 +5,10 @@ import java.util.Random;
 
 public class Game {
     private final ArrayList<Player> players;
+    private int id;
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
+        this.id = -1;
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -55,5 +57,13 @@ public class Game {
             player.clearTosses();
             player.clearUndoStack();
         }
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

@@ -35,6 +35,7 @@ public class GameActivity extends AppCompatActivity {
     private ImageView trophyImageView;
     private Button okButton;
     private RecyclerView verticalRecyclerView;
+    private DBHandler dbHandler;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -50,6 +51,8 @@ public class GameActivity extends AppCompatActivity {
         trophyImageView = findViewById(R.id.trophyImageView);
         okButton = findViewById(R.id.okButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
+
+        dbHandler = new DBHandler(this);
 
         if (getIntent().getStringExtra("json") != null) {
             String json = getIntent().getStringExtra("json");
@@ -211,6 +214,8 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        dbHandler.saveGameToDatabase(game);
+
 
 
     }
@@ -245,6 +250,7 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        dbHandler.removeGameFromDatabase(game);
 
     }
 

@@ -6,13 +6,16 @@ import java.util.Stack;
 
 public class Player implements Comparable<Player> {
     private final String name;
+    private int id = -1;
     private final ArrayList<Integer> tosses;
-    private Stack<Integer> undoStack;
+    private final Stack<Integer> undoStack;
+    private transient boolean selected;
 
     public Player(String name) {
         this.name = name;
         this.tosses = new ArrayList<>();
         this.undoStack = new Stack<>();
+        this.selected = false;
     }
 
     public boolean isEliminated() {
@@ -126,4 +129,19 @@ public class Player implements Comparable<Player> {
             return 0;
     }
 
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 }

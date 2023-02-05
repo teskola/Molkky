@@ -6,7 +6,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,7 +23,11 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
 
     private int selected_position = RecyclerView.NO_POSITION;
     private OnItemClickListener mListener;
-    private ArrayList<Player> playersList;
+    private final ArrayList<Player> playersList;
+    private final int viewId;
+    public static final int ADD_PLAYER_VIEW = 0;
+    public static final int SELECT_PLAYER_VIEW = 1;
+
 
     public interface OnItemClickListener {
         void onSelectClick(int position);
@@ -41,8 +44,9 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
         mListener = listener;
     }
 
-    public AddPlayersAdapter(ArrayList<Player> playersList) {
+    public AddPlayersAdapter(ArrayList<Player> playersList, int viewId) {
         this.playersList = playersList;
+        this.viewId = viewId;
     }
 
     @NonNull
@@ -57,6 +61,9 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
     public void onBindViewHolder(@NonNull AddPlayersAdapter.MyViewHolder holder, int position) {
         holder.playerName.setText(playersList.get(position).getName());
         holder.playerView.setSelected(selected_position == position);
+        if (viewId == SELECT_PLAYER_VIEW) {
+            holder.playerView.setBackgroundResource(playersList.get(position).isSelected() ? R.drawable.beige_white_background : R.drawable.gray_background);
+        }
     }
 
     @Override
@@ -66,67 +73,67 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView playerName;
-        private ImageView removePlayer;
-        private View playerView;
+        private final TextView playerName;
+        private final View playerView;
 
         @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             playerName = itemView.findViewById(R.id.playerTextView);
-            removePlayer = itemView.findViewById(R.id.removePlayerButton);
+            ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
             playerView = itemView.findViewById(R.id.playerView);
 
-            playerName.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int position = getAbsoluteAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-                        notifyItemChanged(selected_position);
-                        selected_position = position;
-                        notifyItemChanged(selected_position);
-                        mListener.onSelectClick(position);
-                    }
+            if (viewId == SELECT_PLAYER_VIEW) removePlayer.setVisibility(View.GONE);
+
+
+            playerName.setOnClickListener(view -> {
+                int position = getAbsoluteAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && viewId==SELECT_PLAYER_VIEW) {
+                    playersList.get(position).setSelected(!playersList.get(position).isSelected());
+                    notifyItemChanged(position);
+                }
+                if (position != RecyclerView.NO_POSITION && viewId==ADD_PLAYER_VIEW) {
+                    notifyItemChanged(selected_position);
+                    selected_position = position;
+                    notifyItemChanged(selected_position);
+                    mListener.onSelectClick(position);
                 }
             });
-            removePlayer.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    int background;
-                    if (playerView.isSelected())
-                        background = R.drawable.yellow_background;
-                    else
-                        background = R.drawable.beige_white_background;
-                    switch (motionEvent.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                        {
-                            playerView.setBackgroundResource(R.drawable.orange_background);
-                            break;
-                        }
-                        case MotionEvent.ACTION_UP:
-                        {
-                            if (mListener != null) {
-                                int position = getAbsoluteAdapterPosition();
-                                if (selected_position == position) {
-                                    selected_position = RecyclerView.NO_POSITION;
-                                } else if (selected_position > position) {
-                                    selected_position -= 1;
-                                }
-                                if (position != RecyclerView.NO_POSITION) {
-                                    mListener.onDeleteClick(position);
-                                }
-                            }
-                            playerView.setBackgroundResource(R.drawable.beige_white_background);
-                            break;
-                        }
-                        case MotionEvent.ACTION_CANCEL:
-                        {
-                            playerView.setBackgroundResource(background);
-                            break;
-                        }
+            removePlayer.setOnTouchListener((view, motionEvent) -> {
+                int background;
+                if (playerView.isSelected())
+                    background = R.drawable.yellow_background;
+                else
+                    background = R.drawable.beige_white_background;
+                switch (motionEvent.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                    {
+                        playerView.setBackgroundResource(R.drawable.orange_background);
+                        break;
                     }
-                    return true;
+                    case MotionEvent.ACTION_UP:
+                    {
+                        if (mListener != null) {
+                            int position = getAbsoluteAdapterPosition();
+                            if (selected_position == position) {
+                                selected_position = RecyclerView.NO_POSITION;
+                            } else if (selected_position > position) {
+                                selected_position -= 1;
+                            }
+                            if (position != RecyclerView.NO_POSITION) {
+                                mListener.onDeleteClick(position);
+                            }
+                        }
+                        playerView.setBackgroundResource(R.drawable.beige_white_background);
+                        break;
+                    }
+                    case MotionEvent.ACTION_CANCEL:
+                    {
+                        playerView.setBackgroundResource(background);
+                        break;
+                    }
                 }
+                return true;
             });
         }
     }
