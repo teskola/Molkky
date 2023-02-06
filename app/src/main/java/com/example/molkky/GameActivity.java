@@ -129,6 +129,8 @@ public class GameActivity extends AppCompatActivity {
         });
 
 
+
+
     }
 
     @Override
@@ -169,7 +171,7 @@ public class GameActivity extends AppCompatActivity {
             pointsToWinTV.setVisibility(View.INVISIBLE);
         }
         if (!gameEnded)
-            nameTextView.setBackgroundResource(VerticalAdapter.MyViewHolder.selectBackground(game.getPlayer(0), false));
+            nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
 
         if (undo) {
             Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(game.getPlayers().size() - 1);
@@ -187,6 +189,7 @@ public class GameActivity extends AppCompatActivity {
             pointsTextView.setText(String.valueOf(points));
             okButton.setEnabled(true);
         }
+
     }
 
     @Override
@@ -214,6 +217,12 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        verticalAdapter.setOnItemClickListener(new VerticalAdapter.OnItemClickListener() {
+            @Override
+            public void onSelectClick(int position) {
+                openStats(sortedPlayers.get(position));
+            }
+        });
         dbHandler.saveGameToDatabase(game);
 
 
@@ -244,7 +253,7 @@ public class GameActivity extends AppCompatActivity {
         }
         trophyImageView.setVisibility(View.INVISIBLE);
         seekBar.setVisibility(View.VISIBLE);
-        nameTextView.setBackgroundResource(VerticalAdapter.MyViewHolder.selectBackground(game.getPlayer(0), false));
+        nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
         congratulationsTextView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
@@ -254,6 +263,13 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
+    public void openStats(Player player) {
+        Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
+        String json = new Gson().toJson(player);
+        intent.putExtra("json", json);
+        startActivity(intent);
+    }
+
     public void startNewGame() {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         game.clear();
@@ -261,4 +277,50 @@ public class GameActivity extends AppCompatActivity {
         intent.putExtra("json", json);
         startActivity(intent);
     }
+
+
+
+    public static int selectBackground (Player player, boolean onlyGray) {
+        final int GOLD = R.drawable.gold_background;
+        final int PURPLE = R.drawable.purple_background;
+        final int GRAY = R.drawable.gray_background;
+        final int GREEN = R.drawable.green_background;
+        final int GREEN_YELLOW = R.drawable.green_yellow_background;
+        final int GREEN_ORANGE = R.drawable.green_orange_background;
+        final int YELLOW = R.drawable.yellow_background;
+        final int ORANGE = R.drawable.orange_background;
+        final int BEIGE = R.drawable.beige_white_background;
+
+        if (player.isEliminated())
+            return GRAY;
+        if (player.countAll() == 50)
+            return GOLD;
+
+        int size = player.getTossesSize();
+        if (!onlyGray) {
+            int misses = 0;
+            if (size > 1 && player.getToss(size - 1) == 0 && player.getToss(size - 2) == 0)
+                misses = 2;
+            else if (size > 0 && player.getToss(size - 1) == 0)
+                misses = 1;
+            if (player.excessesTargetPoints(size - 1) == 1)
+                return PURPLE;
+            if (player.pointsToWin() == 0) {
+                if (misses == 2)
+                    return ORANGE;
+                if (misses == 1)
+                    return YELLOW;
+                else
+                    return BEIGE;
+            } else {
+                if (misses == 2)
+                    return GREEN_ORANGE;
+                if (misses == 1)
+                    return GREEN_YELLOW;
+            }
+            return GREEN;
+        }
+        return BEIGE;
+    }
+
 }

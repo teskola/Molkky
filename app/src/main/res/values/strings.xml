@@ -14,6 +14,8 @@
     <string name="new_game">Aloita uusi peli</string>
     <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon!</string>
     <string name="tosses">heitot: </string>
+    <string name="toss">heitto </string>
+    <string name="points">pisteet: </string>
     <string name="best">paras heitto: </string>
     <string name="zeroes">nollat: </string>
     <string name="mean">keskiarvo: </string>

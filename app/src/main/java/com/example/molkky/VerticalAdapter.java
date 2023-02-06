@@ -17,6 +17,16 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
     private final ArrayList<Player> players;
     private final boolean onlyGray;
     private final boolean showTosses;
+    private OnItemClickListener mListener;
+
+    public interface OnItemClickListener {
+        void onSelectClick(int position);
+    }
+
+    public void setOnItemClickListener (OnItemClickListener listener) {
+        mListener = listener;
+    }
+
 
 
     public VerticalAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses) {
@@ -46,7 +56,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         }
         else
             holder.pointsTV.setVisibility(View.GONE);
-        holder.playerCardView.setBackgroundResource(MyViewHolder.selectBackground(player, onlyGray));
+        holder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
 
 //        holder.stats_TossesTV.setText(player.getTossesSize());
 //        holder.stats_bestTV.setText(Collections.max(player.getTosses()));
@@ -62,7 +72,7 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         return players.size();
     }
 
-    public static class MyViewHolder extends RecyclerView.ViewHolder {
+    public class MyViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView playerNameTextView;
         private final TextView totalPointsTextView;
@@ -105,53 +115,21 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
                 return false;
             });
             pointsTV.setMovementMethod(new ScrollingMovementMethod());
-        }
-
-
-
-
-        public static int selectBackground (Player player, boolean onlyGray) {
-            final int GOLD = R.drawable.gold_background;
-            final int PURPLE = R.drawable.purple_background;
-            final int GRAY = R.drawable.gray_background;
-            final int GREEN = R.drawable.green_background;
-            final int GREEN_YELLOW = R.drawable.green_yellow_background;
-            final int GREEN_ORANGE = R.drawable.green_orange_background;
-            final int YELLOW = R.drawable.yellow_background;
-            final int ORANGE = R.drawable.orange_background;
-            final int BEIGE = R.drawable.beige_white_background;
-
-            if (player.isEliminated())
-                return GRAY;
-            if (player.countAll() == 50)
-                return GOLD;
-
-            int size = player.getTossesSize();
-            if (!onlyGray) {
-                int misses = 0;
-                if (size > 1 && player.getToss(size - 1) == 0 && player.getToss(size - 2) == 0)
-                    misses = 2;
-                else if (size > 0 && player.getToss(size - 1) == 0)
-                    misses = 1;
-                if (player.excessesTargetPoints(size - 1) == 1)
-                    return PURPLE;
-                if (player.pointsToWin() == 0) {
-                    if (misses == 2)
-                        return ORANGE;
-                    if (misses == 1)
-                        return YELLOW;
-                    else
-                        return BEIGE;
-                } else {
-                    if (misses == 2)
-                        return GREEN_ORANGE;
-                    if (misses == 1)
-                        return GREEN_YELLOW;
+            playerCardView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    int position = getAbsoluteAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && mListener != null) {
+                        mListener.onSelectClick(position);
+                    }
                 }
-                return GREEN;
-            }
-            return BEIGE;
+            });
         }
+
+
+
+
+
     }
 
     public String buildTossesString(int position) {

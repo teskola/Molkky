@@ -6,7 +6,7 @@ import java.util.Stack;
 
 public class Player implements Comparable<Player> {
     private final String name;
-    private int id = -1;
+    private int id = 0;
     private final ArrayList<Integer> tosses;
     private final Stack<Integer> undoStack;
     private transient boolean selected;
@@ -43,7 +43,9 @@ public class Player implements Comparable<Player> {
     public void addToss(int points) {
         tosses.add(points);
     }
-
+/*
+* Removes player's last toss. Returns value of the removed toss.
+* */
     public int removeToss() {
         int removed_toss_points = tosses.get(tosses.size() -1);
         tosses.remove(tosses.size() - 1);
@@ -71,10 +73,9 @@ public class Player implements Comparable<Player> {
     * */
 
     public int pointsToWin() {
-        int toWin = 0;
         int total = countAll();
         if (total < 38)
-            return toWin;
+            return 0;
         else
             return 50 - total;
     }
@@ -92,7 +93,9 @@ public class Player implements Comparable<Player> {
     }
 
     public void clearUndoStack() {undoStack.clear();}
-
+/*
+* ******************* Stats
+* */
     public float mean() {
         int sum = 0;
         for (int i : tosses) {

@@ -8,7 +8,7 @@ public class Game {
     private int id;
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
-        this.id = -1;
+        this.id = 0;
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {

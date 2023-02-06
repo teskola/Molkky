@@ -55,9 +55,7 @@ public class MainActivity extends AppCompatActivity {
         firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
         if (!random) showFirstTextView();
     }
-/*
-*   Adds new player to list. If fails, returns false.
-* */
+
     public void addPlayer (AddPlayersAdapter adapter) {
         Player newPlayer = new Player(editPlayerName.getText().toString());
         for (Player p : playersList) {

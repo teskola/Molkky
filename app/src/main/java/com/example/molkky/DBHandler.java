@@ -6,7 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 public class DBHandler extends SQLiteOpenHelper {
@@ -24,6 +29,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 + "CREATE TABLE \"games\" ( "
                 + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "	\"winner\"	INTEGER, "
+                + " \"time\" TEXT, "
                 + "	FOREIGN KEY(\"winner\") REFERENCES \"players\"(\"id\"));";
 
 
@@ -35,7 +41,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
         String tosses = ""
                 + "CREATE TABLE \"tosses\" ( "
-                + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "	\"gameId\"	INTEGER, "
                 + "	\"toss\"	INTEGER, "
                 + "	\"playerId\"	INTEGER, "
@@ -133,9 +138,12 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Add game to database
 
+        String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());
+
         int winner = game.getPlayers().get(0).getId();
         ContentValues values = new ContentValues();
         values.put("winner", winner);
+        values.put("time", timestamp);
         db.insert("games", null, values);
         cursor = db.rawQuery("SELECT last_insert_rowid();", null);
         cursor.moveToFirst();
