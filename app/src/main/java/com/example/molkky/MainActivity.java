@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -134,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        dbHandler = new DBHandler(MainActivity.this);
+        dbHandler = DBHandler.getInstance(this);
         AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList, AddPlayersAdapter.ADD_PLAYER_VIEW);
         myAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(myAdapter);
@@ -228,4 +230,27 @@ public class MainActivity extends AppCompatActivity {
         savedInstanceState.putBoolean("RANDOM", random);
         savedInstanceState.putInt("SELECTED_POSITION", start_position);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
+
+        case R.id.saved_games:
+            Intent intent = new Intent(this, SavedGamesActivity.class);
+            startActivity(intent);
+            return(true);
+        case R.id.stats:
+            intent = new Intent(this, AllStatsActivity.class);
+            startActivity(intent);
+            return(true);
+    }
+        return(super.onOptionsItemSelected(item));
+    }
+
 }

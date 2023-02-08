@@ -2,77 +2,99 @@ package com.example.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
-
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
 public class PlayerStatsActivity extends AppCompatActivity {
-    private Player player;
-    private TextView playerTV;
-    private TextView tossesTV;
-    private TextView pointsTV;
-    private ViewGroup tossesContainer;
+    private DBHandler dbHandler;
+    private int playerID;
+    private int games;
+    private int wins;
+    private int points;
+    private int tosses;
+    private int zeroes;
+    private int eliminations = 0;
+    private int excesses = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player_stats);
+        TextView pointsTV = findViewById(R.id.stats_pointsTV);
+        TextView statsTV = findViewById(R.id.stats_otherTV);
+        TextView playerNameTV = findViewById(R.id.stats_playerNameTV);
+        dbHandler = DBHandler.getInstance(this);
 
-        if (getIntent().getStringExtra("json") != null) {
-            String json = getIntent().getStringExtra("json");
-            player = new Gson().fromJson(json, Player.class);
+        if (getIntent().getIntExtra("playerId", 0) != 0) {
+            playerID = getIntent().getIntExtra("playerId", 0);
+            playerNameTV.setText(dbHandler.getPlayerName(playerID));
         }
-        playerTV = findViewById(R.id.playerNameTV);
-        tossesTV = findViewById(R.id.stats_allTossesTV);
-        tossesContainer = findViewById(R.id.tossesContainer);
-        playerTV.setText(player.getName());
+        wins = dbHandler.getWins(playerID);
+        points = dbHandler.getTotalPoints(playerID);
+        tosses = dbHandler.getTotalTosses(playerID);
+        zeroes = dbHandler.countTosses(playerID, 0);
+        ArrayList<Integer> gameIds = dbHandler.getGames(playerID);
+        games = gameIds.size();
+        for (int gameId : gameIds) {
+            if (dbHandler.isEliminated(playerID, gameId)) eliminations++;
+        }
+        for (int gameId : gameIds) {
+            Player p = new Player(dbHandler.getTosses(gameId, playerID));
+            excesses = excesses + p.countExcesses();
+        }
 
-        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        ArrayList<Integer> tosses = player.getTosses();
-        for (int i = 0; i < tosses.size(); i++) {
-            View view = inflater.inflate(R.layout.tosses_text, tossesContainer, false);
-            view.setId(i);
-            tossesContainer.addView(view);
-            tossesTV = findViewById(i);
-            StringBuilder sb = new StringBuilder();
-            sb.append(getString(R.string.toss));
-            if (i < 9) sb.append("  ");
-            else sb.append(" ");
-            sb.append(i+1).append(": ");
-            if (tosses.get(i) < 10)
-                sb.append(" ").append(tosses.get(i));
-            else
-                sb.append(tosses.get(i));
-            sb.append(" (");
-            sb.append(player.count(i)).append(")");
-            tossesTV.setText(sb.toString());
-        }
+        String pointsString = pointsString();
+        pointsTV.setText(pointsString);
+        String statsString = otherStatsString();
+        statsTV.setText(statsString);
+
+
+
+
+
 
 
     }
-    public String buildTossesString() {
-        ArrayList<Integer> tosses = player.getTosses();
+
+    public String fillWithSpaces(String line) {
+        StringBuilder sb = new StringBuilder(line);
+        while(sb.length() < 21) sb.append(" ");
+        return sb.toString();
+    }
+
+    @SuppressLint("DefaultLocale")
+    String otherStatsString () {
+
+        return fillWithSpaces(getString(R.string.games) + ": " + games) + "\n" +
+                fillWithSpaces(getString(R.string.wins) + ": " + wins +
+                " (" + Math.round(100 * wins / (float) games) + "%)") + "\n" +
+                fillWithSpaces(getString(R.string.points) + ": " + points) + "\n" +
+                fillWithSpaces(getString(R.string.points_per_toss) + ": " + String.format("%.1f", points / (float) tosses) )+ "\n" +
+                fillWithSpaces(getString(R.string.hits_percentage) + ": " + Math.round(100 * (tosses - zeroes) / (float) tosses)) + "\n" +
+                fillWithSpaces(getString(R.string.eliminations) + ": " + eliminations +
+                " (" + Math.round(100 * eliminations / (float) games) + "%)") + "\n" +
+                fillWithSpaces(getString(R.string.excesses) + ": " + excesses);
+    }
+
+    String pointsString () {
+
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tosses.size(); i++) {
-            sb.append(getString(R.string.toss));
-            if (i < 9) sb.append("  ");
-            else sb.append(" ");
-            sb.append(i+1).append(": ");
-            if (tosses.get(i) < 10)
-                sb.append(" ").append(tosses.get(i));
-            else
-                sb.append(tosses.get(i));
-            sb.append(" (");
-            sb.append(player.count(i));
-            sb.append(")\n");
+        for (int i = 0; i < 13; i++) {
+            int freq = dbHandler.countTosses(playerID, i);
+            int percentage = Math.round(100 * freq / (float) tosses);
+            sb.append(getString(R.string.points)).append(": ");
+            if (i<10) sb.append(" ");
+            sb.append(i).append(":");
+            if (freq < 100) sb.append(" ");
+            if (freq < 10) sb.append(" ");
+            sb.append(freq).append(" (");
+            if (percentage < 10) sb.append(" ");
+            sb.append(percentage).append("%)\n");
         }
         return sb.toString();
     }
+
 }

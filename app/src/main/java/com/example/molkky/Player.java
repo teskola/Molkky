@@ -8,14 +8,31 @@ public class Player implements Comparable<Player> {
     private final String name;
     private int id = 0;
     private final ArrayList<Integer> tosses;
-    private final Stack<Integer> undoStack;
+    private final Stack<Integer> undoStack = new Stack<>();
     private transient boolean selected;
+
+    public Player(int id, String name, ArrayList<Integer> tosses) {
+        this.name = name;
+        this.id = id;
+        this.tosses = tosses;
+    }
+
+    public Player(ArrayList<Integer> tosses) {
+        this.name = "";
+        this.tosses = tosses;
+
+    }
 
     public Player(String name) {
         this.name = name;
         this.tosses = new ArrayList<>();
-        this.undoStack = new Stack<>();
         this.selected = false;
+    }
+
+    public Player(int id, String name) {
+        this.name = name;
+        this.id = id;
+        this.tosses = new ArrayList<>();
     }
 
     public boolean isEliminated() {

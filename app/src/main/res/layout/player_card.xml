@@ -8,7 +8,7 @@
     android:paddingBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/playerView"
+        android:id="@+id/listItemView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="1dp"
@@ -21,7 +21,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/playerTextView"
+            android:id="@+id/nameTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="@font/josefin_sans"
@@ -33,6 +33,19 @@
             app:layout_constraintEnd_toStartOf="@+id/removePlayerButton"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <TextView
+            android:id="@+id/valueTV"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:fontFamily="@font/crimson_text_bold"
+            android:gravity="center"
+            android:minEms="2"
+            android:textSize="28sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <ImageView
             android:id="@+id/removePlayerButton"
             android:layout_width="wrap_content"
@@ -40,6 +53,7 @@
             android:adjustViewBounds="true"
             android:padding="10dp"
             android:scaleType="fitCenter"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

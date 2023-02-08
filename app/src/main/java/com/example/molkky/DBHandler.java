@@ -7,20 +7,26 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 public class DBHandler extends SQLiteOpenHelper {
     private static final String DB_NAME = "molkky_db";
     private static final int DB_VERSION = 1;
-    public DBHandler(Context context) {
+    private static DBHandler instance;
+
+    private DBHandler(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
+    public static DBHandler getInstance(Context context) {
+        if (instance == null)
+            instance = new DBHandler(context);
+        return instance;
+    }
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
@@ -41,6 +47,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         String tosses = ""
                 + "CREATE TABLE \"tosses\" ( "
+                + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "	\"gameId\"	INTEGER, "
                 + "	\"toss\"	INTEGER, "
                 + "	\"playerId\"	INTEGER, "
@@ -65,21 +72,146 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
-    public boolean searchPlayerName(String name) {
+    public int getGamesCount(int playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM players", null);
+        Cursor cursor = db.rawQuery("SELECT COUNT (DISTINCT gameId) FROM tosses WHERE playerId=" + playerId, null) ;
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count;
+    }
 
+    public ArrayList<Integer> getGames(int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId=" + playerId, null);
+        ArrayList<Integer> gameIds = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                if (name.equals(cursor.getString(0))) return true;
+                gameIds.add(cursor.getInt(0));
             } while (cursor.moveToNext());
         }
         cursor.close();
-        db.close();
-        return false;
+        return gameIds;
     }
 
-    public ArrayList<Player> readPlayers(ArrayList<Player> excludedPlayers) {
+    public int getWins(int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT (id) FROM games WHERE winner=" + playerId, null);
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count;
+    }
+
+    public int getTotalPoints (int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(toss) FROM tosses WHERE playerId=" + playerId, null);
+        cursor.moveToFirst();
+        int sum = cursor.getInt(0);
+        cursor.close();
+        return sum;
+    }
+
+    public int getTotalTosses (int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=" + playerId, null);
+        cursor.moveToFirst();
+        int sum = cursor.getInt(0);
+        cursor.close();
+        return sum;
+    }
+
+    public int countTosses (int playerId, int value) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor =db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=" + playerId + " AND toss=" + value, null);
+        cursor.moveToFirst();
+        int result = cursor.getInt(0);
+        cursor.close();
+        return result;
+    }
+
+    public boolean isEliminated (int playerId, int gameId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId + " ORDER BY ROWID DESC LIMIT 3;", null);
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getInt(0) != 0) {
+                    cursor.close();
+                    return false;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return true;
+    }
+
+    public ArrayList<ListItem> getGames() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT games.id, time, name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
+        ArrayList<ListItem> games = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                ListItem newGame = new ListItem();
+                newGame.setId(cursor.getInt(0));
+                newGame.setName(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                games.add(newGame);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return games;
+    }
+
+    public String getPlayerName(int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM players WHERE id=" + playerId, null);
+        cursor.moveToFirst();
+        String name = cursor.getString(0);
+        cursor.close();
+        return name;
+    }
+
+    public ArrayList<ListItem> getPlayers() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM players", null);
+        ArrayList<ListItem> players = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                players.add(new ListItem(cursor.getInt(0), cursor.getString(1)));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return players;
+    }
+
+    public ArrayList<Player> getPlayers(int gameId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT playerId, name FROM tosses LEFT JOIN players ON playerId=players.id  WHERE gameId=" + gameId, null);
+        ArrayList<Player> players = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                int playerId = cursor.getInt(0);
+                String name = cursor.getString(1);
+                players.add(new Player(playerId, name, getTosses(gameId, playerId)));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return  players;
+    }
+
+    public ArrayList<Integer> getTosses (int gameId, int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId, null);
+        ArrayList<Integer> tosses = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                tosses.add(cursor.getInt(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return tosses;
+    }
+
+    public ArrayList<Player> getPlayers(ArrayList<Player> excludedPlayers) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM players", null);
         ArrayList<Player> players = new ArrayList<>();
@@ -96,7 +228,6 @@ public class DBHandler extends SQLiteOpenHelper {
                 if (!duplicate) players.add(new Player(cursor.getString(0)));
             } while (cursor.moveToNext());
         }
-        db.close();
         cursor.close();
         return players;
     }
@@ -106,19 +237,17 @@ public class DBHandler extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM players", null);
         cursor.moveToFirst();
         int size = cursor.getInt(0);
-        db.close();
         cursor.close();
         return size;
 
     }
 
-    public void removeGameFromDatabase (Game game) {
+    public void removeGameFromDatabase (int gameId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String games = "DELETE FROM games WHERE id = " + game.getId() + ";";
-        String tosses = "DELETE FROM tosses WHERE gameId = " + game.getId() + ";";
+        String games = "DELETE FROM games WHERE id = " + gameId + ";";
+        String tosses = "DELETE FROM tosses WHERE gameId = " + gameId + ";";
         db.execSQL(games);
         db.execSQL(tosses);
-        db.close();
     }
 
     public void saveGameToDatabase(Game game) {
@@ -139,7 +268,7 @@ public class DBHandler extends SQLiteOpenHelper {
         // Add game to database
 
         String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());
-
+        game.setTimestamp(timestamp);
         int winner = game.getPlayers().get(0).getId();
         ContentValues values = new ContentValues();
         values.put("winner", winner);
@@ -162,7 +291,6 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         cursor.close();
-        db.close();
     }
 
 }

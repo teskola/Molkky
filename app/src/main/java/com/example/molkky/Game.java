@@ -6,9 +6,16 @@ import java.util.Random;
 public class Game {
     private final ArrayList<Player> players;
     private int id;
+    private String timestamp;
+
+    public Game(int gameId, ArrayList<Player> players) {
+        this.players = players;
+        this.id = gameId;
+    }
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
         this.id = 0;
+        this.timestamp ="";
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -65,5 +72,13 @@ public class Game {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }

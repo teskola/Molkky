@@ -79,11 +79,12 @@ public class AddPlayersAdapter extends RecyclerView.Adapter<AddPlayersAdapter.My
         @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            playerName = itemView.findViewById(R.id.playerTextView);
+            playerName = itemView.findViewById(R.id.nameTV);
             ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
-            playerView = itemView.findViewById(R.id.playerView);
+            playerView = itemView.findViewById(R.id.listItemView);
 
             if (viewId == SELECT_PLAYER_VIEW) removePlayer.setVisibility(View.GONE);
+            if (viewId == ADD_PLAYER_VIEW) removePlayer.setVisibility(View.VISIBLE);
 
 
             playerName.setOnClickListener(view -> {

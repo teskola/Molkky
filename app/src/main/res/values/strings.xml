@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Molkky</string>
+    <string name="app_name">Mölkky</string>
     <string name="start">Aloita peli</string>
     <string name="random">Arvo heittojärjestys</string>
     <string name="insert_player">Lisää uusi pelaaja</string>
@@ -10,15 +10,25 @@
     <string name="ok">OK</string>
     <string name="dash">-</string>
     <string name="add">Lisää</string>
+    <string name="yes">kyllä</string>
+    <string name="no">ei</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
     <string name="new_game">Aloita uusi peli</string>
     <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon!</string>
-    <string name="tosses">heitot: </string>
     <string name="toss">heitto </string>
-    <string name="points">pisteet: </string>
-    <string name="best">paras heitto: </string>
-    <string name="zeroes">nollat: </string>
-    <string name="mean">keskiarvo: </string>
-    <string name="mode">yleisin heitto: </string>
-    <string name="excesses">ylitykset: </string>
+    <string name="hits">osumat </string>
+    <string name="mean">keskiarvo </string>
+    <string name="excesses">ylitykset </string>
+    <string name="elimination">putoaminen </string>
+    <string name="eliminations">putoamiset</string>
+    <string name="games">pelit</string>
+    <string name="wins">voitot</string>
+    <string name="points">pisteet</string>
+    <string name="tosses">heitot</string>
+    <string name="points_per_toss">pisteet/heitto</string>
+    <string name="hits_percentage">osuma%</string>
+    <string name="elimination_percentage">putoamis%</string>
+    <string name="excesses_per_game">ylitykset/ottelu</string>
+    <string name="saved_games">Tallennetut pelit</string>
+    <string name="stats">Tilastot</string>
 </resources>

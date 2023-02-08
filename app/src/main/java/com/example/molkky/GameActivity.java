@@ -8,11 +8,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -21,12 +19,12 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.Stack;
 
 public class GameActivity extends AppCompatActivity {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
     private Game game;
     private boolean gameEnded = false;
+    private boolean savedGame = false;
     private SeekBar seekBar;
     private TextView pointsTextView;
     private TextView nameTextView;
@@ -52,7 +50,18 @@ public class GameActivity extends AppCompatActivity {
         okButton = findViewById(R.id.okButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
 
-        dbHandler = new DBHandler(this);
+        dbHandler = DBHandler.getInstance(this);
+
+        // Saved game
+
+        if (getIntent().getIntExtra("gameId", 0) != 0) {
+            int gameId = getIntent().getIntExtra("gameId", 0);
+            game = new Game(gameId, dbHandler.getPlayers(gameId));
+            gameEnded = true;
+            savedGame = true;
+        }
+
+        // New game
 
         if (getIntent().getStringExtra("json") != null) {
             String json = getIntent().getStringExtra("json");
@@ -68,6 +77,7 @@ public class GameActivity extends AppCompatActivity {
             String json = savedInstanceState.getString("json");
             game = new Gson().fromJson(json, Game.class);
             gameEnded = savedInstanceState.getBoolean("finished");
+            savedGame = savedInstanceState.getBoolean("saved");
         }
         nameTextView.setText(game.getPlayer(0).getName());
 
@@ -105,27 +115,32 @@ public class GameActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
         okButton.setOnClickListener(view -> {
-            if (!gameEnded) {
-                Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
-                int points = Integer.parseInt(pointsTextView.getText().toString());
-                game.getPlayer(0).addToss(points);
-                if (!game.getPlayer(0).getUndoStack().empty()) game.getPlayer(0).getUndoStack().pop();
-                if (game.getPlayer(0).countAll() == 50) {
-                    endGame();
-                } else {
-                    game.setTurn(1);
-                    while (game.getPlayer(0).isEliminated()) {
-                        game.setTurn(1);
-                        updateUI(false);
-                    }
-                    if (game.allDropped()) {
+            if (!pointsTextView.getText().equals("-")) {
+                if (!gameEnded) {
+                    Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
+                    int points = Integer.parseInt(pointsTextView.getText().toString());
+                    game.getPlayer(0).addToss(points);
+                    if (!game.getPlayer(0).getUndoStack().empty())
+                        game.getPlayer(0).getUndoStack().pop();
+                    if (game.getPlayer(0).countAll() == 50) {
+                        saveGame();
                         endGame();
+                    } else {
+                        game.setTurn(1);
+                        while (game.getPlayer(0).isEliminated()) {
+                            game.setTurn(1);
+                            updateUI(false);
+                        }
+                        if (game.allDropped()) {
+                            saveGame();
+                            endGame();
+                        }
                     }
-                }
-                if (!gameEnded)
-                    updateUI(false);
-            } else
-                startNewGame();
+                    if (!gameEnded)
+                        updateUI(false);
+                } else
+                    startNewGame();
+            }
         });
 
 
@@ -135,7 +150,7 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (game.getPlayer(game.getPlayers().size() - 1).getTossesSize() == 0) {
+        if (savedGame || game.getPlayer(game.getPlayers().size() - 1).getTossesSize() == 0) {
             super.onBackPressed();
         } else if (gameEnded) {
             resumeGame();
@@ -198,6 +213,7 @@ public class GameActivity extends AppCompatActivity {
         String json = new Gson().toJson(game);
         savedInstanceState.putString("json", json);
         savedInstanceState.putBoolean("finished", gameEnded);
+        savedInstanceState.putBoolean("saved", savedGame);
     }
 
     public void endGame() {
@@ -214,19 +230,10 @@ public class GameActivity extends AppCompatActivity {
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.new_game));
         okButton.setEnabled(true);
-        VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
+        VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);  // muuta tämä
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        verticalAdapter.setOnItemClickListener(new VerticalAdapter.OnItemClickListener() {
-            @Override
-            public void onSelectClick(int position) {
-                openStats(sortedPlayers.get(position));
-            }
-        });
-        dbHandler.saveGameToDatabase(game);
-
-
-
+        verticalAdapter.setOnItemClickListener(position -> openStats(sortedPlayers.get(position)));
     }
 
     public void resumeGame() {
@@ -259,12 +266,12 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        dbHandler.removeGameFromDatabase(game);
+        dbHandler.removeGameFromDatabase(game.getId());
 
     }
 
     public void openStats(Player player) {
-        Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
+        Intent intent = new Intent(getApplicationContext(), ScoreCardActivity.class);
         String json = new Gson().toJson(player);
         intent.putExtra("json", json);
         startActivity(intent);
@@ -276,6 +283,10 @@ public class GameActivity extends AppCompatActivity {
         String json = new Gson().toJson(game.getPlayers());
         intent.putExtra("json", json);
         startActivity(intent);
+    }
+
+    public void saveGame() {
+        new Thread(() -> dbHandler.saveGameToDatabase(game)).start();
     }
 
 
