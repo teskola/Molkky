@@ -1,100 +1,174 @@
 package com.example.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.HorizontalBarChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
+
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class PlayerStatsActivity extends AppCompatActivity {
-    private DBHandler dbHandler;
-    private int playerID;
-    private int games;
-    private int wins;
-    private int points;
-    private int tosses;
-    private int zeroes;
-    private int eliminations = 0;
-    private int excesses = 0;
+    private int[] playerIds;
+    private int position;
+    private final PlayerStats playerStats = new PlayerStats(this);
 
+    private TextView playerNameTV;
+    private TextView pointsTV;
+    private TextView gamesTV;
+    private TextView winsTV;
+    private TextView tossesTV;
+    private TextView pptTV;
+    private TextView hitsTV;
+    private TextView eliminationsTV;
+    private TextView excessTV;
+    private BarChart barChart;
+
+
+    @SuppressLint("DefaultLocale")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_player_stats);
-        TextView pointsTV = findViewById(R.id.stats_pointsTV);
-        TextView statsTV = findViewById(R.id.stats_otherTV);
-        TextView playerNameTV = findViewById(R.id.stats_playerNameTV);
-        dbHandler = DBHandler.getInstance(this);
+        ConstraintLayout titleBar = findViewById(R.id.titleBar);
+        titleBar.setBackgroundColor(getResources().getColor(R.color.white));
 
-        if (getIntent().getIntExtra("playerId", 0) != 0) {
-            playerID = getIntent().getIntExtra("playerId", 0);
-            playerNameTV.setText(dbHandler.getPlayerName(playerID));
+        ImageButton previousIB = findViewById(R.id.previousIB);
+        ImageButton nextIB = findViewById(R.id.nextIB);
+        previousIB.setVisibility(View.VISIBLE);
+        nextIB.setVisibility(View.VISIBLE);
+        barChart = findViewById(R.id.barChartView);
+
+        playerNameTV = findViewById(R.id.titleTV);
+        pointsTV = findViewById(R.id.stats_pointsTV);
+        gamesTV = findViewById(R.id.stats_gamesTV);
+        winsTV = findViewById(R.id.stats_winsTV);
+        tossesTV = findViewById(R.id.stats_TossesTV);
+        pptTV = findViewById(R.id.stats_pptTV);
+        hitsTV = findViewById(R.id.stats_hitsTV);
+        eliminationsTV = findViewById(R.id.stats_elimTV);
+        excessTV = findViewById(R.id.stats_excessesTV);
+        Button showGamesBtn = findViewById(R.id.showGamesButton);
+
+        if (getIntent().getIntArrayExtra("PlayerIds") != null) {
+
+            playerIds = getIntent().getIntArrayExtra("PlayerIds");
+            position = getIntent().getIntExtra("position", 0);
+
         }
-        wins = dbHandler.getWins(playerID);
-        points = dbHandler.getTotalPoints(playerID);
-        tosses = dbHandler.getTotalTosses(playerID);
-        zeroes = dbHandler.countTosses(playerID, 0);
-        ArrayList<Integer> gameIds = dbHandler.getGames(playerID);
-        games = gameIds.size();
-        for (int gameId : gameIds) {
-            if (dbHandler.isEliminated(playerID, gameId)) eliminations++;
-        }
-        for (int gameId : gameIds) {
-            Player p = new Player(dbHandler.getTosses(gameId, playerID));
-            excesses = excesses + p.countExcesses();
-        }
+        updateUI();
 
-        String pointsString = pointsString();
-        pointsTV.setText(pointsString);
-        String statsString = otherStatsString();
-        statsTV.setText(statsString);
+        previousIB.setOnClickListener(view -> {
+            if (position > 0) position--;
+            else position = playerIds.length - 1;
+            updateUI();
+        });
+        nextIB.setOnClickListener(view -> {
+            if (position < playerIds.length - 1) position++;
+            else position = 0;
+            updateUI();
+        });
 
-
-
-
-
-
+        showGamesBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(getApplicationContext(), SavedGamesActivity.class);
+            intent.putExtra("PlayerID", playerIds[position]);
+            startActivity(intent);
+        });
 
     }
 
-    public String fillWithSpaces(String line) {
-        StringBuilder sb = new StringBuilder(line);
-        while(sb.length() < 21) sb.append(" ");
-        return sb.toString();
+    private void showBarChart(){
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+
+        for(int i = 0; i < 13; i++){
+            BarEntry barEntry = new BarEntry(i, playerStats.getTosses(playerIds[position], i));
+            entries.add(barEntry);
+        }
+
+        BarDataSet barDataSet = new BarDataSet(entries, null);
+        barDataSet.setDrawValues(false);
+        barDataSet.setColor(ContextCompat.getColor(getApplicationContext(), R.color.teal));
+
+        BarData data = new BarData(barDataSet);
+
+        barChart.getAxisRight().setDrawGridLines(false);
+        barChart.getAxisLeft().setDrawGridLines(false);
+        barChart.getAxisRight().setDrawAxisLine(false);
+        barChart.getAxisLeft().setDrawAxisLine(false);
+
+        barChart.getAxisRight().setDrawLabels(false);
+        barChart.getLegend().setEnabled(false);
+        barChart.getAxisLeft().setAxisMinimum(0);
+        barChart.getXAxis().setAxisMinimum(-0.5f);
+        barChart.getXAxis().setAxisMaximum(12.5f);
+
+
+
+        barChart.setTouchEnabled(false);
+        barChart.setDescription(null);
+        barChart.setData(data);
+        barChart.invalidate();
+
+
     }
 
     @SuppressLint("DefaultLocale")
-    String otherStatsString () {
-
-        return fillWithSpaces(getString(R.string.games) + ": " + games) + "\n" +
-                fillWithSpaces(getString(R.string.wins) + ": " + wins +
-                " (" + Math.round(100 * wins / (float) games) + "%)") + "\n" +
-                fillWithSpaces(getString(R.string.points) + ": " + points) + "\n" +
-                fillWithSpaces(getString(R.string.points_per_toss) + ": " + String.format("%.1f", points / (float) tosses) )+ "\n" +
-                fillWithSpaces(getString(R.string.hits_percentage) + ": " + Math.round(100 * (tosses - zeroes) / (float) tosses)) + "\n" +
-                fillWithSpaces(getString(R.string.eliminations) + ": " + eliminations +
-                " (" + Math.round(100 * eliminations / (float) games) + "%)") + "\n" +
-                fillWithSpaces(getString(R.string.excesses) + ": " + excesses);
+    public  void  updateUI () {
+        playerNameTV.setText(DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]));
+        pointsTV.setText(String.valueOf(playerStats.getPoints(playerIds[position])));
+        gamesTV.setText(String.valueOf(playerStats.getGames(playerIds[position])));
+        String winsString = playerStats.getWins(playerIds[position]) + " (" + playerStats.getWinsPct(playerIds[position]) + "%)";
+        winsTV.setText(winsString);
+        tossesTV.setText(String.valueOf(playerStats.getTosses(playerIds[position])));
+        pptTV.setText(String.format("%.1f", playerStats.getPointsPerToss(playerIds[position])));
+        hitsTV.setText(String.valueOf(playerStats.getHitsPct(playerIds[position])));
+        String eliminationsString = playerStats.getEliminations(playerIds[position]) + " (" + playerStats.getEliminationsPct(playerIds[position]) + "%)";
+        eliminationsTV.setText(eliminationsString);
+        excessTV.setText(String.valueOf(playerStats.getExcesses(playerIds[position])));
+        showBarChart();
     }
 
-    String pointsString () {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 13; i++) {
-            int freq = dbHandler.countTosses(playerID, i);
-            int percentage = Math.round(100 * freq / (float) tosses);
-            sb.append(getString(R.string.points)).append(": ");
-            if (i<10) sb.append(" ");
-            sb.append(i).append(":");
-            if (freq < 100) sb.append(" ");
-            if (freq < 10) sb.append(" ");
-            sb.append(freq).append(" (");
-            if (percentage < 10) sb.append(" ");
-            sb.append(percentage).append("%)\n");
-        }
-        return sb.toString();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
+
+        case R.id.saved_games:
+            Intent intent = new Intent(this, SavedGamesActivity.class);
+            startActivity(intent);
+            return(true);
+        case R.id.stats:
+            intent = new Intent(this, AllStatsActivity.class);
+            startActivity(intent);
+            return(true);
+    }
+        return(super.onOptionsItemSelected(item));
     }
 
 }

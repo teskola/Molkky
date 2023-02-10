@@ -58,13 +58,6 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             holder.pointsTV.setVisibility(View.GONE);
         holder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
 
-//        holder.stats_TossesTV.setText(player.getTossesSize());
-//        holder.stats_bestTV.setText(Collections.max(player.getTosses()));
-//        holder.stats_meanTV.setText(String.valueOf(player.mean()));
-//        holder.stats_ZeroesTV.setText(String.valueOf(Collections.frequency(player.getTosses(), 0)));
-//        holder.stats_ModeTV.setText(String.valueOf(player.mode()));
-//        holder.stats_ExcessesTV.setText(String.valueOf(player.countExcesses()));
-
     }
 
     @Override
@@ -79,13 +72,6 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         private final TextView pointsTV;
         private final View playerCardView;
 
-//        private View statsView;
-//        private TextView stats_TossesTV;
-//        private TextView stats_bestTV;
-//        private TextView stats_meanTV;
-//        private TextView stats_ZeroesTV;
-//        private TextView stats_ModeTV;
-//        private TextView stats_ExcessesTV;
 
 
 
@@ -99,15 +85,6 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
             totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
             pointsTV = itemView.findViewById(R.id.pointsTV);
 
-//            statsView = itemView.findViewById(R.id.statsView);
-//            stats_TossesTV = itemView.findViewById(R.id.stats_TossesTV);
-//            stats_bestTV = itemView.findViewById(R.id.stats_bestTV);
-//            stats_meanTV = itemView.findViewById(R.id.stats_meanTV);
-//            stats_ZeroesTV = itemView.findViewById(R.id.stats_ZeroesTV);
-//            stats_ModeTV = itemView.findViewById(R.id.stats_ModeTV);
-//            stats_ExcessesTV = itemView.findViewById(R.id.stats_ExcessesTV);
-
-
            // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
             pointsTV.setOnTouchListener((view, motionEvent) -> {
@@ -115,13 +92,10 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
                 return false;
             });
             pointsTV.setMovementMethod(new ScrollingMovementMethod());
-            playerCardView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int position = getAbsoluteAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && mListener != null) {
-                        mListener.onSelectClick(position);
-                    }
+            playerCardView.setOnClickListener(view -> {
+                int position = getAbsoluteAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && mListener != null) {
+                    mListener.onSelectClick(position);
                 }
             });
         }

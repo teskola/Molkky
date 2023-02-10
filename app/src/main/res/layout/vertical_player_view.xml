@@ -61,6 +61,7 @@
                 android:ellipsize="none"
                 android:fontFamily="monospace"
                 android:gravity="bottom|end"
+                android:scrollbars="none"
                 android:singleLine="true"
                 tools:visibility="visible" />
         </ScrollView>

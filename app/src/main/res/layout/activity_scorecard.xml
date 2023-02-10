@@ -6,28 +6,23 @@
     android:layout_height="match_parent"
     tools:context=".ScoreCardActivity">
 
-    <TextView
-        android:id="@+id/playerNameTV"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:fontFamily="@font/josefin_sans"
-        android:text="Pelaajan nimi"
-        android:textColor="@color/black"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
+    <include
+        android:id="@+id/include"
+        layout="@layout/title_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical"
+        android:scrollbars="none"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playerNameTV">
+        app:layout_constraintTop_toBottomOf="@+id/include">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,7 +44,18 @@
                 android:layout_marginTop="8dp"
                 android:fontFamily="monospace"
                 android:gravity="center_horizontal" />
+
         </LinearLayout>
     </ScrollView>
+
+    <android.widget.Button
+        android:id="@+id/allTimeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/start_button"
+        android:text="@string/show_all_time_stats"
+        app:layout_constraintBottom_toBottomOf="@+id/scrollView2"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

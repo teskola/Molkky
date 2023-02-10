@@ -5,10 +5,17 @@ public class ListItem implements Comparable<ListItem> {
     private float valueFloat = 0f;
     private int valueInt = 0;
     private int id = 0;
-    public ListItem(String name, float value) {
+    private boolean selected = false;
+
+    public ListItem(String name) {
         this.name = name;
-        this.valueFloat = value;
     }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+
     public ListItem(int id, String name) {
         this.name = name;
         this.id = id;
@@ -58,5 +65,8 @@ public class ListItem implements Comparable<ListItem> {
             return Integer.compare(listItem.valueInt, this.valueInt);
     }
 
+    public boolean isSelected() {
+        return selected;
+    }
 }
 

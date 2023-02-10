@@ -31,9 +31,8 @@ public class GameActivity extends AppCompatActivity {
     private TextView pointsToWinTV;
     private TextView congratulationsTextView;
     private ImageView trophyImageView;
-    private Button okButton;
+    private Button okButton, chartButton;
     private RecyclerView verticalRecyclerView;
-    private DBHandler dbHandler;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -48,17 +47,18 @@ public class GameActivity extends AppCompatActivity {
         congratulationsTextView = findViewById(R.id.congratulationsTextView);
         trophyImageView = findViewById(R.id.trophyImageView);
         okButton = findViewById(R.id.okButton);
+        chartButton = findViewById(R.id.chartButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
 
-        dbHandler = DBHandler.getInstance(this);
 
         // Saved game
 
         if (getIntent().getIntExtra("gameId", 0) != 0) {
             int gameId = getIntent().getIntExtra("gameId", 0);
-            game = new Game(gameId, dbHandler.getPlayers(gameId));
+            game = new Game(gameId, DBHandler.getInstance(getApplicationContext()).getPlayers(gameId));
             gameEnded = true;
             savedGame = true;
+            chartButton.setVisibility(View.VISIBLE);
         }
 
         // New game
@@ -113,6 +113,8 @@ public class GameActivity extends AppCompatActivity {
         });
 
         // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
+
+        chartButton.setOnClickListener(view -> openChart());
 
         okButton.setOnClickListener(view -> {
             if (!pointsTextView.getText().equals("-")) {
@@ -219,6 +221,7 @@ public class GameActivity extends AppCompatActivity {
     public void endGame() {
         gameEnded = true;
         pointsTextView.setText("");
+        chartButton.setVisibility(View.VISIBLE);
         pointsToWinTV.setVisibility(View.INVISIBLE);
         trophyImageView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.INVISIBLE);
@@ -230,10 +233,10 @@ public class GameActivity extends AppCompatActivity {
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.new_game));
         okButton.setEnabled(true);
-        VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);  // muuta tämä
+        VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        verticalAdapter.setOnItemClickListener(position -> openStats(sortedPlayers.get(position)));
+        verticalAdapter.setOnItemClickListener(this::openStats);
     }
 
     public void resumeGame() {
@@ -258,6 +261,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
         }
+        chartButton.setVisibility(View.GONE);
         trophyImageView.setVisibility(View.INVISIBLE);
         seekBar.setVisibility(View.VISIBLE);
         nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
@@ -266,14 +270,24 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        dbHandler.removeGameFromDatabase(game.getId());
+        DBHandler.getInstance(getApplicationContext()).removeGameFromDatabase(game.getId());
 
     }
 
-    public void openStats(Player player) {
-        Intent intent = new Intent(getApplicationContext(), ScoreCardActivity.class);
-        String json = new Gson().toJson(player);
+    public void openChart() {
+        Intent intent = new Intent(getApplicationContext(), ChartActivity.class);
+        String json = new Gson().toJson(game);
         intent.putExtra("json", json);
+        startActivity(intent);
+    }
+
+    public void openStats(int position) {
+        Intent intent = new Intent(getApplicationContext(), ScoreCardActivity.class);
+        Game newGame = game;
+        Collections.sort(newGame.getPlayers());
+        String json = new Gson().toJson(game);
+        intent.putExtra("json", json);
+        intent.putExtra("position", position);
         startActivity(intent);
     }
 
@@ -286,7 +300,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void saveGame() {
-        new Thread(() -> dbHandler.saveGameToDatabase(game)).start();
+        new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
     }
 
 

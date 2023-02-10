@@ -81,7 +81,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return count;
     }
 
-    public ArrayList<Integer> getGames(int playerId) {
+    public ArrayList<Integer> getGameIds(int playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId=" + playerId, null);
         ArrayList<Integer> gameIds = new ArrayList<>();
@@ -143,6 +143,27 @@ public class DBHandler extends SQLiteOpenHelper {
         }
         cursor.close();
         return true;
+    }
+
+    public ArrayList<ListItem> getGames(int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, time, name FROM tosses " +
+                "LEFT JOIN games ON gameId=games.id " +
+                "LEFT JOIN players ON games.winner=players.id " +
+                "WHERE playerId=" + playerId + " ORDER BY gameId DESC", null);
+
+        ArrayList<ListItem> games = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                ListItem newGame = new ListItem();
+                newGame.setId(cursor.getInt(0));
+                newGame.setName(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                games.add(newGame);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return games;
+
     }
 
     public ArrayList<ListItem> getGames() {
@@ -211,21 +232,21 @@ public class DBHandler extends SQLiteOpenHelper {
         return tosses;
     }
 
-    public ArrayList<Player> getPlayers(ArrayList<Player> excludedPlayers) {
+    public ArrayList<ListItem> getPlayers(ArrayList<ListItem> excludedPlayers) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM players", null);
-        ArrayList<Player> players = new ArrayList<>();
+        ArrayList<ListItem> players = new ArrayList<>();
 
         if (cursor.moveToFirst()) {
             do {
                 boolean duplicate = false;
-                for (Player player : excludedPlayers) {
+                for (ListItem player : excludedPlayers) {
                     if (Objects.equals(player.getName(), cursor.getString(0))) {
                         duplicate = true;
                         break;
                     }
                 }
-                if (!duplicate) players.add(new Player(cursor.getString(0)));
+                if (!duplicate) players.add(new ListItem(cursor.getString(0)));
             } while (cursor.moveToNext());
         }
         cursor.close();

@@ -12,10 +12,19 @@
     <color name="light_gray">#F4F4F4</color>
     <color name="gray">#DFDFDF</color>
     <color name="dark_green">#56AE57</color>
-    <color name="light_green">#CDFFC4</color>
+    <color name="light_green">#9dd866</color>
     <color name="dark_beige">#FFDFB2</color>
     <color name="yellow">#FFEB3B</color>
     <color name="orange">#FF8D69</color>
     <color name="purple">#B791FF</color>
     <color name="gold">#FFFDD017</color>
+
+    <color name="teal">#0b84a5</color>
+    <color name="saffron">#f6c85f</color>
+    <color name="viola">#6f4e7c</color>
+    <color name="olive">#9dd866</color>
+    <color name="chestnut">#ca472f</color>
+    <color name="pale_orange">#ffa056</color>
+    <color name="robin">#8dddd0</color>
+
 </resources>

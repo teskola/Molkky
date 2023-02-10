@@ -27,14 +27,15 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<Player> playersList = new ArrayList<>();
+    private ArrayList<ListItem> playersList = new ArrayList<>();
     private boolean random = false;
-    private int start_position = -1;
-    private DBHandler dbHandler;
+    private int start_position = RecyclerView.NO_POSITION;
+    private ListAdapter listAdapter;
 
     private TextView firstTextView;
     private RecyclerView recyclerview;
@@ -58,10 +59,10 @@ public class MainActivity extends AppCompatActivity {
         if (!random) showFirstTextView();
     }
 
-    public void addPlayer (AddPlayersAdapter adapter) {
-        Player newPlayer = new Player(editPlayerName.getText().toString());
-        for (Player p : playersList) {
-            if (p.getName().equals(newPlayer.getName())) {
+    public void addPlayer () {
+        ListItem newPlayer = new ListItem(editPlayerName.getText().toString());
+        for (ListItem player : playersList) {
+            if (player.getName().equals(newPlayer.getName())) {
                 Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -71,33 +72,33 @@ public class MainActivity extends AppCompatActivity {
             startButton.setEnabled(true);
         }
         editPlayerName.setText("");
-        adapter.notifyItemInserted(0);
-        if (!random && adapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            adapter.setSelected_position(adapter.getSelected_position() + 1);
-            setStarter(adapter.getSelected_position());
+        listAdapter.notifyItemInserted(0);
+        if (!random && listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+            listAdapter.setSelected_position(listAdapter.getSelected_position() + 1);
+            setStarter(listAdapter.getSelected_position());
         }
         Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
     }
 
-    public void deletePlayer (AddPlayersAdapter adapter, int position) {
+    public void deletePlayer (int position) {
         playersList.remove(position);
         if (playersList.size() < 2) {
             startButton.setEnabled(false);
         }
-        start_position = adapter.getSelected_position();
+        start_position = listAdapter.getSelected_position();
         if (playersList.isEmpty() || start_position == RecyclerView.NO_POSITION) {
             hideFirstTextView();
         }
-        adapter.notifyItemRemoved(position);
+        listAdapter.notifyItemRemoved(position);
     }
 
-    public void randomSelected(AddPlayersAdapter adapter) {
+    public void randomSelected() {
         hideFirstTextView();
         random = true;
-        int selPos = adapter.getSelected_position();
-        adapter.setSelected_position(RecyclerView.NO_POSITION);
+        int selPos = listAdapter.getSelected_position();
+        listAdapter.setSelected_position(RecyclerView.NO_POSITION);
         start_position = RecyclerView.NO_POSITION;
-        adapter.notifyItemChanged(selPos);
+        listAdapter.notifyItemChanged(selPos);
     }
 
     public void showFirstTextView() {
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
-            Player[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), Player[].class);
+            ListItem[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), ListItem[].class);
             Collections.addAll(playersList, players);
             start_position = savedInstanceState.getInt("SELECTED_POSITION");
             random = savedInstanceState.getBoolean("RANDOM");
@@ -122,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getStringExtra("json") != null) {
             playersList = new ArrayList<>();
             String json = getIntent().getStringExtra("json");
-            Player[] players = new Gson().fromJson(json, Player[].class);
+            ListItem[] players = new Gson().fromJson(json, ListItem[].class);
             Collections.addAll(playersList, players);
         }
 
@@ -136,17 +137,16 @@ public class MainActivity extends AppCompatActivity {
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        dbHandler = DBHandler.getInstance(this);
-        AddPlayersAdapter myAdapter = new AddPlayersAdapter(playersList, AddPlayersAdapter.ADD_PLAYER_VIEW);
-        myAdapter.setSelected_position(start_position);
-        recyclerview.setAdapter(myAdapter);
+        listAdapter = new ListAdapter(playersList, false, ListAdapter.ADD_PLAYER_VIEW);
+        listAdapter.setSelected_position(start_position);
+        recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
 
         if (random) {
             randomCheckBox.setChecked(true);
-            randomSelected(myAdapter);
-        } else if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            setStarter(myAdapter.getSelected_position());
+            randomSelected();
+        } else if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+            setStarter(listAdapter.getSelected_position());
         }
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             boolean handled = false;
             if (actionId == EditorInfo.IME_ACTION_DONE && editPlayerName.getText().length() > 0) {
-                addPlayer(myAdapter);
+                addPlayer();
                 handled = true;
             }
             return handled;
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         addButton.setOnClickListener(view -> {
 
             if (editPlayerName.getText().length() > 0) {
-                addPlayer(myAdapter);
+                addPlayer();
             }
         });
 
@@ -172,11 +172,11 @@ public class MainActivity extends AppCompatActivity {
 
         randomCheckBox.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
-                randomSelected(myAdapter);
+                randomSelected();
 
             } else {
                 random = false;
-                if (myAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+                if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
                     showFirstTextView();
                 }
             }
@@ -184,15 +184,17 @@ public class MainActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(view -> startGame());
 
-        myAdapter.setOnItemClickListener(new AddPlayersAdapter.OnItemClickListener() {
+        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
-            public void onSelectClick(int position) {
+            public void onSelectClicked(int position) {
                 setStarter(position);
+
             }
 
             @Override
-            public void onDeleteClick(int position) {
-                deletePlayer(myAdapter, position);
+            public void onDeleteClicked(int position) {
+                deletePlayer(position);
+
             }
         });
 
@@ -201,7 +203,11 @@ public class MainActivity extends AppCompatActivity {
     private void startGame() {
 
         Intent intent = new Intent(this, GameActivity.class);
-        String json = new Gson().toJson(playersList);
+        ArrayList<Player> players = new ArrayList<>();
+        for (ListItem player : playersList) {
+            players.add(new Player(player.getName()));
+        }
+        String json = new Gson().toJson(players);
         intent.putExtra("json", json);
         intent.putExtra("first", start_position);
         intent.putExtra("random", random);
@@ -214,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
             String json = new Gson().toJson(playersList);
             intent.putExtra("json", json);
         }
-        if (dbHandler.playersTableSize() > 0) {
+        if (DBHandler.getInstance(getApplicationContext()).playersTableSize() > 0) {
             startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();

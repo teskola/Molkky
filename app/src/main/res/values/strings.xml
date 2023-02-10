@@ -28,7 +28,11 @@
     <string name="points_per_toss">pisteet/heitto</string>
     <string name="hits_percentage">osuma%</string>
     <string name="elimination_percentage">putoamis%</string>
-    <string name="excesses_per_game">ylitykset/ottelu</string>
+    <string name="excesses_per_game">ylitykset/peli</string>
     <string name="saved_games">Tallennetut pelit</string>
     <string name="stats">Tilastot</string>
+    <string name="show_all_time_stats">Näytä kaikkien aikojen tilastot</string>
+    <string name="show_games">Näytä pelit</string>
+    <string name="chart">kuvaaja</string>
+
 </resources>
