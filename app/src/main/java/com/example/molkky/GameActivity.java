@@ -29,8 +29,6 @@ public class GameActivity extends AppCompatActivity {
     private TextView pointsTextView;
     private TextView nameTextView;
     private TextView pointsToWinTV;
-    private TextView congratulationsTextView;
-    private ImageView trophyImageView;
     private Button okButton, chartButton;
     private RecyclerView verticalRecyclerView;
 
@@ -44,8 +42,6 @@ public class GameActivity extends AppCompatActivity {
         pointsTextView = findViewById(R.id.pointsTextView);
         nameTextView = findViewById(R.id.nextPlayerTextView);
         pointsToWinTV = findViewById(R.id.pointsToWinTV);
-        congratulationsTextView = findViewById(R.id.congratulationsTextView);
-        trophyImageView = findViewById(R.id.trophyImageView);
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
@@ -117,7 +113,7 @@ public class GameActivity extends AppCompatActivity {
         chartButton.setOnClickListener(view -> openChart());
 
         okButton.setOnClickListener(view -> {
-            if (!pointsTextView.getText().equals("-")) {
+            if (!pointsTextView.getText().equals("-") || savedGame) {
                 if (!gameEnded) {
                     Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
                     int points = Integer.parseInt(pointsTextView.getText().toString());
@@ -144,8 +140,6 @@ public class GameActivity extends AppCompatActivity {
                     startNewGame();
             }
         });
-
-
 
 
     }
@@ -220,15 +214,11 @@ public class GameActivity extends AppCompatActivity {
 
     public void endGame() {
         gameEnded = true;
-        pointsTextView.setText("");
         chartButton.setVisibility(View.VISIBLE);
         pointsToWinTV.setVisibility(View.INVISIBLE);
-        trophyImageView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.INVISIBLE);
         nameTextView.setBackgroundResource(R.drawable.gold_background);
         nameTextView.setText(game.getPlayer(0).getName());
-        congratulationsTextView.setText(getString(R.string.congratulations, game.getPlayer(0).getName()));
-        congratulationsTextView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.new_game));
@@ -262,10 +252,9 @@ public class GameActivity extends AppCompatActivity {
 
         }
         chartButton.setVisibility(View.GONE);
-        trophyImageView.setVisibility(View.INVISIBLE);
+        pointsTextView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.VISIBLE);
         nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
-        congratulationsTextView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
@@ -293,8 +282,12 @@ public class GameActivity extends AppCompatActivity {
 
     public void startNewGame() {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        game.clear();
-        String json = new Gson().toJson(game.getPlayers());
+
+        ArrayList<Player> reversed = new ArrayList<>(game.getPlayers());
+        Collections.sort(reversed);
+        Collections.reverse(reversed);
+
+        String json = new Gson().toJson(reversed);
         intent.putExtra("json", json);
         startActivity(intent);
     }
@@ -304,8 +297,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
 
-
-    public static int selectBackground (Player player, boolean onlyGray) {
+    public static int selectBackground(Player player, boolean onlyGray) {
         final int GOLD = R.drawable.gold_background;
         final int PURPLE = R.drawable.purple_background;
         final int GRAY = R.drawable.gray_background;

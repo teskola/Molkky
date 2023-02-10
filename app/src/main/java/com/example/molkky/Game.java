@@ -1,6 +1,7 @@
 package com.example.molkky;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class Game {
@@ -58,12 +59,6 @@ public class Game {
             }
         }
         return true;
-    }
-    public void clear() {
-        for (Player player : players) {
-            player.clearTosses();
-            player.clearUndoStack();
-        }
     }
 
     public int getId() {

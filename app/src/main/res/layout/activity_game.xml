@@ -23,23 +23,23 @@
         app:layout_constraintStart_toEndOf="@+id/okButton" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout2"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginLeft="4dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginLeft="1dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:background="@drawable/beige_white_background"
-        app:layout_constraintBottom_toBottomOf="@+id/pointsTextView"
-        app:layout_constraintEnd_toStartOf="@+id/pointsTextView"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/pointsTextView">
+        app:layout_constraintTop_toTopOf="@+id/imageView">
 
         <TextView
             android:id="@+id/nextPlayerTextView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="@drawable/beige_white_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
             android:fontFamily="@font/josefin_sans"
             android:gravity="center"
             android:textColor="@color/black"
@@ -62,26 +62,36 @@
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintHorizontal_bias="0.1"
             app:layout_constraintStart_toStartOf="parent" />
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/pointsTextView"
+    <ImageView
+        android:id="@+id/imageView"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        android:background="@drawable/beige_background"
-        android:ems="2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/molkky" />
+
+    <TextView
+        android:id="@+id/pointsTextView"
+        android:layout_width="0dp"
+        android:layout_height="110dp"
+        android:background="@android:color/transparent"
         android:fontFamily="@font/crimson_text_bold"
         android:gravity="center"
         android:padding="12dp"
         android:text="@string/dash"
         android:textSize="48sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toStartOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="@+id/imageView" />
 
     <SeekBar
         android:id="@+id/seekBar"
@@ -97,9 +107,10 @@
         android:paddingEnd="20dp"
         android:progress="6"
         android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/verticalRecyclerView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pointsTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout2" />
 
     <android.widget.Button
         android:id="@+id/okButton"
@@ -119,39 +130,10 @@
         android:id="@+id/verticalRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/okButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/seekBar" />
-
-    <ImageView
-        android:id="@+id/trophyImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:padding="20dp"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="@+id/pointsTextView"
-        app:layout_constraintEnd_toEndOf="@+id/pointsTextView"
-        app:layout_constraintStart_toStartOf="@+id/pointsTextView"
-        app:layout_constraintTop_toTopOf="@+id/pointsTextView"
-        app:srcCompat="@drawable/trophy" />
-
-    <TextView
-        android:id="@+id/congratulationsTextView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:fontFamily="@font/josefin_sans"
-        android:gravity="center"
-        android:padding="8dp"
-        android:text="@string/congratulations"
-        android:textColor="@color/black"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="@+id/seekBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/seekBar" />
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
