@@ -34,5 +34,6 @@
     <string name="show_all_time_stats">Näytä kaikkien aikojen tilastot</string>
     <string name="show_games">Näytä pelit</string>
     <string name="chart">kuvaaja</string>
+    <string name="instruction">Valitse pisteet liu\'uttamalla kapulaa</string>
 
 </resources>

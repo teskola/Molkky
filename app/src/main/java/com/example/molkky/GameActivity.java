@@ -9,10 +9,12 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -29,6 +31,8 @@ public class GameActivity extends AppCompatActivity {
     private TextView pointsTextView;
     private TextView nameTextView;
     private TextView pointsToWinTV;
+    private ViewGroup congratsView;
+    private TextView congratulationsTextView;
     private Button okButton, chartButton;
     private RecyclerView verticalRecyclerView;
 
@@ -42,6 +46,8 @@ public class GameActivity extends AppCompatActivity {
         pointsTextView = findViewById(R.id.pointsTextView);
         nameTextView = findViewById(R.id.nextPlayerTextView);
         pointsToWinTV = findViewById(R.id.pointsToWinTV);
+        congratulationsTextView = findViewById(R.id.congratulationsTextView);
+        congratsView = findViewById(R.id.congratsView);
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
@@ -111,6 +117,11 @@ public class GameActivity extends AppCompatActivity {
         // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
         chartButton.setOnClickListener(view -> openChart());
+
+        pointsTextView.setOnClickListener(view -> {
+            if (!gameEnded)
+            Toast.makeText(this, getString(R.string.instruction), Toast.LENGTH_SHORT).show();
+        });
 
         okButton.setOnClickListener(view -> {
             if (!pointsTextView.getText().equals("-") || savedGame) {
@@ -219,6 +230,8 @@ public class GameActivity extends AppCompatActivity {
         seekBar.setVisibility(View.INVISIBLE);
         nameTextView.setBackgroundResource(R.drawable.gold_background);
         nameTextView.setText(game.getPlayer(0).getName());
+        congratulationsTextView.setText(getString(R.string.congratulations, game.getPlayer(0).getName()));
+        congratsView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.new_game));
@@ -255,6 +268,7 @@ public class GameActivity extends AppCompatActivity {
         pointsTextView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.VISIBLE);
         nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
+        congratsView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
