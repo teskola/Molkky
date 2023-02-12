@@ -32,7 +32,7 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<ListItem> playersList = new ArrayList<>();
+    private ArrayList<Player> playersList = new ArrayList<>();
     private boolean random = false;
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addPlayer () {
-        ListItem newPlayer = new ListItem(editPlayerName.getText().toString());
-        for (ListItem player : playersList) {
+        Player newPlayer = new Player(editPlayerName.getText().toString());
+        for (Player player : playersList) {
             if (player.getName().equals(newPlayer.getName())) {
                 Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
                 return;
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
-            ListItem[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), ListItem[].class);
+            Player[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), Player[].class);
             Collections.addAll(playersList, players);
             start_position = savedInstanceState.getInt("SELECTED_POSITION");
             random = savedInstanceState.getBoolean("RANDOM");
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         if (getIntent().getStringExtra("json") != null) {
             playersList = new ArrayList<>();
             String json = getIntent().getStringExtra("json");
-            ListItem[] players = new Gson().fromJson(json, ListItem[].class);
+            Player[] players = new Gson().fromJson(json, Player[].class);
             Collections.addAll(playersList, players);
         }
 
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        listAdapter = new ListAdapter(playersList, false, ListAdapter.ADD_PLAYER_VIEW);
+        listAdapter = new ListAdapter(playersList, null, null);
         listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, GameActivity.class);
         ArrayList<Player> players = new ArrayList<>();
-        for (ListItem player : playersList) {
+        for (Player player : playersList) {
             players.add(new Player(player.getName()));
         }
         String json = new Gson().toJson(players);

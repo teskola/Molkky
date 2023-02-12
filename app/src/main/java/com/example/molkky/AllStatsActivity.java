@@ -18,14 +18,14 @@ import java.util.Collections;
 
 public class AllStatsActivity extends AppCompatActivity {
 
-    private ArrayList<ListItem> players;
+    private ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID = 0;
     private TextView statTv;
     private ListAdapter listAdapter;
     private ImageButton previousIB;
     private ImageButton nextIB;
 
-    private final int[] stats = {
+    public static final int[] stats = {
             R.string.games,
             R.string.wins,
             R.string.points,
@@ -44,13 +44,18 @@ public class AllStatsActivity extends AppCompatActivity {
         statTv = findViewById(R.id.titleTV);
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
+        RecyclerView recyclerView = findViewById(R.id.allStatsRW);
+
+
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
 
-        players = DBHandler.getInstance(getApplicationContext()).getPlayers();
+        ArrayList<Player> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
+        for (Player player : players) {
+            playerStats.add(new PlayerStats(player, getApplicationContext()));
+        }
 
-        RecyclerView recyclerView = findViewById(R.id.allStatsRW);
-        listAdapter = new ListAdapter(players, true, ListAdapter.STATS_ACTIVITY);
+        listAdapter = new ListAdapter(null, playerStats, null);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -95,64 +100,34 @@ public class AllStatsActivity extends AppCompatActivity {
     @SuppressLint({"NotifyDataSetChanged", "NonConstantResourceId"})
     public void updateUI() {
         statTv.setText(getString(stats[statID]));
-        if (stats[statID] == R.string.points_per_toss || stats[statID] == R.string.excesses_per_game)
-            listAdapter.setValueType(ListAdapter.FLOAT);
-        else listAdapter.setValueType(ListAdapter.INT);
-
-        PlayerStats playerStats = new PlayerStats(this);
 
         switch (stats[statID]) {
             case R.string.games:
-                for (ListItem player : players) {
-                    player.setValueInt(playerStats.getGames(player.getId()));
-                    player.setValueFloat(0f);
-                }
+                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
                 break;
             case R.string.wins:
-                for (ListItem player : players) {
-                    player.setValueInt(playerStats.getWins(player.getId()));
-                    player.setValueFloat(0f);
-                }
+                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getWins(), b.getWins()));
                 break;
             case R.string.points:
-                for (ListItem player : players) {
-                    player.setValueInt(playerStats.getPoints(player.getId()));
-                    player.setValueFloat(0f);
-                }
+                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
                 break;
             case R.string.tosses:
-                for (ListItem player : players) {
-                    player.setValueInt(playerStats.getTosses(player.getId()));
-                    player.setValueFloat(0f);
-                }
+                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
                 break;
             case R.string.points_per_toss:
-                for (ListItem player : players) {
-                    player.setValueFloat(playerStats.getPointsPerToss(player.getId()));
-                    player.setValueInt(0);
-                }
+                Collections.sort(playerStats, (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
                 break;
             case R.string.hits_percentage:
-                for (ListItem player : players) {
-                    player.setValueFloat(0f);
-                    player.setValueInt(playerStats.getHitsPct(player.getId()));
-                }
+                Collections.sort(playerStats, (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
                 break;
             case R.string.elimination_percentage:
-                for (ListItem player : players) {
-                    player.setValueFloat(0f);
-                    player.setValueInt(playerStats.getEliminationsPct(player.getId()));
-                }
+                Collections.sort(playerStats, (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
                 break;
             case R.string.excesses_per_game:
-                for (ListItem player : players) {
-                    player.setValueFloat(playerStats.getExcessesPerGame(player.getId()));
-                    player.setValueInt(0);
-                }
+                Collections.sort(playerStats, (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
                 break;
         }
-
-        Collections.sort(players);
+        listAdapter.setStatID(stats[statID]);
         listAdapter.notifyDataSetChanged();
     }
 

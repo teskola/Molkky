@@ -16,8 +16,8 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 
 public class SelectPlayersActivity extends AppCompatActivity {
-
-    private final ArrayList<ListItem> allPlayers = new ArrayList<>();
+    private ArrayList<Boolean> selected = new ArrayList<>();
+    private final ArrayList<Player> allPlayers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,42 +25,60 @@ public class SelectPlayersActivity extends AppCompatActivity {
 
         if (getIntent().getStringExtra("json") != null) {
             String json = getIntent().getStringExtra("json");
-            ListItem[] players = new Gson().fromJson(json, ListItem[].class);
-            for (ListItem player : players) {
-                player.setSelected(true);
+            Player[] players = new Gson().fromJson(json, Player[].class);
+
+            for (Player player : players) {
                 allPlayers.add(player);
+                selected.add(true);
             }
         }
         DBHandler dbHandler = DBHandler.getInstance(getApplicationContext());
-        ArrayList<ListItem> savedPlayers = dbHandler.getPlayers(allPlayers);
-        allPlayers.addAll(savedPlayers);
+        ArrayList<Player> savedPlayers = dbHandler.getPlayers(allPlayers);
+        for (Player player : savedPlayers) {
+            allPlayers.add(player);
+            selected.add(false);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_players);
         TextView titleTV = findViewById(R.id.titleTV);
         titleTV.setText(getString(R.string.choose_player));
+
         RecyclerView playersContainer = findViewById(R.id.selectPlayersRecyclerView);
         Button okButton = findViewById(R.id.selectPlayersOKButton);
-        ListAdapter listAdapter = new ListAdapter(allPlayers, false, ListAdapter.SELECT_PLAYER_VIEW);
+        ListAdapter listAdapter = new ListAdapter(allPlayers, ListAdapter.SELECT_PLAYER_VIEW, selected);
         playersContainer.setAdapter(listAdapter);
         playersContainer.setLayoutManager(new LinearLayoutManager(this));
 
         okButton.setOnClickListener(view -> {
-            ArrayList<ListItem> selectedPlayers = new ArrayList<>();
-            for (ListItem player : allPlayers) {
-                if (player.isSelected()) selectedPlayers.add(player);
-            }
+            ArrayList<Player> selectedPlayers = new ArrayList<>();
+            for (int i=0; i < selected.size(); i++)
+                if (selected.get(i)) selectedPlayers.add(allPlayers.get(i));
+
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             String json = new Gson().toJson(selectedPlayers);
             intent.putExtra("json", json);
             startActivity(intent);
         });
 
+        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
+            @Override
+            public void onSelectClicked(int position) {
+                selected.set(position, !selected.get(position));
+            }
+
+            @Override
+            public void onDeleteClicked(int position) {
+
+            }
+        });
 
     }
 
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.findItem(R.id.new_game).setVisible(false);
         return true;

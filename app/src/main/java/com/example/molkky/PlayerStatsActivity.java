@@ -30,8 +30,7 @@ import java.util.Collections;
 public class PlayerStatsActivity extends AppCompatActivity {
     private int[] playerIds;
     private int position;
-    private final PlayerStats playerStats = new PlayerStats(this);
-
+    private PlayerStats playerStats;
     private TextView playerNameTV;
     private TextView pointsTV;
     private TextView gamesTV;
@@ -102,7 +101,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
         ArrayList<BarEntry> entries = new ArrayList<>();
 
         for(int i = 0; i < 13; i++){
-            BarEntry barEntry = new BarEntry(i, playerStats.getTosses(playerIds[position], i));
+            BarEntry barEntry = new BarEntry(i, playerStats.getTosses(i));
             entries.add(barEntry);
         }
 
@@ -133,19 +132,28 @@ public class PlayerStatsActivity extends AppCompatActivity {
 
     }
 
+    public void getPlayerData() {
+        String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
+        int image = DBHandler.getInstance(getApplicationContext()).getPlayerImage(playerIds[position]);
+        Player player = new Player(playerIds[position], name, image);
+        playerStats = new PlayerStats(player, getApplicationContext());
+    }
+
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-        playerNameTV.setText(DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]));
-        pointsTV.setText(String.valueOf(playerStats.getPoints(playerIds[position])));
-        gamesTV.setText(String.valueOf(playerStats.getGames(playerIds[position])));
-        String winsString = playerStats.getWins(playerIds[position]) + " (" + playerStats.getWinsPct(playerIds[position]) + "%)";
+
+        getPlayerData();
+        playerNameTV.setText(playerStats.getName());
+        pointsTV.setText(String.valueOf(playerStats.getPoints()));
+        gamesTV.setText(String.valueOf(playerStats.getGamesCount()));
+        String winsString = playerStats.getWins() + " (" + Math.round(100 * playerStats.getWinsPct()) + "%)";
         winsTV.setText(winsString);
-        tossesTV.setText(String.valueOf(playerStats.getTosses(playerIds[position])));
-        pptTV.setText(String.format("%.1f", playerStats.getPointsPerToss(playerIds[position])));
-        hitsTV.setText(String.valueOf(playerStats.getHitsPct(playerIds[position])));
-        String eliminationsString = playerStats.getEliminations(playerIds[position]) + " (" + playerStats.getEliminationsPct(playerIds[position]) + "%)";
+        tossesTV.setText(String.valueOf(playerStats.getTossesCount()));
+        pptTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
+        hitsTV.setText(String.valueOf(Math.round(100 *playerStats.getHitsPct())));
+        String eliminationsString = playerStats.getEliminations() + " (" + Math.round(100 * playerStats.getEliminationsPct()) + "%)";
         eliminationsTV.setText(eliminationsString);
-        excessTV.setText(String.valueOf(playerStats.getExcesses(playerIds[position])));
+        excessTV.setText(String.valueOf(playerStats.getExcesses()));
         showBarChart();
     }
 

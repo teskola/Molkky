@@ -72,11 +72,6 @@ public class VerticalAdapter extends RecyclerView.Adapter<VerticalAdapter.MyView
         private final TextView pointsTV;
         private final View playerCardView;
 
-
-
-
-
-
         @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);

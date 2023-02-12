@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -42,7 +41,8 @@ public class DBHandler extends SQLiteOpenHelper {
         String players = ""
                 + "CREATE TABLE \"players\" ( "
                 + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "	\"name\"	TEXT UNIQUE)";
+                + "	\"name\"	TEXT UNIQUE, "
+                + " \"image\" INTEGER)";
 
 
         String tosses = ""
@@ -145,19 +145,19 @@ public class DBHandler extends SQLiteOpenHelper {
         return true;
     }
 
-    public ArrayList<ListItem> getGames(int playerId) {
+    public ArrayList<GameInfo> getGames(int playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, time, name FROM tosses " +
                 "LEFT JOIN games ON gameId=games.id " +
                 "LEFT JOIN players ON games.winner=players.id " +
                 "WHERE playerId=" + playerId + " ORDER BY gameId DESC", null);
 
-        ArrayList<ListItem> games = new ArrayList<>();
+        ArrayList<GameInfo> games = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                ListItem newGame = new ListItem();
+                GameInfo newGame = new GameInfo();
                 newGame.setId(cursor.getInt(0));
-                newGame.setName(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                newGame.setData(cursor.getString(1) + " (" + cursor.getString(2) + ")");
                 games.add(newGame);
             } while (cursor.moveToNext());
         }
@@ -166,15 +166,15 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
-    public ArrayList<ListItem> getGames() {
+    public ArrayList<GameInfo> getGames() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT games.id, time, name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
-        ArrayList<ListItem> games = new ArrayList<>();
+        ArrayList<GameInfo> games = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                ListItem newGame = new ListItem();
+                GameInfo newGame = new GameInfo();
                 newGame.setId(cursor.getInt(0));
-                newGame.setName(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                newGame.setData(cursor.getString(1) + " (" + cursor.getString(2) + ")");
                 games.add(newGame);
             } while (cursor.moveToNext());
         }
@@ -191,13 +191,23 @@ public class DBHandler extends SQLiteOpenHelper {
         return name;
     }
 
-    public ArrayList<ListItem> getPlayers() {
+    public int getPlayerImage(int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT image FROM players WHERE id=" + playerId, null);
+        cursor.moveToFirst();
+        int image = cursor.getInt(0);
+        cursor.close();
+        return image;
+    }
+
+
+    public ArrayList<Player> getPlayers() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM players", null);
-        ArrayList<ListItem> players = new ArrayList<>();
+        ArrayList<Player> players = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                players.add(new ListItem(cursor.getInt(0), cursor.getString(1)));
+                players.add(new Player(cursor.getInt(0), cursor.getString(1), cursor.getInt(2)));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -232,21 +242,21 @@ public class DBHandler extends SQLiteOpenHelper {
         return tosses;
     }
 
-    public ArrayList<ListItem> getPlayers(ArrayList<ListItem> excludedPlayers) {
+    public ArrayList<Player> getPlayers(ArrayList<Player> excludedPlayers) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM players", null);
-        ArrayList<ListItem> players = new ArrayList<>();
+        ArrayList<Player> players = new ArrayList<>();
 
         if (cursor.moveToFirst()) {
             do {
                 boolean duplicate = false;
-                for (ListItem player : excludedPlayers) {
+                for (Player player : excludedPlayers) {
                     if (Objects.equals(player.getName(), cursor.getString(0))) {
                         duplicate = true;
                         break;
                     }
                 }
-                if (!duplicate) players.add(new ListItem(cursor.getString(0)));
+                if (!duplicate) players.add(new Player(cursor.getString(0)));
             } while (cursor.moveToNext());
         }
         cursor.close();

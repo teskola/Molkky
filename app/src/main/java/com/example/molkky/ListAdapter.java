@@ -12,23 +12,25 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.google.android.material.imageview.ShapeableImageView;
+
 import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     private onItemClickListener mListener;
-    private final ArrayList<ListItem> listItems;
-    private final boolean showValue;
-    private int valueType = INT;
+    private ArrayList<Player> players = null;
+    private ArrayList<GameInfo> games = null;
+    private ArrayList<PlayerStats> playerStats = null;
 
+    private int statID;
+    private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
-    private final int viewId;
+
+    private int viewId;
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
     public static final int SAVED_GAMES_ACTIVITY = 2;
     public static final int STATS_ACTIVITY = 3;
-
-    public static final int INT = 0;
-    public static final int FLOAT = 1;
 
     public void setSelected_position(int selected_position) {
         this.selected_position = selected_position;
@@ -36,6 +38,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     public int getSelected_position() {
         return selected_position;
     }
+
+    public void setStatID(int statID) {
+        this.statID = statID;
+    }
+
 
     @NonNull
     @Override
@@ -48,27 +55,60 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
-        holder.nameTV.setText(listItems.get(position).getName());
-        holder.playerView.setSelected(selected_position == position);
-        if (viewId == SELECT_PLAYER_VIEW) {
-            holder.playerView.setBackgroundResource(listItems.get(position).isSelected() ? R.drawable.beige_white_background : R.drawable.gray_background);
+        if (viewId == ADD_PLAYER_VIEW) {
+            holder.nameTV.setText(players.get(position).getName());
+            holder.playerView.setSelected(selected_position == position);
         }
-        if (valueType == INT) {
-            int valueInt = listItems.get(position).getValueInt();
-            holder.valueTV.setText(String.valueOf(valueInt));
-        } else {
-            float valueFloat = listItems.get(position).getValueFloat();
-            holder.valueTV.setText(String.format("%.1f", valueFloat));
+        if (viewId == SELECT_PLAYER_VIEW) {
+            holder.nameTV.setText(players.get(position).getName());
+            if (selected.get(position)) holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
+            else
+                holder.playerView.setBackgroundResource(R.drawable.gray_background);
+        }
+
+        if (viewId == SAVED_GAMES_ACTIVITY) {
+            holder.nameTV.setText(games.get(position).getData());
+        }
+
+        if (viewId == STATS_ACTIVITY) {
+            holder.valueTV.setVisibility(View.VISIBLE);
+            holder.nameTV.setText(playerStats.get(position).getName());
+            switch (statID) {
+                case R.string.games:
+                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getGamesCount()));
+                    break;
+                case R.string.wins:
+                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getWins()));
+                    break;
+                case R.string.points:
+                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getPoints()));
+                    break;
+                case R.string.tosses:
+                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getTossesCount()));
+                    break;
+                case R.string.points_per_toss:
+                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
+                    break;
+                case R.string.hits_percentage:
+                    int hitsPct = Math.round(100*playerStats.get(position).getHitsPct());
+                    holder.valueTV.setText(String.valueOf(hitsPct));
+                    break;
+                case R.string.elimination_percentage:
+                    int elimPct = Math.round(100*playerStats.get(position).getEliminationsPct());
+                    holder.valueTV.setText(String.valueOf(elimPct));
+                    break;
+                case R.string.excesses_per_game:
+                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
+                    break;
+            }
         }
     }
 
     @Override
     public int getItemCount() {
-        return listItems.size();
-    }
-
-    public void setValueType(int valueType) {
-        this.valueType = valueType;
+        if (players != null) return players.size();
+        if (games != null) return games.size();
+        return playerStats.size();
     }
 
     public interface onItemClickListener {
@@ -76,10 +116,27 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
         void onDeleteClicked(int position);
     }
     public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
-    public ListAdapter (ArrayList<ListItem> listItems, boolean showValue, int viewId) {
+
+    public ListAdapter (ArrayList<Player> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos) {
+        if (players != null) {
+            this.players = players;
+            this.viewId = ADD_PLAYER_VIEW;
+        }
+        if (playerStats != null) {
+            this.playerStats = playerStats;
+            this.viewId = STATS_ACTIVITY;
+            this.statID = 0;
+        }
+        if (gameInfos != null) {
+            this.games = gameInfos;
+            this.viewId = SAVED_GAMES_ACTIVITY;
+        }
+    }
+
+    public ListAdapter (ArrayList<Player> players, int viewId, ArrayList<Boolean> selected) {
         this.viewId = viewId;
-        this.showValue = showValue;
-        this.listItems = listItems;
+        this.players = players;
+        this.selected = selected;
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -87,6 +144,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
         private final TextView nameTV;
         private final TextView valueTV;
         private final View playerView;
+        private final ShapeableImageView playerImageView;
 
         @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder (View itemView) {
@@ -94,17 +152,21 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             nameTV = itemView.findViewById(R.id.nameTV);
             valueTV = itemView.findViewById(R.id.valueTV);
             playerView = itemView.findViewById(R.id.listItemView);
+            playerImageView = itemView.findViewById(R.id.playerImageView);
             ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
-            if (showValue) valueTV.setVisibility(View.VISIBLE);
+
+            if (viewId == SAVED_GAMES_ACTIVITY) playerImageView.setVisibility(View.GONE);
+            if (viewId == STATS_ACTIVITY) valueTV.setVisibility(View.VISIBLE);
             if (viewId == ADD_PLAYER_VIEW) removePlayer.setVisibility(View.VISIBLE);
             else removePlayer.setVisibility(View.GONE);
+
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && viewId > 1) {
+                if (position != RecyclerView.NO_POSITION && (viewId == SAVED_GAMES_ACTIVITY || viewId == STATS_ACTIVITY)) {
                     mListener.onSelectClicked(position);
                 }
                 if (position != RecyclerView.NO_POSITION && viewId==SELECT_PLAYER_VIEW) {
-                    listItems.get(position).setSelected(!listItems.get(position).isSelected());
+                    selected.set(position, !selected.get(position));
                     notifyItemChanged(position);
                 }
                 if (position != RecyclerView.NO_POSITION && viewId==ADD_PLAYER_VIEW) {

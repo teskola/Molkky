@@ -7,13 +7,23 @@ import java.util.Stack;
 public class Player implements Comparable<Player> {
     private final String name;
     private int id = 0;
-    private final ArrayList<Integer> tosses;
-    private final Stack<Integer> undoStack = new Stack<>();
+    private int image = 0;
+    private ArrayList<Integer> tosses;
+    private Stack<Integer> undoStack;
+
+    public Player(int id, String name, int image) {
+        this.id = id;
+        this.name = name;
+        this.image = image;
+        this.tosses = new ArrayList<>();
+        this.undoStack = new Stack<>();
+    }
 
     public Player(int id, String name, ArrayList<Integer> tosses) {
         this.name = name;
         this.id = id;
         this.tosses = tosses;
+        this.undoStack = new Stack<>();
     }
 
     public Player(ArrayList<Integer> tosses) {
@@ -25,6 +35,7 @@ public class Player implements Comparable<Player> {
     public Player(String name) {
         this.name = name;
         this.tosses = new ArrayList<>();
+        this.undoStack = new Stack<>();
     }
 
     public boolean isEliminated() {
@@ -97,11 +108,6 @@ public class Player implements Comparable<Player> {
             return Boolean.compare(this.isEliminated(), player.isEliminated());
     }
 
-    public void clearTosses() {
-        tosses.clear();
-    }
-
-    public void clearUndoStack() {undoStack.clear();}
 /*
 * ******************* Stats
 * */
@@ -147,5 +153,13 @@ public class Player implements Comparable<Player> {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getImage() {
+        return image;
+    }
+
+    public void setImage(int image) {
+        this.image = image;
     }
 }

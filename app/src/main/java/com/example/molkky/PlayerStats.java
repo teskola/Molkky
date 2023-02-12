@@ -4,75 +4,87 @@ import android.content.Context;
 
 import java.util.ArrayList;
 
-public class PlayerStats {
-    private final DBHandler db;
+public class PlayerStats extends Player {
 
-    public PlayerStats(Context context) {
+    private DBHandler db;
+    private ArrayList<Integer> games;
+    private int wins;
+    private int points;
+    private int tossesCount;
+    private int eliminations;
+    private int excesses;
+
+    public PlayerStats(Player player, Context context) {
+        super(player.getId(), player.getName(), player.getImage());
         db = DBHandler.getInstance(context);
-    }
-    public int getGames(int playerId) {
-        return db.getGamesCount(playerId);
-    }
-    public int getWins(int playerId) {
-        return db.getWins(playerId);
-    }
-    public int getWinsPct(int playerId) { return Math.round(100 * getWins(playerId) / (float) getGames(playerId));}
-    public int getPoints(int playerId) {
-        return db.getTotalPoints(playerId);
-    }
-    public int getTosses(int playerId) {
-        return db.getTotalTosses(playerId);
-    }
-    public float getPointsPerToss(int playerId) {
-        return db.getTotalPoints(playerId) / (float) db.getTotalTosses(playerId);
+        this.games = db.getGameIds(getId());
+        this.wins = db.getWins(getId());
+        this.points = db.getTotalPoints(getId());
+        this.tossesCount = db.getTotalTosses(getId());
+        this.eliminations = calculateEliminations();
+        this.excesses = calculateExcesses();
     }
 
-    public int getTosses (int playerId, int value) {
-        return db.countTosses(playerId, value);
+    public int getTosses(int value) {
+        return db.countTosses(getId(), value);
     }
 
-    public int getHitsPct(int playerId) {
-        int zeroes = db.countTosses(playerId, 0);
-        int tosses = db.getTotalTosses(playerId);
-        return Math.round(100* (tosses - zeroes) / (float) tosses);
+    public int getGamesCount() {
+        return games.size();
     }
 
-    public int getEliminations(int playerId) {
+    public float getPointsPerToss() {
+        return this.points / (float) this.tossesCount;
+    }
+
+    public float getHitsPct() {
+        return (tossesCount - getTosses(0)) / (float) tossesCount;
+    }
+
+    public int calculateEliminations() {
         int eliminations = 0;
-        ArrayList<Integer> games = db.getGameIds(playerId);
+        ArrayList<Integer> games = db.getGameIds(getId());
         for (int gameId : games) {
-            if (db.isEliminated(playerId, gameId)) eliminations++;
+            if (db.isEliminated(getId(), gameId)) eliminations++;
         }
         return eliminations;
     }
 
-    public int getEliminationsPct(int playerId) {
-        int eliminations = 0;
-        ArrayList<Integer> games = db.getGameIds(playerId);
-        for (int gameId : games) {
-            if (db.isEliminated(playerId, gameId)) eliminations++;
-        }
-        return Math.round(100 * eliminations / (float) games.size());
+    public float getEliminationsPct() {
+        return eliminations / (float) games.size();
     }
 
-    public int getExcesses (int playerId) {
-        ArrayList<Integer> games = db.getGameIds(playerId);
+    public int calculateExcesses() {
         int excesses = 0;
         for (int gameId : games) {
-            Player p = new Player(db.getTosses(gameId, playerId));
+            Player p = new Player(db.getTosses(gameId, getId()));
             excesses = excesses + p.countExcesses();
         }
         return excesses;
     }
-    public float getExcessesPerGame (int playerId) {
-        ArrayList<Integer> games = db.getGameIds(playerId);
-        int excesses = 0;
-        for (int gameId : games) {
-            Player p = new Player(db.getTosses(gameId, playerId));
-            excesses = excesses + p.countExcesses();
-        }
-        return (excesses / (float) games.size());
+    public float getExcessesPerGame () {
+        return excesses / (float) games.size();
     }
 
+    public int getWins() {
+        return wins;
+    }
+    public int getExcesses() {
+        return excesses;
+    }
+
+    public float getWinsPct() {
+        return wins / (float) games.size();
+    }
+
+    public int getPoints() {
+        return points;
+    }
+    public int getTossesCount() {
+        return tossesCount;
+    }
+    public int getEliminations() {
+        return eliminations;
+    }
 
 }

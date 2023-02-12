@@ -14,11 +14,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class SavedGamesActivity extends AppCompatActivity {
 
-    private ArrayList<ListItem> games = new ArrayList<>();
+    private ArrayList<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
@@ -44,7 +43,7 @@ public class SavedGamesActivity extends AppCompatActivity {
 
         }
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(games, false, ListAdapter.SAVED_GAMES_ACTIVITY);
+        ListAdapter listAdapter = new ListAdapter(null, null, games);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -71,13 +70,13 @@ public class SavedGamesActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     public void showAllGames() {
-        ArrayList<ListItem> allGames = DBHandler.getInstance(getApplicationContext()).getGames();
+        ArrayList<GameInfo> allGames = DBHandler.getInstance(getApplicationContext()).getGames();
         while (!games.isEmpty()) {
             games.remove(0);
             recyclerView.getAdapter().notifyItemRemoved(0);
         }
-        for (ListItem listItem : allGames) {
-            games.add(listItem);
+        for (GameInfo gameInfo : allGames) {
+            games.add(gameInfo);
             recyclerView.getAdapter().notifyItemInserted(games.size() -1);
         }
 
