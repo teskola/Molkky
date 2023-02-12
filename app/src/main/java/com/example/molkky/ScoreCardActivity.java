@@ -141,24 +141,32 @@ public class ScoreCardActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        menu.findItem(R.id.new_game).setVisible(false);
         return true;
     }
 
-    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
 
-        case R.id.saved_games:
-            Intent intent = new Intent(this, SavedGamesActivity.class);
-            startActivity(intent);
-            return(true);
         case R.id.stats:
-            intent = new Intent(this, AllStatsActivity.class);
+            Intent intent = new Intent(this, AllStatsActivity.class);
             startActivity(intent);
             return(true);
+        case R.id.saved_games:
+            intent = new Intent(this, SavedGamesActivity.class);
+            startActivity(intent);
+            return(true);
+        case R.id.settings:
+            intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return (true);
+        case R.id.rules:
+            intent = new Intent(this, RulesActivity.class);
+            startActivity(intent);
+            return true;
     }
         return(super.onOptionsItemSelected(item));
     }
+
 }

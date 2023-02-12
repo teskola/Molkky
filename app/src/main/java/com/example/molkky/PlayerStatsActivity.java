@@ -68,7 +68,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
         hitsTV = findViewById(R.id.stats_hitsTV);
         eliminationsTV = findViewById(R.id.stats_elimTV);
         excessTV = findViewById(R.id.stats_excessesTV);
-        Button showGamesBtn = findViewById(R.id.showGamesButton);
+        View showGamesView = findViewById(R.id.gamesTableRow);
 
         if (getIntent().getIntArrayExtra("PlayerIds") != null) {
 
@@ -89,7 +89,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
             updateUI();
         });
 
-        showGamesBtn.setOnClickListener(view -> {
+        showGamesView.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), SavedGamesActivity.class);
             intent.putExtra("PlayerID", playerIds[position]);
             startActivity(intent);
@@ -151,24 +151,35 @@ public class PlayerStatsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
-
-        case R.id.saved_games:
-            Intent intent = new Intent(this, SavedGamesActivity.class);
+        case R.id.new_game:
+            Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
-            return(true);
+            return true;
         case R.id.stats:
             intent = new Intent(this, AllStatsActivity.class);
             startActivity(intent);
             return(true);
+        case R.id.saved_games:
+            intent = new Intent(this, SavedGamesActivity.class);
+            startActivity(intent);
+            return(true);
+        case R.id.settings:
+            intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return (true);
+        case R.id.rules:
+            intent = new Intent(this, RulesActivity.class);
+            startActivity(intent);
+            return true;
     }
         return(super.onOptionsItemSelected(item));
     }
+
 
 }

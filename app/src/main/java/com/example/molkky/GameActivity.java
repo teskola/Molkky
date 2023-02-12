@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -32,7 +34,6 @@ public class GameActivity extends AppCompatActivity {
     private TextView nameTextView;
     private TextView pointsToWinTV;
     private ViewGroup congratsView;
-    private TextView congratulationsTextView;
     private Button okButton, chartButton;
     private RecyclerView verticalRecyclerView;
 
@@ -46,7 +47,6 @@ public class GameActivity extends AppCompatActivity {
         pointsTextView = findViewById(R.id.pointsTextView);
         nameTextView = findViewById(R.id.nextPlayerTextView);
         pointsToWinTV = findViewById(R.id.pointsToWinTV);
-        congratulationsTextView = findViewById(R.id.congratulationsTextView);
         congratsView = findViewById(R.id.congratsView);
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
@@ -120,7 +120,7 @@ public class GameActivity extends AppCompatActivity {
 
         pointsTextView.setOnClickListener(view -> {
             if (!gameEnded)
-            Toast.makeText(this, getString(R.string.instruction), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.instruction), Toast.LENGTH_SHORT).show();
         });
 
         okButton.setOnClickListener(view -> {
@@ -230,11 +230,10 @@ public class GameActivity extends AppCompatActivity {
         seekBar.setVisibility(View.INVISIBLE);
         nameTextView.setBackgroundResource(R.drawable.gold_background);
         nameTextView.setText(game.getPlayer(0).getName());
-        congratulationsTextView.setText(getString(R.string.congratulations, game.getPlayer(0).getName()));
         congratsView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
         Collections.sort(sortedPlayers);
-        okButton.setText(getString(R.string.new_game));
+        okButton.setText(getString(R.string.start_new_game));
         okButton.setEnabled(true);
         VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
         verticalRecyclerView.setAdapter(verticalAdapter);
@@ -308,6 +307,30 @@ public class GameActivity extends AppCompatActivity {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        menu.findItem(R.id.new_game).setVisible(false);
+        menu.findItem(R.id.stats).setVisible(false);
+        menu.findItem(R.id.saved_games).setVisible(false);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
+
+        case R.id.settings:
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return (true);
+        case R.id.rules:
+            intent = new Intent(this, RulesActivity.class);
+            startActivity(intent);
+            return true;
+    }
+        return(super.onOptionsItemSelected(item));
     }
 
 

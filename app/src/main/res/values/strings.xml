@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Mölkky</string>
+    <string name="settings">Asetukset</string>
     <string name="start">Aloita peli</string>
     <string name="random">Arvo heittojärjestys</string>
     <string name="insert_player">Lisää uusi pelaaja</string>
@@ -13,7 +14,8 @@
     <string name="yes">kyllä</string>
     <string name="no">ei</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
-    <string name="new_game">Aloita uusi peli</string>
+    <string name="new_game">Uusi peli</string>
+    <string name="start_new_game">Aloita uusi peli</string>
     <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon!</string>
     <string name="toss">heitto </string>
     <string name="hits">osumat </string>
@@ -31,9 +33,13 @@
     <string name="excesses_per_game">ylitykset/peli</string>
     <string name="saved_games">Tallennetut pelit</string>
     <string name="stats">Tilastot</string>
+    <string name="show_all_games">Näytä kaikki pelit</string>
     <string name="show_all_time_stats">Näytä kaikkien aikojen tilastot</string>
     <string name="show_games">Näytä pelit</string>
     <string name="chart">kuvaaja</string>
     <string name="instruction">Valitse pisteet liu\'uttamalla kapulaa</string>
+    <string name="rules">Säännöt</string>
+    <string name="rules_content">Pisteiden lasku:\n\nYksi kaatunut keila: keilaan merkitty numero\nUseampi kaatunut keila: kaatuneiden keilojen lukumäärä.\nKeilaa ei lasketa kaatuneeksi, jos se nojaa toiseen keilaan tai heittokapulaan.\nKaatuneet keilat nostetaan samaan paikkaan, johon ne ovat kaatuneet.\n\nPelin kulku: \n\nPeli päättyy, kun pelaaja saavuttaa 50 pistettä. Jos 50 pistettä ylittyy, pelaajan pisteet lasketaan 25 pisteeseen. Kolme peräkkäistä nollaa heittänyt pelaaja putoaa pelistä.\n\nHeittolinja: 3-4 metriä muodostelmasta.</string>
+    <string name="source">Lähde: https://www.molkky.com/wp/saannot/</string>
 
 </resources>

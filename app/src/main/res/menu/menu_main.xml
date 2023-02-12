@@ -3,9 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
 
     <item
+        android:id="@+id/new_game"
+        android:title="@string/new_game"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/stats"
+        android:title="@string/stats"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/saved_games" app:showAsAction="never" android:title="@string/saved_games">
     </item>
     <item
-        android:id="@+id/stats"  app:showAsAction="never" android:title="@string/stats">
-    </item>
+        android:id="@+id/settings"
+        android:title="@string/settings"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/rules"
+        android:title="@string/rules"
+        app:showAsAction="never"/>
 </menu>
