@@ -1,6 +1,8 @@
 package com.example.molkky;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,11 +23,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     private ArrayList<PlayerInfo> players = null;
     private ArrayList<GameInfo> games = null;
     private ArrayList<PlayerStats> playerStats = null;
-
     private int statID;
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
 
+    private boolean showImages;
     private int viewId;
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
@@ -49,6 +51,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     public ListAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View view = inflater.inflate(R.layout.player_card, parent, false);
+
         return new MyViewHolder(view);
     }
 
@@ -117,26 +120,28 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     }
     public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
 
-    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos) {
+    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos, boolean showImages) {
         if (players != null) {
             this.players = players;
             this.viewId = ADD_PLAYER_VIEW;
         }
-        if (playerStats != null) {
+        else if (playerStats != null) {
             this.playerStats = playerStats;
             this.viewId = STATS_ACTIVITY;
             this.statID = 0;
         }
-        if (gameInfos != null) {
+        else if (gameInfos != null) {
             this.games = gameInfos;
             this.viewId = SAVED_GAMES_ACTIVITY;
         }
+        this.showImages = showImages;
     }
 
-    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<Boolean> selected) {
+    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
         this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
         this.selected = selected;
+        this.showImages = showImages;
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -153,6 +158,9 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             valueTV = itemView.findViewById(R.id.valueTV);
             playerView = itemView.findViewById(R.id.listItemView);
             playerImageView = itemView.findViewById(R.id.playerImageView);
+            if (showImages) playerImageView.setVisibility(View.VISIBLE);
+            else playerImageView.setVisibility(View.GONE);
+
             ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
 
             if (viewId == SAVED_GAMES_ACTIVITY) playerImageView.setVisibility(View.GONE);

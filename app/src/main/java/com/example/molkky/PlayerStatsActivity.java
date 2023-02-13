@@ -5,27 +5,23 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.charts.HorizontalBarChart;
-import com.github.mikephil.charting.components.AxisBase;
-import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class PlayerStatsActivity extends AppCompatActivity {
     private int[] playerIds;
@@ -41,6 +37,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
     private TextView eliminationsTV;
     private TextView excessTV;
     private BarChart barChart;
+    private ShapeableImageView playerImage;
 
 
     @SuppressLint("DefaultLocale")
@@ -68,13 +65,21 @@ public class PlayerStatsActivity extends AppCompatActivity {
         eliminationsTV = findViewById(R.id.stats_elimTV);
         excessTV = findViewById(R.id.stats_excessesTV);
         View showGamesView = findViewById(R.id.gamesTableRow);
+        playerImage = findViewById(R.id.titleBar_playerImageView);
 
-        if (getIntent().getIntArrayExtra("PlayerIds") != null) {
+        if (getIntent().getIntArrayExtra("PLAYER_IDS") != null) {
 
-            playerIds = getIntent().getIntArrayExtra("PlayerIds");
-            position = getIntent().getIntExtra("position", 0);
+            playerIds = getIntent().getIntArrayExtra("PLAYER_IDS");
+            position = getIntent().getIntExtra("POSITION", 0);
 
         }
+
+        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        if (preferences.getBoolean("SHOW_IMAGES", false))
+            playerImage.setVisibility(View.VISIBLE);
+        else
+            playerImage.setVisibility(View.GONE);
+
         updateUI();
 
         previousIB.setOnClickListener(view -> {
@@ -90,7 +95,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
 
         showGamesView.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), SavedGamesActivity.class);
-            intent.putExtra("PlayerID", playerIds[position]);
+            intent.putExtra("PLAYER_ID", playerIds[position]);
             startActivity(intent);
         });
 
@@ -135,7 +140,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
     public void getPlayerData() {
         String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
         int image = DBHandler.getInstance(getApplicationContext()).getPlayerImage(playerIds[position]);
-        Player player = new Player(playerIds[position], name, image);
+        PlayerInfo player = new PlayerInfo(playerIds[position], name, image);
         playerStats = new PlayerStats(player, getApplicationContext());
     }
 
@@ -155,6 +160,14 @@ public class PlayerStatsActivity extends AppCompatActivity {
         eliminationsTV.setText(eliminationsString);
         excessTV.setText(String.valueOf(playerStats.getExcesses()));
         showBarChart();
+    }
+
+    public void openSettings() {
+        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+        intent.putExtra("ACTIVITY", "player_stats");
+        intent.putExtra("POSITION", position);
+        intent.putExtra("PLAYER_IDS", playerIds);
+        startActivity(intent);
     }
 
     @Override
@@ -178,8 +191,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
             startActivity(intent);
             return(true);
         case R.id.settings:
-            intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
+            openSettings();
             return (true);
         case R.id.rules:
             intent = new Intent(this, RulesActivity.class);

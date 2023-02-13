@@ -5,7 +5,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,13 +15,17 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 public class AllStatsActivity extends AppCompatActivity {
 
     private ArrayList<PlayerStats> playerStats = new ArrayList<>();
-    private int statID = 0;
+    private int statID;
     private TextView statTv;
     private ListAdapter listAdapter;
     private ImageButton previousIB;
@@ -44,20 +50,27 @@ public class AllStatsActivity extends AppCompatActivity {
         statTv = findViewById(R.id.titleTV);
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
+        ShapeableImageView playerImageView = findViewById(R.id.titleBar_playerImageView);
+        playerImageView.setVisibility(View.GONE);
         RecyclerView recyclerView = findViewById(R.id.allStatsRW);
 
 
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
 
+        statID = getIntent().getIntExtra("STAT_ID", 0);
+
         ArrayList<PlayerInfo> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
         for (PlayerInfo player : players) {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }
 
-        listAdapter = new ListAdapter(null, playerStats, null);
+        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        listAdapter = new ListAdapter(null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+
 
 
         updateUI();
@@ -81,13 +94,13 @@ public class AllStatsActivity extends AppCompatActivity {
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
             public void onSelectClicked(int position) {
-                int[] playerIds = new int[players.size()];
-                for (int i = 0; i < players.size(); i++) {
-                    playerIds[i] = players.get(i).getId();
+                int[] playerIds = new int[playerStats.size()];
+                for (int i = 0; i < playerStats.size(); i++) {
+                    playerIds[i] = playerStats.get(i).getId();
                 }
                 Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-                intent.putExtra("PlayerIds", playerIds);
-                intent.putExtra("position", position);
+                intent.putExtra("PLAYER_IDS", playerIds);
+                intent.putExtra("POSITION", position);
                 startActivity(intent);
             }
 
@@ -131,6 +144,13 @@ public class AllStatsActivity extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }
 
+    public void openSettings() {
+        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+        intent.putExtra("ACTIVITY", "all_stats");
+        intent.putExtra("STAT_ID", statID);
+        startActivity(intent);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -154,8 +174,7 @@ public class AllStatsActivity extends AppCompatActivity {
                 startActivity(intent);
                 return (true);
             case R.id.settings:
-                intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                openSettings();
                 return (true);
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);

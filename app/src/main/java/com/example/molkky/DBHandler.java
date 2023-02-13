@@ -72,15 +72,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
-    public int getGamesCount(int playerId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT (DISTINCT gameId) FROM tosses WHERE playerId=" + playerId, null) ;
-        cursor.moveToFirst();
-        int count = cursor.getInt(0);
-        cursor.close();
-        return count;
-    }
-
     public ArrayList<Integer> getGameIds(int playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId=" + playerId, null);
@@ -230,18 +221,6 @@ public class DBHandler extends SQLiteOpenHelper {
         return  players;
     }
 
-    public ArrayList<Integer> getTosses (int gameId, int playerId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId, null);
-        ArrayList<Integer> tosses = new ArrayList<>();
-        if (cursor.moveToFirst()) {
-            do {
-                tosses.add(cursor.getInt(0));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return tosses;
-    }
 
     public ArrayList<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -264,7 +243,20 @@ public class DBHandler extends SQLiteOpenHelper {
         return players;
     }
 
-    public int playersTableSize () {
+    public ArrayList<Integer> getTosses (int gameId, int playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId, null);
+        ArrayList<Integer> tosses = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                tosses.add(cursor.getInt(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return tosses;
+    }
+
+    public int getPlayerCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM players", null);
         cursor.moveToFirst();
@@ -291,6 +283,7 @@ public class DBHandler extends SQLiteOpenHelper {
         for (Player player : game.getPlayers()) {
             ContentValues values = new ContentValues();
             values.put("name", player.getName());
+            values.put("image", player.getImage());
             db.insert("players", null, values);
             cursor = db.rawQuery("SELECT id FROM players WHERE name= \"" + player.getName() + "\";", null);
             cursor.moveToFirst();

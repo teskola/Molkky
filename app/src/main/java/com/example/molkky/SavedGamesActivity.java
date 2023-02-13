@@ -5,13 +5,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -21,6 +26,7 @@ public class SavedGamesActivity extends AppCompatActivity {
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
+    private ShapeableImageView playerImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,21 +35,29 @@ public class SavedGamesActivity extends AppCompatActivity {
 
         titleTV = findViewById(R.id.titleTV);
         showAllBtn = findViewById(R.id.showAllButton);
+        playerImageView = findViewById(R.id.titleBar_playerImageView);
 
         if (getIntent().getExtras() != null) {
-            int playerID = getIntent().getIntExtra("PlayerID", 0);
+            int playerID = getIntent().getIntExtra("PLAYER_ID", 0);
             games = DBHandler.getInstance(getApplicationContext()).getGames(playerID);
             String title = getString(R.string.games) + ": " + DBHandler.getInstance(getApplicationContext()).getPlayerName(playerID);
             titleTV.setText(title);
+            SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+            if (preferences.getBoolean("SHOW_IMAGES", false))
+                playerImageView.setVisibility(View.VISIBLE);
+            else
+                playerImageView.setVisibility(View.GONE);
             showAllBtn.setVisibility(View.VISIBLE);
 
         } else {
             titleTV.setText(getString(R.string.saved_games));
+            playerImageView.setVisibility(View.GONE);
             games = DBHandler.getInstance(getApplicationContext()).getGames();
 
         }
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(null, null, games);
+        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        ListAdapter listAdapter = new ListAdapter(null, null, games, preferences.getBoolean("SHOW_IMAGES", false));
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -81,7 +95,15 @@ public class SavedGamesActivity extends AppCompatActivity {
         }
 
         titleTV.setText(getString(R.string.saved_games));
+        playerImageView.setVisibility(View.GONE);
         showAllBtn.setVisibility(View.INVISIBLE);
+    }
+
+    public void openSettings() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra("PLAYER_ID", getIntent().getIntExtra("PLAYER_ID", 0));
+        intent.putExtra("ACTIVITY", "saved_games");
+        startActivity(intent);
     }
 
     @Override
@@ -106,8 +128,7 @@ public class SavedGamesActivity extends AppCompatActivity {
             startActivity(intent);
             return(true);
         case R.id.settings:
-            intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
+            openSettings();
             return (true);
         case R.id.rules:
             intent = new Intent(this, RulesActivity.class);

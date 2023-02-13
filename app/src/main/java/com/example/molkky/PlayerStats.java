@@ -6,23 +6,18 @@ import java.util.ArrayList;
 
 public class PlayerStats extends PlayerInfo {
 
-    private DBHandler db;
-    private ArrayList<Integer> games;
-    private int wins;
-    private int points;
-    private int tossesCount;
-    private int eliminations;
-    private int excesses;
+    private final DBHandler db;
+    private final ArrayList<Integer> games;
+    private int wins = -1;
+    private int points = -1;
+    private int tossesCount= -1;
+    private int eliminations = -1;
+    private int excesses = -1;
 
     public PlayerStats(PlayerInfo player, Context context) {
         super(player.getId(), player.getName(), player.getImage());
         db = DBHandler.getInstance(context);
         this.games = db.getGameIds(getId());
-        this.wins = db.getWins(getId());
-        this.points = db.getTotalPoints(getId());
-        this.tossesCount = db.getTotalTosses(getId());
-        this.eliminations = calculateEliminations();
-        this.excesses = calculateExcesses();
     }
 
     public int getTosses(int value) {
@@ -34,56 +29,67 @@ public class PlayerStats extends PlayerInfo {
     }
 
     public float getPointsPerToss() {
+        if (points == -1) points = db.getTotalPoints(getId());
+        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
         return this.points / (float) this.tossesCount;
     }
 
     public float getHitsPct() {
+        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
         return (tossesCount - getTosses(0)) / (float) tossesCount;
     }
 
-    public int calculateEliminations() {
+    public void calculateEliminations() {
         int eliminations = 0;
         ArrayList<Integer> games = db.getGameIds(getId());
         for (int gameId : games) {
             if (db.isEliminated(getId(), gameId)) eliminations++;
         }
-        return eliminations;
+        this.eliminations = eliminations;
     }
 
     public float getEliminationsPct() {
+        if (eliminations == -1) calculateEliminations();
         return eliminations / (float) games.size();
     }
 
-    public int calculateExcesses() {
+    public void calculateExcesses() {
         int excesses = 0;
         for (int gameId : games) {
             Player p = new Player(db.getTosses(gameId, getId()));
             excesses = excesses + p.countExcesses();
         }
-        return excesses;
+        this.excesses = excesses;
     }
     public float getExcessesPerGame () {
+        if (excesses == -1) calculateExcesses();
         return excesses / (float) games.size();
     }
 
     public int getWins() {
+        if (wins == -1) wins = db.getWins(getId());
         return wins;
     }
     public int getExcesses() {
+        if (excesses == -1) calculateExcesses();
         return excesses;
     }
 
     public float getWinsPct() {
+        if (wins == -1) wins = db.getWins(getId());
         return wins / (float) games.size();
     }
 
     public int getPoints() {
+        if (points == -1) points = db.getTotalPoints(getId());
         return points;
     }
     public int getTossesCount() {
+        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
         return tossesCount;
     }
     public int getEliminations() {
+        if (eliminations == -1) calculateEliminations();
         return eliminations;
     }
 

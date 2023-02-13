@@ -2,11 +2,14 @@ package com.example.molkky;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,7 +39,8 @@ public class GameActivity extends AppCompatActivity {
     private ViewGroup congratsView;
     private Button okButton, chartButton;
     private RecyclerView verticalRecyclerView;
-
+    private ConstraintLayout topContainer;
+    private ImageView playerImage;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -51,6 +55,15 @@ public class GameActivity extends AppCompatActivity {
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
+        topContainer = findViewById(R.id.topContainer);
+         playerImage = findViewById(R.id.game_IW);
+         playerImage.setImageResource(R.drawable.molkky);
+
+        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        if (preferences.getBoolean("SHOW_IMAGES", false))
+            playerImage.setVisibility(View.VISIBLE);
+        else
+            playerImage.setVisibility(View.GONE);
 
 
         // Saved game
@@ -185,6 +198,7 @@ public class GameActivity extends AppCompatActivity {
     public void updateUI(boolean undo) {
 
         nameTextView.setText(game.getPlayer(0).getName());
+        // playerImage update
         int pointsToWin = game.getPlayer(0).pointsToWin();
         if (pointsToWin > 0) {
             pointsToWinTV.setText(getString(R.string.points_to_win, (pointsToWin)));
@@ -193,7 +207,7 @@ public class GameActivity extends AppCompatActivity {
             pointsToWinTV.setVisibility(View.INVISIBLE);
         }
         if (!gameEnded)
-            nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
+            topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
 
         if (undo) {
             Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(game.getPlayers().size() - 1);
@@ -228,7 +242,7 @@ public class GameActivity extends AppCompatActivity {
         chartButton.setVisibility(View.VISIBLE);
         pointsToWinTV.setVisibility(View.INVISIBLE);
         seekBar.setVisibility(View.INVISIBLE);
-        nameTextView.setBackgroundResource(R.drawable.gold_background);
+        topContainer.setBackgroundResource(R.drawable.gold_background);
         nameTextView.setText(game.getPlayer(0).getName());
         congratsView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
@@ -238,7 +252,7 @@ public class GameActivity extends AppCompatActivity {
         VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        verticalAdapter.setOnItemClickListener(this::openStats);
+        verticalAdapter.setOnItemClickListener(this::openScorecard);
     }
 
     public void resumeGame() {
@@ -266,7 +280,7 @@ public class GameActivity extends AppCompatActivity {
         chartButton.setVisibility(View.GONE);
         pointsTextView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.VISIBLE);
-        nameTextView.setBackgroundResource(selectBackground(game.getPlayer(0), false));
+        topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
         congratsView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
@@ -283,13 +297,13 @@ public class GameActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void openStats(int position) {
+    public void openScorecard(int position) {
         Intent intent = new Intent(getApplicationContext(), ScoreCardActivity.class);
         Game newGame = game;
         Collections.sort(newGame.getPlayers());
         String json = new Gson().toJson(game);
-        intent.putExtra("json", json);
-        intent.putExtra("position", position);
+        intent.putExtra("GAME", json);
+        intent.putExtra("POSITION", position);
         startActivity(intent);
     }
 
@@ -301,7 +315,7 @@ public class GameActivity extends AppCompatActivity {
         Collections.reverse(reversed);
 
         String json = new Gson().toJson(reversed);
-        intent.putExtra("json", json);
+        intent.putExtra("PLAYERS", json);
         startActivity(intent);
     }
 
@@ -314,6 +328,7 @@ public class GameActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.findItem(R.id.new_game).setVisible(false);
         menu.findItem(R.id.stats).setVisible(false);
+        menu.findItem(R.id.settings).setVisible(false);
         menu.findItem(R.id.saved_games).setVisible(false);
         return true;
     }
@@ -321,12 +336,8 @@ public class GameActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
 
-        case R.id.settings:
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return (true);
         case R.id.rules:
-            intent = new Intent(this, RulesActivity.class);
+            Intent intent = new Intent(this, RulesActivity.class);
             startActivity(intent);
             return true;
     }
