@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class SelectPlayersActivity extends AppCompatActivity {
     private ArrayList<Boolean> selected = new ArrayList<>();
-    private final ArrayList<Player> allPlayers = new ArrayList<>();
+    private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +33,8 @@ public class SelectPlayersActivity extends AppCompatActivity {
             }
         }
         DBHandler dbHandler = DBHandler.getInstance(getApplicationContext());
-        ArrayList<Player> savedPlayers = dbHandler.getPlayers(allPlayers);
-        for (Player player : savedPlayers) {
+        ArrayList<PlayerInfo> savedPlayers = dbHandler.getPlayers(allPlayers);
+        for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);
             selected.add(false);
         }
@@ -46,12 +46,12 @@ public class SelectPlayersActivity extends AppCompatActivity {
 
         RecyclerView playersContainer = findViewById(R.id.selectPlayersRecyclerView);
         Button okButton = findViewById(R.id.selectPlayersOKButton);
-        ListAdapter listAdapter = new ListAdapter(allPlayers, ListAdapter.SELECT_PLAYER_VIEW, selected);
+        ListAdapter listAdapter = new ListAdapter(allPlayers, selected);
         playersContainer.setAdapter(listAdapter);
         playersContainer.setLayoutManager(new LinearLayoutManager(this));
 
         okButton.setOnClickListener(view -> {
-            ArrayList<Player> selectedPlayers = new ArrayList<>();
+            ArrayList<PlayerInfo> selectedPlayers = new ArrayList<>();
             for (int i=0; i < selected.size(); i++)
                 if (selected.get(i)) selectedPlayers.add(allPlayers.get(i));
 

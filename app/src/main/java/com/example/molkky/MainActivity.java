@@ -32,7 +32,7 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<Player> playersList = new ArrayList<>();
+    private ArrayList<PlayerInfo> playersList = new ArrayList<>();
     private boolean random = false;
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addPlayer () {
-        Player newPlayer = new Player(editPlayerName.getText().toString());
-        for (Player player : playersList) {
+        PlayerInfo newPlayer = new Player(editPlayerName.getText().toString());
+        for (PlayerInfo player : playersList) {
             if (player.getName().equals(newPlayer.getName())) {
                 Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
                 return;
@@ -203,8 +203,8 @@ public class MainActivity extends AppCompatActivity {
     private void startGame() {
 
         Intent intent = new Intent(this, GameActivity.class);
-        ArrayList<Player> players = new ArrayList<>();
-        for (Player player : playersList) {
+        ArrayList<PlayerInfo> players = new ArrayList<>();
+        for (PlayerInfo player : playersList) {
             players.add(new Player(player.getName()));
         }
         String json = new Gson().toJson(players);

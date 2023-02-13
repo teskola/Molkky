@@ -50,8 +50,8 @@ public class AllStatsActivity extends AppCompatActivity {
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
 
-        ArrayList<Player> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
-        for (Player player : players) {
+        ArrayList<PlayerInfo> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
+        for (PlayerInfo player : players) {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }
 

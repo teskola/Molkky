@@ -4,36 +4,31 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Stack;
 
-public class Player implements Comparable<Player> {
-    private final String name;
-    private int id = 0;
-    private int image = 0;
-    private ArrayList<Integer> tosses;
+public class Player extends PlayerInfo implements Comparable<Player> {
+
+    private final ArrayList<Integer> tosses;
     private Stack<Integer> undoStack;
 
     public Player(int id, String name, int image) {
-        this.id = id;
-        this.name = name;
-        this.image = image;
+        super(id,name, image);
         this.tosses = new ArrayList<>();
         this.undoStack = new Stack<>();
     }
 
-    public Player(int id, String name, ArrayList<Integer> tosses) {
-        this.name = name;
-        this.id = id;
+    public Player(int id, String name, int image, ArrayList<Integer> tosses) {
+        super(id, name, image);
         this.tosses = tosses;
         this.undoStack = new Stack<>();
     }
 
     public Player(ArrayList<Integer> tosses) {
-        this.name = "";
+        super();
         this.tosses = tosses;
 
     }
 
     public Player(String name) {
-        this.name = name;
+        super(name);
         this.tosses = new ArrayList<>();
         this.undoStack = new Stack<>();
     }
@@ -42,10 +37,6 @@ public class Player implements Comparable<Player> {
         return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
                 && getToss(tosses.size() - 2) == 0
                 && getToss(tosses.size() - 3) == 0;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public Stack<Integer> getUndoStack() {
@@ -145,21 +136,5 @@ public class Player implements Comparable<Player> {
             return 1;
         else
             return 0;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getImage() {
-        return image;
-    }
-
-    public void setImage(int image) {
-        this.image = image;
     }
 }

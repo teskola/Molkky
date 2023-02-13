@@ -4,7 +4,7 @@ import android.content.Context;
 
 import java.util.ArrayList;
 
-public class PlayerStats extends Player {
+public class PlayerStats extends PlayerInfo {
 
     private DBHandler db;
     private ArrayList<Integer> games;
@@ -14,7 +14,7 @@ public class PlayerStats extends Player {
     private int eliminations;
     private int excesses;
 
-    public PlayerStats(Player player, Context context) {
+    public PlayerStats(PlayerInfo player, Context context) {
         super(player.getId(), player.getName(), player.getImage());
         db = DBHandler.getInstance(context);
         this.games = db.getGameIds(getId());

@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     private onItemClickListener mListener;
-    private ArrayList<Player> players = null;
+    private ArrayList<PlayerInfo> players = null;
     private ArrayList<GameInfo> games = null;
     private ArrayList<PlayerStats> playerStats = null;
 
@@ -117,7 +117,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     }
     public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
 
-    public ListAdapter (ArrayList<Player> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos) {
+    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos) {
         if (players != null) {
             this.players = players;
             this.viewId = ADD_PLAYER_VIEW;
@@ -133,8 +133,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
         }
     }
 
-    public ListAdapter (ArrayList<Player> players, int viewId, ArrayList<Boolean> selected) {
-        this.viewId = viewId;
+    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<Boolean> selected) {
+        this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
         this.selected = selected;
     }
