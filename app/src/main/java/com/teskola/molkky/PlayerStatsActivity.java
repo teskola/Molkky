@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -139,8 +139,7 @@ public class PlayerStatsActivity extends AppCompatActivity {
 
     public void getPlayerData() {
         String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
-        int image = DBHandler.getInstance(getApplicationContext()).getPlayerImage(playerIds[position]);
-        PlayerInfo player = new PlayerInfo(playerIds[position], name, image);
+        PlayerInfo player = new PlayerInfo(playerIds[position], name);
         playerStats = new PlayerStats(player, getApplicationContext());
     }
 
@@ -176,30 +175,27 @@ public class PlayerStatsActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
-        case R.id.new_game:
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            return true;
-        case R.id.stats:
-            intent = new Intent(this, AllStatsActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.saved_games:
-            intent = new Intent(this, SavedGamesActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.settings:
-            openSettings();
-            return (true);
-        case R.id.rules:
-            intent = new Intent(this, RulesActivity.class);
-            startActivity(intent);
-            return true;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
+        switch (item.getItemId()) {
+            case R.id.new_game:
+                intent = new Intent(this, MainActivity.class);
+                break;
+            case R.id.stats:
+                intent = new Intent(this, AllStatsActivity.class);
+                break;
+            case R.id.saved_games:
+                intent = new Intent(this, SavedGamesActivity.class);
+                break;
+            case R.id.settings:
+                intent = new Intent(this, SettingsActivity.class);
+                break;
+            case R.id.rules:
+                intent = new Intent(this, RulesActivity.class);
+                break;
+        }
+        startActivity(intent);
+        return false;
     }
-        return(super.onOptionsItemSelected(item));
-    }
-
 
 }

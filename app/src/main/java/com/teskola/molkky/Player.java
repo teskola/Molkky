@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,14 +9,14 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     private final ArrayList<Integer> tosses;
     private Stack<Integer> undoStack;
 
-    public Player(int id, String name, int image) {
-        super(id,name, image);
+    public Player(int id, String name) {
+        super(id,name);
         this.tosses = new ArrayList<>();
         this.undoStack = new Stack<>();
     }
 
-    public Player(int id, String name, int image, ArrayList<Integer> tosses) {
-        super(id, name, image);
+    public Player(int id, String name, ArrayList<Integer> tosses) {
+        super(id, name);
         this.tosses = tosses;
         this.undoStack = new Stack<>();
     }

@@ -1,14 +1,20 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -22,24 +28,28 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     private ArrayList<PlayerInfo> playersList = new ArrayList<>();
     private boolean random = false;
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
-
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private ImageHandler imageHandler = new ImageHandler(this);
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
     private Button startButton;
+
+
 
     // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
 
@@ -58,6 +68,27 @@ public class MainActivity extends AppCompatActivity {
         if (!random) showFirstTextView();
     }
 
+    public boolean playerIsOnDatabase (String newPlayerName) {
+        ArrayList<String> playerNames = DBHandler.getInstance(this).getPlayerNames();
+        for (String name : playerNames) {
+            if (newPlayerName.equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean playerImageOnFile (String newPlayerName) {
+        String[] files = this.fileList();
+        for (String file : files) {
+            if (file.equals(newPlayerName + ".jpg")) {
+                this.deleteFile(file);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public void addPlayer () {
         PlayerInfo newPlayer = new Player(editPlayerName.getText().toString());
         for (PlayerInfo player : playersList) {
@@ -66,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+        if (!playerIsOnDatabase(newPlayer.getName()))
+            playerImageOnFile(newPlayer.getName()); // delete old image
         playersList.add(0, newPlayer);
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
@@ -141,11 +174,14 @@ public class MainActivity extends AppCompatActivity {
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listAdapter = new ListAdapter(playersList, null, null, preferences.getBoolean("SHOW_IMAGES", false));
-        listAdapter.setSelected_position(start_position);
-        recyclerview.setAdapter(listAdapter);
-        recyclerview.setLayoutManager(new LinearLayoutManager(this));
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        createRecyclerView();
+        listener = (sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+                createRecyclerView();
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(listener);
 
         if (random) {
             randomCheckBox.setChecked(true);
@@ -189,21 +225,53 @@ public class MainActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(view -> startGame());
 
+
+    }
+
+    public void createRecyclerView () {
+        listAdapter = new ListAdapter(this, playersList, null, null, preferences.getBoolean("SHOW_IMAGES", false));
+        listAdapter.setSelected_position(start_position);
+        recyclerview.setAdapter(listAdapter);
+        recyclerview.setLayoutManager(new LinearLayoutManager(this));
+
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
             public void onSelectClicked(int position) {
                 setStarter(position);
-
             }
 
             @Override
             public void onDeleteClicked(int position) {
                 deletePlayer(position);
+            }
 
+            @Override
+            public void onImageClicked(int position) {
+                takePicture(position);
             }
         });
 
     }
+
+    public void takePicture(int position) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(intent, position);
+        }
+    }
+
+    protected void onActivityResult(int position, int resultCode, Intent data) {
+        super.onActivityResult(position, resultCode, data);
+        if (data != null) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageHandler.BitmapToJpg(photo, playersList.get(position).getName());
+            listAdapter.notifyItemChanged(position);
+        }
+    }
+
 
     private void startGame() {
 
@@ -232,16 +300,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void openSettings() {
-        Intent intent = new Intent(this, SettingsActivity.class);
-        String json = new Gson().toJson(playersList);
-        intent.putExtra("PLAYERS", json);
-        intent.putExtra("RANDOM", random);
-        intent.putExtra("SELECTED_POSITION", start_position);
-        intent.putExtra("ACTIVITY", "main");
-        startActivity(intent);
-    }
-
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
@@ -259,27 +317,27 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
-
-        case R.id.saved_games:
-            Intent intent = new Intent(this, SavedGamesActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.stats:
-            intent = new Intent(this, AllStatsActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.settings:
-            openSettings();
-            return (true);
-        case R.id.rules:
-            intent = new Intent(this, RulesActivity.class);
-            startActivity(intent);
-            return true;
-    }
-
-        return(super.onOptionsItemSelected(item));
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
+        switch (item.getItemId()) {
+            case R.id.new_game:
+                intent = new Intent(this, MainActivity.class);
+                break;
+            case R.id.stats:
+                intent = new Intent(this, AllStatsActivity.class);
+                break;
+            case R.id.saved_games:
+                intent = new Intent(this, SavedGamesActivity.class);
+                break;
+            case R.id.settings:
+                intent = new Intent(this, SettingsActivity.class);
+                break;
+            case R.id.rules:
+                intent = new Intent(this, RulesActivity.class);
+                break;
+        }
+        startActivity(intent);
+        return false;
     }
 
 }

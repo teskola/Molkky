@@ -1,8 +1,9 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
@@ -26,6 +28,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     private int statID;
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
+    private Context context;
 
     private boolean showImages;
     private int viewId;
@@ -58,6 +61,24 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
+        if (showImages) {
+            ImageHandler imageHandler = new ImageHandler(context);
+            String path = "";
+            if (players != null)
+                path = imageHandler.getImagePath(players.get(position).getName());
+            else if (playerStats != null)
+                path = imageHandler.getImagePath(playerStats.get(position).getName());
+            if (path != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(path);
+                holder.playerImageView.setImageBitmap(bitmap);
+                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            }
+            else {
+                holder.playerImageView.setImageResource(R.drawable.camera);
+                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+            }
+        }
+
         if (viewId == ADD_PLAYER_VIEW) {
             holder.nameTV.setText(players.get(position).getName());
             holder.playerView.setSelected(selected_position == position);
@@ -117,10 +138,12 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     public interface onItemClickListener {
         void onSelectClicked(int position);
         void onDeleteClicked(int position);
+        void onImageClicked(int position);
     }
     public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
 
-    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos, boolean showImages) {
+
+    public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos, boolean showImages) {
         if (players != null) {
             this.players = players;
             this.viewId = ADD_PLAYER_VIEW;
@@ -135,13 +158,15 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             this.viewId = SAVED_GAMES_ACTIVITY;
         }
         this.showImages = showImages;
+        this.context = context;
     }
 
-    public ListAdapter (ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
+    public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
         this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
         this.selected = selected;
         this.showImages = showImages;
+        this.context =context;
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -158,15 +183,23 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             valueTV = itemView.findViewById(R.id.valueTV);
             playerView = itemView.findViewById(R.id.listItemView);
             playerImageView = itemView.findViewById(R.id.playerImageView);
-            if (showImages) playerImageView.setVisibility(View.VISIBLE);
-            else playerImageView.setVisibility(View.GONE);
-
             ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
 
             if (viewId == SAVED_GAMES_ACTIVITY) playerImageView.setVisibility(View.GONE);
             if (viewId == STATS_ACTIVITY) valueTV.setVisibility(View.VISIBLE);
             if (viewId == ADD_PLAYER_VIEW) removePlayer.setVisibility(View.VISIBLE);
             else removePlayer.setVisibility(View.GONE);
+
+            if (showImages) {
+                playerImageView.setVisibility(View.VISIBLE);
+                playerImageView.setOnClickListener(view -> {
+                    int position = getAbsoluteAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION)
+                        mListener.onImageClicked(position);
+                });
+            }
+            else playerImageView.setVisibility(View.GONE);
+
 
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();

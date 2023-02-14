@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,7 +16,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -57,7 +56,7 @@ public class SavedGamesActivity extends AppCompatActivity {
         }
         recyclerView = findViewById(R.id.savedGamesRW);
         SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        ListAdapter listAdapter = new ListAdapter(null, null, games, preferences.getBoolean("SHOW_IMAGES", false));
+        ListAdapter listAdapter = new ListAdapter(getApplicationContext(), null, null, games, preferences.getBoolean("SHOW_IMAGES", false));
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -76,6 +75,11 @@ public class SavedGamesActivity extends AppCompatActivity {
 
             @Override
             public void onDeleteClicked(int position) {
+
+            }
+
+            @Override
+            public void onImageClicked(int position) {
 
             }
         });
@@ -112,30 +116,26 @@ public class SavedGamesActivity extends AppCompatActivity {
         menu.findItem(R.id.saved_games).setVisible(false);
         return true;
     }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
-        case R.id.new_game:
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            return true;
-        case R.id.stats:
-            intent = new Intent(this, AllStatsActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.saved_games:
-            intent = new Intent(this, SavedGamesActivity.class);
-            startActivity(intent);
-            return(true);
-        case R.id.settings:
-            openSettings();
-            return (true);
-        case R.id.rules:
-            intent = new Intent(this, RulesActivity.class);
-            startActivity(intent);
-            return true;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
+        switch (item.getItemId()) {
+            case R.id.new_game:
+                intent = new Intent(this, MainActivity.class);
+                break;
+            case R.id.stats:
+                intent = new Intent(this, AllStatsActivity.class);
+                break;
+            case R.id.saved_games:
+                intent = new Intent(this, SavedGamesActivity.class);
+                break;
+            case R.id.settings:
+                intent = new Intent(this, SettingsActivity.class);
+                break;
+            case R.id.rules:
+                intent = new Intent(this, RulesActivity.class);
+                break;
+        }
+        startActivity(intent);
+        return false;
     }
-        return(super.onOptionsItemSelected(item));
-    }
-
 }

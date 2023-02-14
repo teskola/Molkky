@@ -1,7 +1,6 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
 
 public class Game {

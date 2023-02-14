@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 public class GameInfo {
     private String data;

@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import static java.lang.Math.min;
 
@@ -7,14 +7,10 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;

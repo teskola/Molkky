@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import android.content.Context;
 
@@ -15,7 +15,7 @@ public class PlayerStats extends PlayerInfo {
     private int excesses = -1;
 
     public PlayerStats(PlayerInfo player, Context context) {
-        super(player.getId(), player.getName(), player.getImage());
+        super(player.getId(), player.getName());
         db = DBHandler.getInstance(context);
         this.games = db.getGameIds(getId());
     }

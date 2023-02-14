@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,10 +16,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 public class AllStatsActivity extends AppCompatActivity {
@@ -66,7 +64,7 @@ public class AllStatsActivity extends AppCompatActivity {
         }
 
         SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listAdapter = new ListAdapter(null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
+        listAdapter = new ListAdapter(getApplicationContext(), null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -107,6 +105,11 @@ public class AllStatsActivity extends AppCompatActivity {
             @Override
             public void onDeleteClicked(int position) {
             }
+
+            @Override
+            public void onImageClicked(int position) {
+
+            }
         });
     }
 
@@ -144,13 +147,6 @@ public class AllStatsActivity extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }
 
-    public void openSettings() {
-        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-        intent.putExtra("ACTIVITY", "all_stats");
-        intent.putExtra("STAT_ID", statID);
-        startActivity(intent);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -158,30 +154,27 @@ public class AllStatsActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
         switch (item.getItemId()) {
             case R.id.new_game:
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                return true;
+                intent = new Intent(this, MainActivity.class);
+                break;
             case R.id.stats:
                 intent = new Intent(this, AllStatsActivity.class);
-                startActivity(intent);
-                return (true);
+                break;
             case R.id.saved_games:
                 intent = new Intent(this, SavedGamesActivity.class);
-                startActivity(intent);
-                return (true);
+                break;
             case R.id.settings:
-                openSettings();
-                return (true);
+                intent = new Intent(this, SettingsActivity.class);
+                break;
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);
-                startActivity(intent);
-                return true;
+                break;
         }
-        return (super.onOptionsItemSelected(item));
+        startActivity(intent);
+        return false;
     }
 
 

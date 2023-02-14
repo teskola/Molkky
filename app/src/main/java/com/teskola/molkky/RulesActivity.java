@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
 

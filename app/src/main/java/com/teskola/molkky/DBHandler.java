@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -182,15 +182,18 @@ public class DBHandler extends SQLiteOpenHelper {
         return name;
     }
 
-    public int getPlayerImage(int playerId) {
+    public ArrayList<String> getPlayerNames() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT image FROM players WHERE id=" + playerId, null);
-        cursor.moveToFirst();
-        int image = cursor.getInt(0);
+        Cursor cursor = db.rawQuery("SELECT name FROM players", null);
+        ArrayList<String> names = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                names.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
         cursor.close();
-        return image;
+        return names;
     }
-
 
     public ArrayList<PlayerInfo> getPlayers() {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -198,7 +201,7 @@ public class DBHandler extends SQLiteOpenHelper {
         ArrayList<PlayerInfo> players = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                players.add(new PlayerInfo(cursor.getInt(0), cursor.getString(1), cursor.getInt(2)));
+                players.add(new PlayerInfo(cursor.getInt(0), cursor.getString(1)));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -213,8 +216,8 @@ public class DBHandler extends SQLiteOpenHelper {
             do {
                 int playerId = cursor.getInt(0);
                 String name = cursor.getString(1);
-                int image = cursor.getInt(2);
-                players.add(new Player(playerId, name, image, getTosses(gameId, playerId)));
+                // int image = cursor.getInt(2);
+                players.add(new Player(playerId, name, getTosses(gameId, playerId)));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -283,7 +286,7 @@ public class DBHandler extends SQLiteOpenHelper {
         for (Player player : game.getPlayers()) {
             ContentValues values = new ContentValues();
             values.put("name", player.getName());
-            values.put("image", player.getImage());
+            // values.put("image", player.getImage());
             db.insert("players", null, values);
             cursor = db.rawQuery("SELECT id FROM players WHERE name= \"" + player.getName() + "\";", null);
             cursor.moveToFirst();

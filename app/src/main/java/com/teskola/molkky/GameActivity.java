@@ -1,4 +1,4 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,6 +10,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +43,8 @@ public class GameActivity extends AppCompatActivity {
     private RecyclerView verticalRecyclerView;
     private ConstraintLayout topContainer;
     private ImageView playerImage;
+    private ImageHandler imageHandler = new ImageHandler(this);
+    private boolean showImages;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -56,15 +60,10 @@ public class GameActivity extends AppCompatActivity {
         chartButton = findViewById(R.id.chartButton);
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
         topContainer = findViewById(R.id.topContainer);
-         playerImage = findViewById(R.id.game_IW);
-         playerImage.setImageResource(R.drawable.molkky);
+        playerImage = findViewById(R.id.game_IW);
 
-        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        if (preferences.getBoolean("SHOW_IMAGES", false))
-            playerImage.setVisibility(View.VISIBLE);
-        else
-            playerImage.setVisibility(View.GONE);
-
+        SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        showImages = preferences.getBoolean("SHOW_IMAGES", false);
 
         // Saved game
 
@@ -95,6 +94,8 @@ public class GameActivity extends AppCompatActivity {
             savedGame = savedInstanceState.getBoolean("saved");
         }
         nameTextView.setText(game.getPlayer(0).getName());
+        if (showImages)
+            setImage();
 
         if (gameEnded) {
             endGame();
@@ -195,10 +196,24 @@ public class GameActivity extends AppCompatActivity {
         okButton.setEnabled(false);
     }
 
+    public void setImage() {
+        if (showImages) {
+            String path = imageHandler.getImagePath(game.getPlayer(0).getName());
+            if (path != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(path);
+                playerImage.setImageBitmap(bitmap);
+                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                playerImage.setVisibility(View.VISIBLE);
+            }
+            else
+                playerImage.setVisibility(View.GONE);
+        }
+    }
+
     public void updateUI(boolean undo) {
 
         nameTextView.setText(game.getPlayer(0).getName());
-        // playerImage update
+        setImage();
         int pointsToWin = game.getPlayer(0).pointsToWin();
         if (pointsToWin > 0) {
             pointsToWinTV.setText(getString(R.string.points_to_win, (pointsToWin)));
@@ -244,6 +259,7 @@ public class GameActivity extends AppCompatActivity {
         seekBar.setVisibility(View.INVISIBLE);
         topContainer.setBackgroundResource(R.drawable.gold_background);
         nameTextView.setText(game.getPlayer(0).getName());
+        setImage();
         congratsView.setVisibility(View.VISIBLE);
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
         Collections.sort(sortedPlayers);
@@ -270,6 +286,7 @@ public class GameActivity extends AppCompatActivity {
             game.getPlayer(0).getUndoStack().push(0);
             seekBar.setProgress(0);
             nameTextView.setText(game.getPlayer(0).getName());
+            setImage();
             int pointsToWin = game.getPlayer(0).pointsToWin();
             if (pointsToWin > 0) {
                 pointsToWinTV.setText(getResources().getString(R.string.points_to_win, pointsToWin));
@@ -291,14 +308,14 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void openChart() {
-        Intent intent = new Intent(getApplicationContext(), ChartActivity.class);
+        Intent intent = new Intent(this, ChartActivity.class);
         String json = new Gson().toJson(game);
         intent.putExtra("json", json);
         startActivity(intent);
     }
 
     public void openScorecard(int position) {
-        Intent intent = new Intent(getApplicationContext(), ScoreCardActivity.class);
+        Intent intent = new Intent(this, ScoreCardActivity.class);
         Game newGame = game;
         Collections.sort(newGame.getPlayers());
         String json = new Gson().toJson(game);
@@ -308,7 +325,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void startNewGame() {
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
 
         ArrayList<Player> reversed = new ArrayList<>(game.getPlayers());
         Collections.sort(reversed);
@@ -333,17 +350,28 @@ public class GameActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) { switch(item.getItemId()) {
-
-        case R.id.rules:
-            Intent intent = new Intent(this, RulesActivity.class);
-            startActivity(intent);
-            return true;
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
+        switch (item.getItemId()) {
+            case R.id.new_game:
+                intent = new Intent(this, MainActivity.class);
+                break;
+            case R.id.stats:
+                intent = new Intent(this, AllStatsActivity.class);
+                break;
+            case R.id.saved_games:
+                intent = new Intent(this, SavedGamesActivity.class);
+                break;
+            case R.id.settings:
+                intent = new Intent(this, SettingsActivity.class);
+                break;
+            case R.id.rules:
+                intent = new Intent(this, RulesActivity.class);
+                break;
+        }
+        startActivity(intent);
+        return false;
     }
-        return(super.onOptionsItemSelected(item));
-    }
-
 
     public static int selectBackground(Player player, boolean onlyGray) {
         final int GOLD = R.drawable.gold_background;

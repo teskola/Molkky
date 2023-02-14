@@ -1,9 +1,8 @@
-package com.example.molkky;
+package com.teskola.molkky;
 
 import android.annotation.SuppressLint;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
