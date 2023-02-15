@@ -1,5 +1,6 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -8,11 +9,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -20,6 +24,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -38,6 +43,9 @@ public class PlayerStatsActivity extends AppCompatActivity {
     private TextView excessTV;
     private BarChart barChart;
     private ShapeableImageView playerImage;
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private ImageHandler imageHandler = new ImageHandler(this);
 
 
     @SuppressLint("DefaultLocale")
@@ -74,22 +82,33 @@ public class PlayerStatsActivity extends AppCompatActivity {
 
         }
 
-        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        if (preferences.getBoolean("SHOW_IMAGES", false))
-            playerImage.setVisibility(View.VISIBLE);
-        else
-            playerImage.setVisibility(View.GONE);
+        if (savedInstanceState != null) {
+            playerIds = savedInstanceState.getIntArray("PLAYER_IDS");
+            position = savedInstanceState.getInt("POSITION");
+        }
 
-        updateUI();
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        listener = (sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(listener);
+
+        playerImage.setOnClickListener(view -> {
+            imageHandler.takePicture(ImageHandler.TITLE_BAR);
+        });
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
             else position = playerIds.length - 1;
+            getPlayerData();
             updateUI();
         });
         nextIB.setOnClickListener(view -> {
             if (position < playerIds.length - 1) position++;
             else position = 0;
+            getPlayerData();
             updateUI();
         });
 
@@ -99,6 +118,20 @@ public class PlayerStatsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+
+        getPlayerData();
+        updateUI();
+
+
+    }
+
+    protected void onActivityResult(int position, int resultCode, Intent data) {
+        super.onActivityResult(position, resultCode, data);
+        if (data != null) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageHandler.BitmapToJpg(photo, playerStats.getName());
+            updateImage();
+        }
     }
 
     private void showBarChart(){
@@ -143,10 +176,27 @@ public class PlayerStatsActivity extends AppCompatActivity {
         playerStats = new PlayerStats(player, getApplicationContext());
     }
 
+    public void updateImage () {
+        if (preferences.getBoolean("SHOW_IMAGES", false)) {
+            String path = imageHandler.getImagePath(playerStats.getName());
+            if (path != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(path);
+                playerImage.setImageBitmap(bitmap);
+                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            }
+            else {
+                playerImage.setImageResource(R.drawable.camera);
+                playerImage.setScaleType(ImageView.ScaleType.CENTER);
+            }
+            playerImage.setVisibility(View.VISIBLE);
+        }
+        else
+            playerImage.setVisibility(View.GONE);
+    }
+
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-
-        getPlayerData();
+        updateImage();
         playerNameTV.setText(playerStats.getName());
         pointsTV.setText(String.valueOf(playerStats.getPoints()));
         gamesTV.setText(String.valueOf(playerStats.getGamesCount()));
@@ -161,12 +211,11 @@ public class PlayerStatsActivity extends AppCompatActivity {
         showBarChart();
     }
 
-    public void openSettings() {
-        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-        intent.putExtra("ACTIVITY", "player_stats");
-        intent.putExtra("POSITION", position);
-        intent.putExtra("PLAYER_IDS", playerIds);
-        startActivity(intent);
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putIntArray("PLAYER_IDS", playerIds);
+        savedInstanceState.putInt("POSITION", position);
     }
 
     @Override

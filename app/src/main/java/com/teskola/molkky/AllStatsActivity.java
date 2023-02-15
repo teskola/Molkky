@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,10 +25,14 @@ public class AllStatsActivity extends AppCompatActivity {
 
     private ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID;
+    private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
     private ImageButton previousIB;
     private ImageButton nextIB;
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private ImageHandler imageHandler = new ImageHandler(this);
 
     public static final int[] stats = {
             R.string.games,
@@ -50,12 +55,9 @@ public class AllStatsActivity extends AppCompatActivity {
         nextIB = findViewById(R.id.nextIB);
         ShapeableImageView playerImageView = findViewById(R.id.titleBar_playerImageView);
         playerImageView.setVisibility(View.GONE);
-        RecyclerView recyclerView = findViewById(R.id.allStatsRW);
-
-
+        recyclerView = findViewById(R.id.allStatsRW);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
-
         statID = getIntent().getIntExtra("STAT_ID", 0);
 
         ArrayList<PlayerInfo> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
@@ -63,14 +65,18 @@ public class AllStatsActivity extends AppCompatActivity {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }
 
-        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listAdapter = new ListAdapter(getApplicationContext(), null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
-        recyclerView.setAdapter(listAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        listener = (sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+                createRecyclerView();
+                updateUI();
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(listener);
 
 
 
-
+        createRecyclerView();
         updateUI();
 
         previousIB.setOnClickListener(view -> {
@@ -89,6 +95,14 @@ public class AllStatsActivity extends AppCompatActivity {
             updateUI();
 
         });
+
+
+    }
+
+    public void createRecyclerView() {
+        listAdapter = new ListAdapter(this, null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
+        recyclerView.setAdapter(listAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
             public void onSelectClicked(int position) {
@@ -108,9 +122,18 @@ public class AllStatsActivity extends AppCompatActivity {
 
             @Override
             public void onImageClicked(int position) {
-
+                imageHandler.takePicture(position);
             }
         });
+    }
+
+    protected void onActivityResult(int position, int resultCode, Intent data) {
+        super.onActivityResult(position, resultCode, data);
+        if (data != null) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageHandler.BitmapToJpg(photo, playerStats.get(position).getName());
+            listAdapter.notifyItemChanged(position);
+        }
     }
 
     @SuppressLint({"NotifyDataSetChanged", "NonConstantResourceId"})

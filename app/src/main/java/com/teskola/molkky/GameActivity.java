@@ -45,6 +45,8 @@ public class GameActivity extends AppCompatActivity {
     private ImageView playerImage;
     private ImageHandler imageHandler = new ImageHandler(this);
     private boolean showImages;
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -62,8 +64,15 @@ public class GameActivity extends AppCompatActivity {
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
 
-        SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
+        listener = (sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+                showImages = sharedPreferences.getBoolean(key, false);
+                setImage();
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(listener);
 
         // Saved game
 
@@ -208,6 +217,8 @@ public class GameActivity extends AppCompatActivity {
             else
                 playerImage.setVisibility(View.GONE);
         }
+        else
+            playerImage.setVisibility(View.GONE);
     }
 
     public void updateUI(boolean undo) {
@@ -343,10 +354,10 @@ public class GameActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.findItem(R.id.new_game).setVisible(false);
-        menu.findItem(R.id.stats).setVisible(false);
-        menu.findItem(R.id.settings).setVisible(false);
-        menu.findItem(R.id.saved_games).setVisible(false);
+        menu.findItem(R.id.new_game).setVisible(gameEnded);
+        menu.findItem(R.id.stats).setVisible(gameEnded);
+        menu.findItem(R.id.settings).setVisible(gameEnded);
+        menu.findItem(R.id.saved_games).setVisible(gameEnded);
         return true;
     }
 

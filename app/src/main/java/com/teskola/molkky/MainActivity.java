@@ -247,20 +247,10 @@ public class MainActivity extends AppCompatActivity  {
 
             @Override
             public void onImageClicked(int position) {
-                takePicture(position);
+                imageHandler.takePicture(position);
             }
         });
 
-    }
-
-    public void takePicture(int position) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(intent, position);
-        }
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {

@@ -1,5 +1,6 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -7,24 +8,31 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ScoreCardActivity extends AppCompatActivity {
     private Game game;
     private int position;
     private TextView titleTV, tossesTV, statsTV;
     private ShapeableImageView playerImage;
+    private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private ImageHandler imageHandler = new ImageHandler(this);
 
 
     @Override
@@ -50,20 +58,22 @@ public class ScoreCardActivity extends AppCompatActivity {
             game = new Gson().fromJson(json, Game.class);
         }
 
-        SharedPreferences preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        if (preferences.getBoolean("SHOW_IMAGES", false))
-            playerImage.setVisibility(View.VISIBLE);
-        else
-            playerImage.setVisibility(View.GONE);
+        if (savedInstanceState != null) {
+            String json = savedInstanceState.getString("GAME");
+            position = savedInstanceState.getInt("POSITION");
+            game = new Gson().fromJson(json, Game.class);
+        }
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
             else position = game.getPlayers().size() -1;
+            setImage();
             updateUI();
         });
         nextIB.setOnClickListener(view -> {
             if (position < game.getPlayers().size() - 1) position++;
             else position = 0;
+            setImage();
             updateUI();
         });
         allTimeButton.setOnClickListener(view -> {
@@ -77,10 +87,50 @@ public class ScoreCardActivity extends AppCompatActivity {
             startActivity(intent);
 
         });
+
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        listener = (sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+                setImage();
+            }
+        };
+        preferences.registerOnSharedPreferenceChangeListener(listener);
+        setImage();
         updateUI();
+        playerImage.setOnClickListener(view -> {
+            imageHandler.takePicture(ImageHandler.TITLE_BAR);
+        });
+    }
+
+    protected void onActivityResult(int position, int resultCode, Intent data) {
+        super.onActivityResult(position, resultCode, data);
+        if (data != null) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            imageHandler.BitmapToJpg(photo, game.getPlayer(position).getName());
+            setImage();
+        }
+    }
+
+    public void setImage() {
+        if (preferences.getBoolean("SHOW_IMAGES", false)) {
+            String path = imageHandler.getImagePath(game.getPlayer(position).getName());
+            if (path != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(path);
+                playerImage.setImageBitmap(bitmap);
+                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            }
+            else {
+                playerImage.setImageResource(R.drawable.camera);
+                playerImage.setScaleType(ImageView.ScaleType.CENTER);
+            }
+            playerImage.setVisibility(View.VISIBLE);
+        }
+        else
+            playerImage.setVisibility(View.GONE);
     }
 
     public void updateUI() {
+
         titleTV.setText(game.getPlayer(position).getName());
         String tosses = buildTossesString();
         String stats = buildStatsString();
@@ -152,13 +202,13 @@ public class ScoreCardActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    public void openSettings() {
-        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-        intent.putExtra("ACTIVITY", "scorecard");
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
         String json = new Gson().toJson(game);
-        intent.putExtra("GAME", json);
-        intent.putExtra("POSITION", position);
-        startActivity(intent);
+        savedInstanceState.putString("GAME", json);
+        savedInstanceState.putInt("POSITION", position);
     }
 
 
