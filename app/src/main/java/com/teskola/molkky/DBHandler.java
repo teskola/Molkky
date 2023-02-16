@@ -72,6 +72,13 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
+    public boolean PlayerNameIsOnDatabase(String name) {
+        ArrayList<String> dbNames = getPlayerNames();
+        for (String dbName : dbNames)
+            if (dbName.equals(name)) return true;
+        return false;
+    }
+
     public ArrayList<Integer> getGameIds(int playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId=" + playerId, null);
@@ -194,6 +201,7 @@ public class DBHandler extends SQLiteOpenHelper {
         cursor.close();
         return names;
     }
+
 
     public ArrayList<PlayerInfo> getPlayers() {
         SQLiteDatabase db = this.getReadableDatabase();

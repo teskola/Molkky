@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -39,7 +40,8 @@ public class GameActivity extends AppCompatActivity {
     private TextView nameTextView;
     private TextView pointsToWinTV;
     private ViewGroup congratsView;
-    private Button okButton, chartButton;
+    private Button okButton;
+    private ImageButton chartButton;
     private RecyclerView verticalRecyclerView;
     private ConstraintLayout topContainer;
     private ImageView playerImage;
@@ -102,6 +104,8 @@ public class GameActivity extends AppCompatActivity {
             gameEnded = savedInstanceState.getBoolean("finished");
             savedGame = savedInstanceState.getBoolean("saved");
         }
+
+        if (savedGame) okButton.setVisibility(View.INVISIBLE);
         nameTextView.setText(game.getPlayer(0).getName());
         if (showImages)
             setImage();
@@ -116,7 +120,7 @@ public class GameActivity extends AppCompatActivity {
         }
 
         verticalRecyclerView.setOnTouchListener((view, motionEvent) -> {
-            findViewById(R.id.childScroll).getParent().requestDisallowInterceptTouchEvent(false);
+            findViewById(R.id.pointsTV).getParent().requestDisallowInterceptTouchEvent(false);
             return false;
         });
 
@@ -305,7 +309,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
         }
-        chartButton.setVisibility(View.GONE);
+        chartButton.setVisibility(View.INVISIBLE);
         pointsTextView.setVisibility(View.VISIBLE);
         seekBar.setVisibility(View.VISIBLE);
         topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
@@ -356,8 +360,14 @@ public class GameActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.findItem(R.id.new_game).setVisible(gameEnded);
         menu.findItem(R.id.stats).setVisible(gameEnded);
-        menu.findItem(R.id.settings).setVisible(gameEnded);
         menu.findItem(R.id.saved_games).setVisible(gameEnded);
+
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        boolean showImages = preferences.getBoolean("SHOW_IMAGES", false);
+        MenuItem imageSwitch = menu.findItem(R.id.images_switch);
+        if (showImages) imageSwitch.setTitle(R.string.hide_images);
+        else imageSwitch.setTitle(R.string.show_images);
+
         return true;
     }
 
@@ -373,9 +383,13 @@ public class GameActivity extends AppCompatActivity {
             case R.id.saved_games:
                 intent = new Intent(this, SavedGamesActivity.class);
                 break;
-            case R.id.settings:
-                intent = new Intent(this, SettingsActivity.class);
-                break;
+            case R.id.images_switch:
+                preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("SHOW_IMAGES", !preferences.getBoolean("SHOW_IMAGES", false));
+                editor.apply();
+                invalidateOptionsMenu();
+                return false;
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);
                 break;

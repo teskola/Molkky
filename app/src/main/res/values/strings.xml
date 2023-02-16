@@ -39,7 +39,8 @@
     <string name="chart">kuvaaja</string>
     <string name="instruction">Valitse pisteet liu\'uttamalla kapulaa</string>
     <string name="rules">Säännöt</string>
-    <string name="images">Näytä kuvat</string>
+    <string name="show_images">Näytä kuvat</string>
+    <string name="hide_images">Piilota kuvat</string>
     <string name="rules_content">Pisteiden lasku:\n\nYksi kaatunut keila: keilaan merkitty numero\nUseampi kaatunut keila: kaatuneiden keilojen lukumäärä.\nKeilaa ei lasketa kaatuneeksi, jos se nojaa toiseen keilaan tai heittokapulaan.\nKaatuneet keilat nostetaan samaan paikkaan, johon ne ovat kaatuneet.\n\nPelin kulku: \n\nPeli päättyy, kun pelaaja saavuttaa 50 pistettä. Jos 50 pistettä ylittyy, pelaajan pisteet lasketaan 25 pisteeseen. Kolme peräkkäistä nollaa heittänyt pelaaja putoaa pelistä.\n\nHeittolinja: 3-4 metriä muodostelmasta.</string>
     <string name="source">Lähde: https://www.molkky.com/wp/saannot/</string>
     <string name="confirm">Vahvista muutokset</string>

@@ -8,20 +8,20 @@
     android:background="@color/light_gray"
     tools:context=".GameActivity">
 
-    <android.widget.Button
+    <ImageButton
         android:id="@+id/chartButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/start_button"
+        android:background="@drawable/select_button_background"
         android:enabled="true"
-        android:padding="10dp"
-        android:text="@string/chart"
+        android:src="@drawable/show_chart"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/okButton" />
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
 
@@ -165,15 +165,15 @@
         android:id="@+id/okButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:background="@drawable/start_button"
         android:enabled="false"
         android:padding="10dp"
         android:text="@android:string/ok"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/chartButton"
+        app:layout_constraintBottom_toBottomOf="@+id/chartButton"
+        app:layout_constraintEnd_toEndOf="@+id/chartButton"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/chartButton" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/verticalRecyclerView"

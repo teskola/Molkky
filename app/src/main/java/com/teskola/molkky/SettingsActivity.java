@@ -21,7 +21,6 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        imageSwitch = findViewById(R.id.imagesSwitch);
         confirmBtn = findViewById(R.id.confirmButton);
 
         preferences = getApplicationContext().getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
@@ -43,8 +42,12 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        showImages = preferences.getBoolean("SHOW_IMAGES", false);
+        MenuItem imageSwitch = menu.findItem(R.id.images_switch);
+        if (showImages) imageSwitch.setTitle(R.string.hide_images);
+        else imageSwitch.setTitle(R.string.show_images);
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.findItem(R.id.settings).setVisible(false);
         return true;
     }
 
@@ -60,9 +63,14 @@ public class SettingsActivity extends AppCompatActivity {
             case R.id.saved_games:
                 intent = new Intent(this, SavedGamesActivity.class);
                 break;
-            case R.id.settings:
+            case R.id.images_switch:
+                SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("SHOW_IMAGES", showImages);
+                editor.apply();
+
                 intent = new Intent(this, SettingsActivity.class);
-                break;
+                return false;
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);
                 break;

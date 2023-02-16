@@ -14,8 +14,8 @@
         android:id="@+id/saved_games" app:showAsAction="never" android:title="@string/saved_games">
     </item>
     <item
-        android:id="@+id/settings"
-        android:title="@string/settings"
+        android:id="@+id/images_switch"
+        android:title="@string/show_images"
         app:showAsAction="never"/>
     <item
         android:id="@+id/rules"

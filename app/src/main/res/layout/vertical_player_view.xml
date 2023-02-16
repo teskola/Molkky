@@ -44,27 +44,22 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ScrollView
-            android:id="@+id/childScroll"
+        <TextView
+            android:id="@+id/pointsTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:ellipsize="none"
+            android:fontFamily="monospace"
+            android:gravity="bottom|end"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:scrollbars="none"
+            android:singleLine="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/totalPointsTextView"
             app:layout_constraintStart_toEndOf="@+id/playerNameTextView"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/pointsTV"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="none"
-                android:fontFamily="monospace"
-                android:gravity="bottom|end"
-                android:scrollbars="none"
-                android:singleLine="true"
-                tools:visibility="visible" />
-        </ScrollView>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

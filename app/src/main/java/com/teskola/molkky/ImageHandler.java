@@ -48,6 +48,17 @@ public class ImageHandler {
         }
     }
 
+    public boolean findAndDeleteImage (String newPlayerName) {
+        String[] files = context.fileList();
+        for (String file : files) {
+            if (file.equals(newPlayerName + ".jpg")) {
+                context.deleteFile(file);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }
 

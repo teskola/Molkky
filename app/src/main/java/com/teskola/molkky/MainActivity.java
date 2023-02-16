@@ -68,27 +68,6 @@ public class MainActivity extends AppCompatActivity  {
         if (!random) showFirstTextView();
     }
 
-    public boolean playerIsOnDatabase (String newPlayerName) {
-        ArrayList<String> playerNames = DBHandler.getInstance(this).getPlayerNames();
-        for (String name : playerNames) {
-            if (newPlayerName.equals(name))
-                return true;
-        }
-        return false;
-    }
-
-    public boolean playerImageOnFile (String newPlayerName) {
-        String[] files = this.fileList();
-        for (String file : files) {
-            if (file.equals(newPlayerName + ".jpg")) {
-                this.deleteFile(file);
-                return true;
-            }
-        }
-        return false;
-    }
-
-
     public void addPlayer () {
         PlayerInfo newPlayer = new Player(editPlayerName.getText().toString());
         for (PlayerInfo player : playersList) {
@@ -97,8 +76,8 @@ public class MainActivity extends AppCompatActivity  {
                 return;
             }
         }
-        if (!playerIsOnDatabase(newPlayer.getName()))
-            playerImageOnFile(newPlayer.getName()); // delete old image
+        if (!DBHandler.getInstance(this).PlayerNameIsOnDatabase(newPlayer.getName()))
+            imageHandler.findAndDeleteImage(newPlayer.getName());
         playersList.add(0, newPlayer);
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
@@ -304,6 +283,13 @@ public class MainActivity extends AppCompatActivity  {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.findItem(R.id.new_game).setVisible(false);
+
+        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        boolean showImages = preferences.getBoolean("SHOW_IMAGES", false);
+        MenuItem imageSwitch = menu.findItem(R.id.images_switch);
+        if (showImages) imageSwitch.setTitle(R.string.hide_images);
+        else imageSwitch.setTitle(R.string.show_images);
+
         return true;
     }
 
@@ -319,9 +305,13 @@ public class MainActivity extends AppCompatActivity  {
             case R.id.saved_games:
                 intent = new Intent(this, SavedGamesActivity.class);
                 break;
-            case R.id.settings:
-                intent = new Intent(this, SettingsActivity.class);
-                break;
+            case R.id.images_switch:
+                preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("SHOW_IMAGES", !preferences.getBoolean("SHOW_IMAGES", false));
+                editor.apply();
+                invalidateOptionsMenu();
+                return false;
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);
                 break;
