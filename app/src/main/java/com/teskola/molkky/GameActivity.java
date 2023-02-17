@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends BaseActivity {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
     private Game game;
     private boolean gameEnded = false;
@@ -269,6 +269,7 @@ public class GameActivity extends AppCompatActivity {
 
     public void endGame() {
         gameEnded = true;
+        invalidateOptionsMenu();
         chartButton.setVisibility(View.VISIBLE);
         pointsToWinTV.setVisibility(View.INVISIBLE);
         seekBar.setVisibility(View.INVISIBLE);
@@ -288,6 +289,7 @@ public class GameActivity extends AppCompatActivity {
 
     public void resumeGame() {
         gameEnded = false;
+        invalidateOptionsMenu();
         if (game.getPlayer(0).countAll() == 50) {
             pointsTextView.setText(String.valueOf(game.getPlayer(0).removeToss()));
             pointsToWinTV.setVisibility(View.VISIBLE);
@@ -326,6 +328,7 @@ public class GameActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ChartActivity.class);
         String json = new Gson().toJson(game);
         intent.putExtra("json", json);
+        savedGame = true;
         startActivity(intent);
     }
 
@@ -336,6 +339,7 @@ public class GameActivity extends AppCompatActivity {
         String json = new Gson().toJson(game);
         intent.putExtra("GAME", json);
         intent.putExtra("POSITION", position);
+        savedGame = true;
         startActivity(intent);
     }
 
@@ -348,6 +352,7 @@ public class GameActivity extends AppCompatActivity {
 
         String json = new Gson().toJson(reversed);
         intent.putExtra("PLAYERS", json);
+        savedGame = true;
         startActivity(intent);
     }
 
@@ -357,17 +362,10 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        super.onCreateOptionsMenu(menu);
         menu.findItem(R.id.new_game).setVisible(gameEnded);
         menu.findItem(R.id.stats).setVisible(gameEnded);
         menu.findItem(R.id.saved_games).setVisible(gameEnded);
-
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        boolean showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        MenuItem imageSwitch = menu.findItem(R.id.images_switch);
-        if (showImages) imageSwitch.setTitle(R.string.hide_images);
-        else imageSwitch.setTitle(R.string.show_images);
-
         return true;
     }
 
@@ -394,6 +392,7 @@ public class GameActivity extends AppCompatActivity {
                 intent = new Intent(this, RulesActivity.class);
                 break;
         }
+        savedGame = true;
         startActivity(intent);
         return false;
     }

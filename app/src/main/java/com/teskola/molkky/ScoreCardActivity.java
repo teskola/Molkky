@@ -25,7 +25,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ScoreCardActivity extends AppCompatActivity {
+public class ScoreCardActivity extends BaseActivity {
     private Game game;
     private int position;
     private TextView titleTV, tossesTV, statsTV;
@@ -202,56 +202,12 @@ public class ScoreCardActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         String json = new Gson().toJson(game);
         savedInstanceState.putString("GAME", json);
         savedInstanceState.putInt("POSITION", position);
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.findItem(R.id.new_game).setVisible(false);
-
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        boolean showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        MenuItem imageSwitch = menu.findItem(R.id.images_switch);
-        if (showImages) imageSwitch.setTitle(R.string.hide_images);
-        else imageSwitch.setTitle(R.string.show_images);
-
-        return true;
-    }
-
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent = null;
-        switch (item.getItemId()) {
-            case R.id.new_game:
-                intent = new Intent(this, MainActivity.class);
-                break;
-            case R.id.stats:
-                intent = new Intent(this, AllStatsActivity.class);
-                break;
-            case R.id.saved_games:
-                intent = new Intent(this, SavedGamesActivity.class);
-                break;
-            case R.id.images_switch:
-                preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("SHOW_IMAGES", !preferences.getBoolean("SHOW_IMAGES", false));
-                editor.apply();
-                invalidateOptionsMenu();
-
-                return false;
-            case R.id.rules:
-                intent = new Intent(this, RulesActivity.class);
-                break;
-        }
-        startActivity(intent);
-        return false;
     }
 
 }
