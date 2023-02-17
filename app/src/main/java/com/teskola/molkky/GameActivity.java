@@ -1,7 +1,6 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,11 +29,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class GameActivity extends BaseActivity {
+public class GameActivity extends CommonOptions {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
+
     private Game game;
     private boolean gameEnded = false;
     private boolean savedGame = false;
+    private boolean showImages;
+
     private SeekBar seekBar;
     private TextView pointsTextView;
     private TextView nameTextView;
@@ -45,8 +47,8 @@ public class GameActivity extends BaseActivity {
     private RecyclerView verticalRecyclerView;
     private ConstraintLayout topContainer;
     private ImageView playerImage;
+
     private ImageHandler imageHandler = new ImageHandler(this);
-    private boolean showImages;
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
@@ -55,6 +57,7 @@ public class GameActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
         seekBar = findViewById(R.id.seekBar);
         pointsTextView = findViewById(R.id.pointsTextView);
         nameTextView = findViewById(R.id.nextPlayerTextView);

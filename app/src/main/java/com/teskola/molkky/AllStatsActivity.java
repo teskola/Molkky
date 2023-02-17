@@ -1,6 +1,5 @@
 package com.teskola.molkky;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -21,7 +19,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class AllStatsActivity extends BaseActivity {
+public class AllStatsActivity extends CommonOptions {
 
     private ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID;

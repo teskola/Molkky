@@ -1,7 +1,6 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
@@ -12,8 +11,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -24,11 +21,10 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class PlayerStatsActivity extends BaseActivity {
+public class PlayerStatsActivity extends CommonOptions {
     private int[] playerIds;
     private int position;
     private PlayerStats playerStats;

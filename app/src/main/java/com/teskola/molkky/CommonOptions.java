@@ -7,7 +7,7 @@ import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class CommonOptions extends AppCompatActivity {
 
     private SharedPreferences preferences;
 

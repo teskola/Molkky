@@ -1,7 +1,5 @@
 package com.teskola.molkky;
 
-import android.graphics.Bitmap;
-
 public class PlayerInfo {
 
     private int id = 0;

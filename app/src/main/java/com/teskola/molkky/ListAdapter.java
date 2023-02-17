@@ -144,10 +144,13 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
 
 
     public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos, boolean showImages) {
+
         if (players != null) {
+
             this.players = players;
             this.viewId = ADD_PLAYER_VIEW;
             this.showImages = showImages;
+            System.out.println(players.getClass());
 
         }
         else if (playerStats != null) {
@@ -155,12 +158,16 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             this.viewId = STATS_ACTIVITY;
             this.statID = 0;
             this.showImages = showImages;
+            System.out.println(playerStats.getClass());
+
 
         }
         else if (gameInfos != null) {
             this.games = gameInfos;
             this.showImages = false;
             this.viewId = SAVED_GAMES_ACTIVITY;
+            System.out.println(gameInfos.getClass());
+
         }
         this.context = context;
     }
