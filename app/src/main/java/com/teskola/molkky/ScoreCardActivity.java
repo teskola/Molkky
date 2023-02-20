@@ -27,8 +27,7 @@ public class ScoreCardActivity extends CommonOptions {
     private TextView titleTV, tossesTV, statsTV;
     private ShapeableImageView playerImage;
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
 
 
     @Override
@@ -85,17 +84,16 @@ public class ScoreCardActivity extends CommonOptions {
         });
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 setImage();
+                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
         setImage();
         updateUI();
-        playerImage.setOnClickListener(view -> {
-            imageHandler.takePicture(ImageHandler.TITLE_BAR);
-        });
+        playerImage.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {

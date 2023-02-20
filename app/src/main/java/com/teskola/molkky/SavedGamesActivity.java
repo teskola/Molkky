@@ -27,9 +27,7 @@ public class SavedGamesActivity extends CommonOptions {
     private Button showAllBtn;
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
-    private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +37,7 @@ public class SavedGamesActivity extends CommonOptions {
         titleTV = findViewById(R.id.titleTV);
         showAllBtn = findViewById(R.id.showAllButton);
         playerImageView = findViewById(R.id.titleBar_playerImageView);
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         if (getIntent().getExtras() != null) {
             int playerID = getIntent().getIntExtra("PLAYER_ID", 0);
@@ -51,8 +49,9 @@ public class SavedGamesActivity extends CommonOptions {
                 setImage(name);
             else
                 playerImageView.setVisibility(View.GONE);
-            listener = (sharedPreferences, key) -> {
+            SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
                 if (key.equals("SHOW_IMAGES")) {
+                    invalidateMenu();
                     if (sharedPreferences.getBoolean(key, false)) {
                         setImage(name);
                     } else
@@ -68,12 +67,10 @@ public class SavedGamesActivity extends CommonOptions {
             games = DBHandler.getInstance(getApplicationContext()).getGames();
 
         }
-        showAllBtn.setOnClickListener(view -> {
-            showAllGames();
-        });
+        showAllBtn.setOnClickListener(view -> showAllGames());
 
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(this, null, null, games, preferences.getBoolean("SHOW_IMAGES", false));
+        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.SAVED_GAMES_ACTIVITY);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
@@ -94,9 +91,7 @@ public class SavedGamesActivity extends CommonOptions {
             public void onImageClicked(int position) {
             }
         });
-        playerImageView.setOnClickListener(view -> {
-            imageHandler.takePicture(ImageHandler.TITLE_BAR);
-        });
+        playerImageView.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {

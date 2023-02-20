@@ -34,8 +34,7 @@ public class MainActivity extends CommonOptions {
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
@@ -147,9 +146,10 @@ public class MainActivity extends CommonOptions {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         createRecyclerView();
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
+                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
@@ -200,7 +200,7 @@ public class MainActivity extends CommonOptions {
     }
 
     public void createRecyclerView () {
-        listAdapter = new ListAdapter(this, playersList, null, null, preferences.getBoolean("SHOW_IMAGES", false));
+        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.ADD_PLAYER_VIEW);
         listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));

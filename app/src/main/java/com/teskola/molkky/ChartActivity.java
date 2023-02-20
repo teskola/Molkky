@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -33,7 +34,7 @@ public class ChartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chart);
         switchContainer = findViewById(R.id.switchContainer);
-        chart = (LineChart) findViewById(R.id.chart);
+        chart = findViewById(R.id.chart);
 
         if (getIntent().getStringExtra("json") != null) {
             String json = getIntent().getStringExtra("json");

@@ -21,16 +21,13 @@ import java.util.Collections;
 
 public class AllStatsActivity extends CommonOptions {
 
-    private ArrayList<PlayerStats> playerStats = new ArrayList<>();
+    private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID;
     private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
-    private ImageButton previousIB;
-    private ImageButton nextIB;
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
 
     public static final int[] stats = {
             R.string.games,
@@ -49,8 +46,8 @@ public class AllStatsActivity extends CommonOptions {
         setContentView(R.layout.activity_all_stats);
 
         statTv = findViewById(R.id.titleTV);
-        previousIB = findViewById(R.id.previousIB);
-        nextIB = findViewById(R.id.nextIB);
+        ImageButton previousIB = findViewById(R.id.previousIB);
+        ImageButton nextIB = findViewById(R.id.nextIB);
         ShapeableImageView playerImageView = findViewById(R.id.titleBar_playerImageView);
         playerImageView.setVisibility(View.GONE);
         recyclerView = findViewById(R.id.allStatsRW);
@@ -64,8 +61,9 @@ public class AllStatsActivity extends CommonOptions {
         }
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
+                invalidateOptionsMenu();
                 createRecyclerView();
                 updateUI();
             }
@@ -98,7 +96,7 @@ public class AllStatsActivity extends CommonOptions {
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(this, null, playerStats, null, preferences.getBoolean("SHOW_IMAGES", false));
+        listAdapter = new ListAdapter(this, playerStats, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.STATS_ACTIVITY);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {

@@ -48,9 +48,8 @@ public class GameActivity extends CommonOptions {
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -71,10 +70,11 @@ public class GameActivity extends CommonOptions {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 showImages = sharedPreferences.getBoolean(key, false);
                 setImage();
+                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);

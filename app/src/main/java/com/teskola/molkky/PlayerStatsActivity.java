@@ -40,8 +40,7 @@ public class PlayerStatsActivity extends CommonOptions {
     private BarChart barChart;
     private ShapeableImageView playerImage;
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
 
 
     @SuppressLint("DefaultLocale")
@@ -84,16 +83,15 @@ public class PlayerStatsActivity extends CommonOptions {
         }
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
+                invalidateOptionsMenu();
                 updateUI();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
 
-        playerImage.setOnClickListener(view -> {
-            imageHandler.takePicture(ImageHandler.TITLE_BAR);
-        });
+        playerImage.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;

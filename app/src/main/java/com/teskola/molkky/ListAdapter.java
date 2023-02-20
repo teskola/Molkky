@@ -21,21 +21,25 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
-    private onItemClickListener mListener;
-    private ArrayList<PlayerInfo> players = null;
-    private ArrayList<GameInfo> games = null;
-    private ArrayList<PlayerStats> playerStats = null;
-    private int statID;
-    private ArrayList<Boolean> selected = null;
-    private int selected_position = RecyclerView.NO_POSITION;
-    private Context context;
 
-    private boolean showImages;
-    private int viewId;
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
     public static final int SAVED_GAMES_ACTIVITY = 2;
     public static final int STATS_ACTIVITY = 3;
+
+    private ArrayList<PlayerInfo> players;
+    private ArrayList<GameInfo> games = null;
+    private ArrayList<PlayerStats> playerStats = null;
+
+    private final Context context;
+    private final int viewId;
+    private int statID = 0;
+    private final boolean showImages;
+
+    private ArrayList<Boolean> selected = null;
+    private int selected_position = RecyclerView.NO_POSITION;
+    private onItemClickListener mListener;
+
 
     public void setSelected_position(int selected_position) {
         this.selected_position = selected_position;
@@ -61,7 +65,10 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
-        if (showImages) {
+
+        // Add images
+
+        if (showImages && (viewId != SAVED_GAMES_ACTIVITY)) {
             ImageHandler imageHandler = new ImageHandler(context);
             String path = "";
             if (players != null)
@@ -143,33 +150,15 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
 
 
-    public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<PlayerStats> playerStats, ArrayList<GameInfo> gameInfos, boolean showImages) {
-
-        if (players != null) {
-
-            this.players = players;
-            this.viewId = ADD_PLAYER_VIEW;
-            this.showImages = showImages;
-            System.out.println(players.getClass());
-
-        }
-        else if (playerStats != null) {
-            this.playerStats = playerStats;
-            this.viewId = STATS_ACTIVITY;
-            this.statID = 0;
-            this.showImages = showImages;
-            System.out.println(playerStats.getClass());
-
-
-        }
-        else if (gameInfos != null) {
-            this.games = gameInfos;
-            this.showImages = false;
-            this.viewId = SAVED_GAMES_ACTIVITY;
-            System.out.println(gameInfos.getClass());
-
-        }
+    public ListAdapter (Context context, ArrayList<?> data, boolean showImages, int viewId) {
         this.context = context;
+        this.viewId = viewId;
+        this.showImages = showImages;
+
+        this.players = (ArrayList<PlayerInfo>) data;
+        this.playerStats = (ArrayList<PlayerStats>)  data;
+        this.games = (ArrayList<GameInfo>) data;
+
     }
 
     public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
@@ -196,12 +185,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             playerImageView = itemView.findViewById(R.id.playerImageView);
             ImageView removePlayer = itemView.findViewById(R.id.removePlayerButton);
 
-            if (viewId == SAVED_GAMES_ACTIVITY) playerImageView.setVisibility(View.GONE);
             if (viewId == STATS_ACTIVITY) valueTV.setVisibility(View.VISIBLE);
             if (viewId == ADD_PLAYER_VIEW) removePlayer.setVisibility(View.VISIBLE);
             else removePlayer.setVisibility(View.GONE);
 
-            if (showImages) {
+            if (showImages && viewId != SAVED_GAMES_ACTIVITY) {
                 playerImageView.setVisibility(View.VISIBLE);
                 playerImageView.setOnClickListener(view -> {
                     int position = getAbsoluteAdapterPosition();

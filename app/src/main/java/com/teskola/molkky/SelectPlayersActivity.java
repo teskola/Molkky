@@ -23,14 +23,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class SelectPlayersActivity extends AppCompatActivity {
+public class SelectPlayersActivity extends CommonOptions {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private RecyclerView recyclerView;
     private ListAdapter listAdapter;
-    private ImageHandler imageHandler = new ImageHandler(this);
+    private final ImageHandler imageHandler = new ImageHandler(this);
 
 
     @Override
@@ -68,9 +67,10 @@ public class SelectPlayersActivity extends AppCompatActivity {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         createRecyclerView();
-        listener = (sharedPreferences, key) -> {
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
+                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
