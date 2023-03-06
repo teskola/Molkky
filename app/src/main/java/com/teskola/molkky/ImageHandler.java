@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.provider.MediaStore;
 
 import androidx.core.app.ActivityCompat;
@@ -14,12 +15,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 public class ImageHandler {
-    private Context context;
+    private final Context context;
     public static final int TITLE_BAR = 0;
 
     public ImageHandler(Context context) {
         this.context = context;
-    };
+    }
+
+    /*
+    * Saves image to jpg and adds to Gallery
+    * */
+
     public void BitmapToJpg (Bitmap photo, String name) {
         try {
             FileOutputStream fileOutputStream = context.openFileOutput(name + ".jpg", Context.MODE_PRIVATE);
@@ -48,15 +54,12 @@ public class ImageHandler {
         }
     }
 
-    public boolean findAndDeleteImage (String newPlayerName) {
-        String[] files = context.fileList();
-        for (String file : files) {
-            if (file.equals(newPlayerName + ".jpg")) {
-                context.deleteFile(file);
-                return true;
-            }
-        }
-        return false;
+    public void addPictureToGallery (String name) {
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            File f = new File(getImagePath(name));
+            Uri contentUri = Uri.fromFile(f);
+            mediaScanIntent.setData(contentUri);
+            context.sendBroadcast(mediaScanIntent);
     }
 
 

@@ -27,6 +27,8 @@ public class ScoreCardActivity extends CommonOptions {
     private TextView titleTV, tossesTV, statsTV;
     private ShapeableImageView playerImage;
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+
     private final ImageHandler imageHandler = new ImageHandler(this);
 
 
@@ -84,7 +86,7 @@ public class ScoreCardActivity extends CommonOptions {
         });
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 setImage();
                 invalidateOptionsMenu();
@@ -100,14 +102,14 @@ public class ScoreCardActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, game.getPlayer(position).getName());
+            imageHandler.BitmapToJpg(photo, game.getPlayer(position).getId());
             setImage();
         }
     }
 
     public void setImage() {
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
-            String path = imageHandler.getImagePath(game.getPlayer(position).getName());
+            String path = imageHandler.getImagePath(game.getPlayer(position).getId());
             if (path != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 playerImage.setImageBitmap(bitmap);

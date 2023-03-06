@@ -50,6 +50,7 @@ public class GameActivity extends CommonOptions {
 
     private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -70,7 +71,7 @@ public class GameActivity extends CommonOptions {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 showImages = sharedPreferences.getBoolean(key, false);
                 setImage();
@@ -214,7 +215,7 @@ public class GameActivity extends CommonOptions {
 
     public void setImage() {
         if (showImages) {
-            String path = imageHandler.getImagePath(game.getPlayer(0).getName());
+            String path = imageHandler.getImagePath(game.getPlayer(0).getId());
             if (path != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 playerImage.setImageBitmap(bitmap);

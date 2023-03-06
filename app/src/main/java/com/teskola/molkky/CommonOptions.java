@@ -42,7 +42,6 @@ public abstract class CommonOptions extends AppCompatActivity {
                 editor.putBoolean("SHOW_IMAGES", !preferences.getBoolean("SHOW_IMAGES", false));
                 editor.apply();
                 invalidateOptionsMenu();
-
                 return false;
             case R.id.rules:
                 intent = new Intent(this, RulesActivity.class);

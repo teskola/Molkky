@@ -6,14 +6,8 @@ import java.util.Stack;
 
 public class Player extends PlayerInfo implements Comparable<Player> {
 
-    private final ArrayList<Integer> tosses;
+    private ArrayList<Integer> tosses;
     private Stack<Integer> undoStack;
-
-    public Player(String id, String name) {
-        super(id,name);
-        this.tosses = new ArrayList<>();
-        this.undoStack = new Stack<>();
-    }
 
     public Player(String id, String name, ArrayList<Integer> tosses) {
         super(id, name);
@@ -27,19 +21,21 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     }
 
-    public Player(String name) {
-        super(name);
-        this.tosses = new ArrayList<>();
-        this.undoStack = new Stack<>();
-    }
-
     public boolean isEliminated() {
         return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
                 && getToss(tosses.size() - 2) == 0
                 && getToss(tosses.size() - 3) == 0;
     }
 
+
+    /*
+    * Initializes undoStack if not initialized and returns undoStack.
+    * */
+
     public Stack<Integer> getUndoStack() {
+        if (undoStack == null) {
+            undoStack = new Stack<>();
+        }
         return undoStack;
     }
 
@@ -74,7 +70,14 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         return sum;
     }
 
+    /*
+    * Returns players current points. Initializes tosses array if not initialized.
+    * */
+
     public int countAll() {
+        if (tosses == null) {
+            tosses = new ArrayList<>();
+        }
         return count (tosses.size() - 1);
     }
 

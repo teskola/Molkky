@@ -27,6 +27,7 @@ public class AllStatsActivity extends CommonOptions {
     private TextView statTv;
     private ListAdapter listAdapter;
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private final ImageHandler imageHandler = new ImageHandler(this);
 
     public static final int[] stats = {
@@ -59,9 +60,9 @@ public class AllStatsActivity extends CommonOptions {
         for (PlayerInfo player : players) {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }
-
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 invalidateOptionsMenu();
                 createRecyclerView();
@@ -69,8 +70,6 @@ public class AllStatsActivity extends CommonOptions {
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
-
-
 
         createRecyclerView();
         updateUI();
@@ -127,7 +126,7 @@ public class AllStatsActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playerStats.get(position).getName());
+            imageHandler.BitmapToJpg(photo, playerStats.get(position).getId());
             listAdapter.notifyItemChanged(position);
         }
     }

@@ -40,6 +40,8 @@ public class PlayerStatsActivity extends CommonOptions {
     private BarChart barChart;
     private ShapeableImageView playerImage;
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+
     private final ImageHandler imageHandler = new ImageHandler(this);
 
 
@@ -83,7 +85,7 @@ public class PlayerStatsActivity extends CommonOptions {
         }
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 invalidateOptionsMenu();
                 updateUI();
@@ -172,7 +174,7 @@ public class PlayerStatsActivity extends CommonOptions {
 
     public void updateImage () {
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
-            String path = imageHandler.getImagePath(playerStats.getName());
+            String path = imageHandler.getImagePath(playerStats.getId());
             if (path != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 playerImage.setImageBitmap(bitmap);

@@ -28,6 +28,7 @@ public class SavedGamesActivity extends CommonOptions {
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
     private final ImageHandler imageHandler = new ImageHandler(this);
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,14 +47,14 @@ public class SavedGamesActivity extends CommonOptions {
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
             if (preferences.getBoolean("SHOW_IMAGES", false))
-                setImage(name);
+                setImage(playerID);
             else
                 playerImageView.setVisibility(View.GONE);
-            SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+            listener = (sharedPreferences, key) -> {
                 if (key.equals("SHOW_IMAGES")) {
                     invalidateMenu();
                     if (sharedPreferences.getBoolean(key, false)) {
-                        setImage(name);
+                        setImage(playerID);
                     } else
                         playerImageView.setVisibility(View.GONE);
                 }
@@ -98,9 +99,9 @@ public class SavedGamesActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(getIntent().getStringExtra("PLAYER_ID"));
-            imageHandler.BitmapToJpg(photo, name);
-            setImage(name);
+            String id = getIntent().getStringExtra("PLAYER_ID");
+            imageHandler.BitmapToJpg(photo, id);
+            setImage(id);
         }
     }
 

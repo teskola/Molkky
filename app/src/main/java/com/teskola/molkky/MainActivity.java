@@ -34,6 +34,7 @@ public class MainActivity extends CommonOptions {
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private final ImageHandler imageHandler = new ImageHandler(this);
     private TextView firstTextView;
     private RecyclerView recyclerview;
@@ -75,7 +76,7 @@ public class MainActivity extends CommonOptions {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         createRecyclerView();
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
                 invalidateOptionsMenu();
@@ -157,7 +158,7 @@ public class MainActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playersList.get(position).getName());
+            imageHandler.BitmapToJpg(photo, playersList.get(position).getId());
             listAdapter.notifyItemChanged(position);
         }
     }
@@ -166,11 +167,7 @@ public class MainActivity extends CommonOptions {
     private void startGame() {
 
         Intent intent = new Intent(this, GameActivity.class);
-        ArrayList<PlayerInfo> players = new ArrayList<>();
-        for (PlayerInfo player : playersList) {
-            players.add(new Player(player.getName()));
-        }
-        String json = new Gson().toJson(players);
+        String json = new Gson().toJson(playersList);
         intent.putExtra("json", json);
         intent.putExtra("first", start_position);
         intent.putExtra("random", random);
@@ -209,6 +206,9 @@ public class MainActivity extends CommonOptions {
     }
 
     public void addPlayer () {
+
+        // Check if name is already added
+
         PlayerInfo newPlayer = new PlayerInfo(editPlayerName.getText().toString());
         for (PlayerInfo player : playersList) {
             if (player.getName().equals(newPlayer.getName())) {
@@ -216,8 +216,13 @@ public class MainActivity extends CommonOptions {
                 return;
             }
         }
-        if (!DBHandler.getInstance(this).PlayerNameIsOnDatabase(newPlayer.getName()))
-            imageHandler.findAndDeleteImage(newPlayer.getName());
+
+        // Check if name is already in database
+
+        String playerId = DBHandler.getInstance(this).getPlayerId(newPlayer.getName());
+        if (playerId != null)
+            newPlayer.setId(playerId);
+
         playersList.add(0, newPlayer);
         if (playersList.size() > 1) {
             startButton.setEnabled(true);

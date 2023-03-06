@@ -1,7 +1,6 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,13 +18,13 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 public class SelectPlayersActivity extends CommonOptions {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+
     private RecyclerView recyclerView;
     private ListAdapter listAdapter;
     private final ImageHandler imageHandler = new ImageHandler(this);
@@ -67,7 +65,7 @@ public class SelectPlayersActivity extends CommonOptions {
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         createRecyclerView();
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
+        listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
                 invalidateOptionsMenu();
@@ -116,7 +114,7 @@ public class SelectPlayersActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, allPlayers.get(position).getName());
+            imageHandler.BitmapToJpg(photo, allPlayers.get(position).getId());
             listAdapter.notifyItemChanged(position);
         }
     }

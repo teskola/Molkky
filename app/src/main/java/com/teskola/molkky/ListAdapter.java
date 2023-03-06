@@ -17,17 +17,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 
-import java.io.File;
 import java.util.ArrayList;
 
-public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
+public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> {
 
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
     public static final int SAVED_GAMES_ACTIVITY = 2;
     public static final int STATS_ACTIVITY = 3;
 
-    private ArrayList<PlayerInfo> players;
+    private final ArrayList<PlayerInfo> players;
     private ArrayList<GameInfo> games = null;
     private ArrayList<PlayerStats> playerStats = null;
 
@@ -44,6 +43,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     public void setSelected_position(int selected_position) {
         this.selected_position = selected_position;
     }
+
     public int getSelected_position() {
         return selected_position;
     }
@@ -73,7 +73,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
                 break;
             case SELECT_PLAYER_VIEW:
                 holder.nameTV.setText(players.get(position).getName());
-                if (selected.get(position)) holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
+                if (selected.get(position))
+                    holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
                 else
                     holder.playerView.setBackgroundResource(R.drawable.gray_background);
                 break;
@@ -100,11 +101,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
                         holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
                         break;
                     case R.string.hits_percentage:
-                        int hitsPct = Math.round(100*playerStats.get(position).getHitsPct());
+                        int hitsPct = Math.round(100 * playerStats.get(position).getHitsPct());
                         holder.valueTV.setText(String.valueOf(hitsPct));
                         break;
                     case R.string.elimination_percentage:
-                        int elimPct = Math.round(100*playerStats.get(position).getEliminationsPct());
+                        int elimPct = Math.round(100 * playerStats.get(position).getEliminationsPct());
                         holder.valueTV.setText(String.valueOf(elimPct));
                         break;
                     case R.string.excesses_per_game:
@@ -119,15 +120,14 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             ImageHandler imageHandler = new ImageHandler(context);
             String path = "";
             if (players != null)
-                path = imageHandler.getImagePath(players.get(position).getName());
+                path = imageHandler.getImagePath(players.get(position).getId());
             else if (playerStats != null)
-                path = imageHandler.getImagePath(playerStats.get(position).getName());
+                path = imageHandler.getImagePath(playerStats.get(position).getId());
             if (path != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 holder.playerImageView.setImageBitmap(bitmap);
                 holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
+            } else {
                 holder.playerImageView.setImageResource(R.drawable.camera);
                 holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
             }
@@ -143,29 +143,34 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
 
     public interface onItemClickListener {
         void onSelectClicked(int position);
+
         void onDeleteClicked(int position);
+
         void onImageClicked(int position);
     }
-    public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
+
+    public void setOnItemClickListener(onItemClickListener listener) {
+        mListener = listener;
+    }
 
 
-    public ListAdapter (Context context, ArrayList<?> data, boolean showImages, int viewId) {
+    public ListAdapter(Context context, ArrayList<?> data, boolean showImages, int viewId) {
         this.context = context;
         this.viewId = viewId;
         this.showImages = showImages;
 
         this.players = (ArrayList<PlayerInfo>) data;
-        this.playerStats = (ArrayList<PlayerStats>)  data;
+        this.playerStats = (ArrayList<PlayerStats>) data;
         this.games = (ArrayList<GameInfo>) data;
 
     }
 
-    public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
+    public ListAdapter(Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
         this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
         this.selected = selected;
         this.showImages = showImages;
-        this.context =context;
+        this.context = context;
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -176,7 +181,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
         private final ShapeableImageView playerImageView;
 
         @SuppressLint("ClickableViewAccessibility")
-        public MyViewHolder (View itemView) {
+        public MyViewHolder(View itemView) {
             super(itemView);
             nameTV = itemView.findViewById(R.id.nameTV);
             valueTV = itemView.findViewById(R.id.valueTV);
@@ -195,8 +200,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
                     if (position != RecyclerView.NO_POSITION)
                         mListener.onImageClicked(position);
                 });
-            }
-            else playerImageView.setVisibility(View.GONE);
+            } else playerImageView.setVisibility(View.GONE);
 
 
             nameTV.setOnClickListener(view -> {
@@ -212,42 +216,39 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             });
 
             if (removePlayer.getVisibility() == View.VISIBLE) {
-            removePlayer.setOnTouchListener((view, motionEvent) -> {
-                int background;
-                if (playerView.isSelected())
-                    background = R.drawable.yellow_background;
-                else
-                    background = R.drawable.beige_white_background;
-                switch (motionEvent.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                    {
-                        playerView.setBackgroundResource(R.drawable.orange_background);
-                        break;
-                    }
-                    case MotionEvent.ACTION_UP:
-                    {
-                        if (mListener != null) {
-                            int position = getAbsoluteAdapterPosition();
-                            if (selected_position == position) {
-                                selected_position = RecyclerView.NO_POSITION;
-                            } else if (selected_position > position) {
-                                selected_position -= 1;
-                            }
-                            if (position != RecyclerView.NO_POSITION) {
-                                mListener.onDeleteClicked(position);
-                            }
+                removePlayer.setOnTouchListener((view, motionEvent) -> {
+                    int background;
+                    if (playerView.isSelected())
+                        background = R.drawable.yellow_background;
+                    else
+                        background = R.drawable.beige_white_background;
+                    switch (motionEvent.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            playerView.setBackgroundResource(R.drawable.orange_background);
+                            break;
                         }
-                        playerView.setBackgroundResource(R.drawable.beige_white_background);
-                        break;
+                        case MotionEvent.ACTION_UP: {
+                            if (mListener != null) {
+                                int position = getAbsoluteAdapterPosition();
+                                if (selected_position == position) {
+                                    selected_position = RecyclerView.NO_POSITION;
+                                } else if (selected_position > position) {
+                                    selected_position -= 1;
+                                }
+                                if (position != RecyclerView.NO_POSITION) {
+                                    mListener.onDeleteClicked(position);
+                                }
+                            }
+                            playerView.setBackgroundResource(R.drawable.beige_white_background);
+                            break;
+                        }
+                        case MotionEvent.ACTION_CANCEL: {
+                            playerView.setBackgroundResource(background);
+                            break;
+                        }
                     }
-                    case MotionEvent.ACTION_CANCEL:
-                    {
-                        playerView.setBackgroundResource(background);
-                        break;
-                    }
-                }
-                return true;
-            });
+                    return true;
+                });
             }
         }
     }

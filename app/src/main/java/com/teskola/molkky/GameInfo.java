@@ -6,8 +6,8 @@ import java.util.Locale;
 
 public class GameInfo {
     private String data;
-    private String timestamp;
-    private String winner;
+    private final String timestamp;
+    private final String winner;
     private int id = 0;
 
     public GameInfo(int id, String timestamp, String winner) {

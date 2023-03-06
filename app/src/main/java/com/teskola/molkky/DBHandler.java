@@ -72,11 +72,11 @@ public class DBHandler extends SQLiteOpenHelper {
 
     }
 
-    public boolean PlayerNameIsOnDatabase(String name) {
-        ArrayList<String> dbNames = getPlayerNames();
-        for (String dbName : dbNames)
-            if (dbName.equals(name)) return true;
-        return false;
+    public String getPlayerId(String name) {
+        ArrayList<PlayerInfo> players = getPlayers();
+        for (PlayerInfo player : players)
+            if (player.getName().equals(name)) return player.getId();
+        return null;
     }
 
     public ArrayList<Integer> getGameIds(String playerId) {
@@ -230,19 +230,19 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM players", null);
+        Cursor cursor = db.rawQuery("SELECT id, name FROM players", null);
         ArrayList<PlayerInfo> players = new ArrayList<>();
 
         if (cursor.moveToFirst()) {
             do {
                 boolean duplicate = false;
                 for (PlayerInfo player : excludedPlayers) {
-                    if (Objects.equals(player.getName(), cursor.getString(0))) {
+                    if (Objects.equals(player.getId(), cursor.getString(0))) {
                         duplicate = true;
                         break;
                     }
                 }
-                if (!duplicate) players.add(new PlayerInfo(cursor.getString(0)));
+                if (!duplicate) players.add(new PlayerInfo(cursor.getString(0), cursor.getString(1)));
             } while (cursor.moveToNext());
         }
         cursor.close();
