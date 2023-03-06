@@ -66,6 +66,53 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
     @Override
     public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
 
+        switch (viewId) {
+            case ADD_PLAYER_VIEW:
+                holder.nameTV.setText(players.get(position).getName());
+                holder.playerView.setSelected(selected_position == position);
+                break;
+            case SELECT_PLAYER_VIEW:
+                holder.nameTV.setText(players.get(position).getName());
+                if (selected.get(position)) holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
+                else
+                    holder.playerView.setBackgroundResource(R.drawable.gray_background);
+                break;
+            case SAVED_GAMES_ACTIVITY:
+                holder.nameTV.setText(games.get(position).getData());
+                break;
+            case STATS_ACTIVITY:
+                holder.nameTV.setText(playerStats.get(position).getName());
+                holder.valueTV.setVisibility(View.VISIBLE);
+                switch (statID) {
+                    case R.string.games:
+                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getGamesCount()));
+                        break;
+                    case R.string.wins:
+                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getWins()));
+                        break;
+                    case R.string.points:
+                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getPoints()));
+                        break;
+                    case R.string.tosses:
+                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getTossesCount()));
+                        break;
+                    case R.string.points_per_toss:
+                        holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
+                        break;
+                    case R.string.hits_percentage:
+                        int hitsPct = Math.round(100*playerStats.get(position).getHitsPct());
+                        holder.valueTV.setText(String.valueOf(hitsPct));
+                        break;
+                    case R.string.elimination_percentage:
+                        int elimPct = Math.round(100*playerStats.get(position).getEliminationsPct());
+                        holder.valueTV.setText(String.valueOf(elimPct));
+                        break;
+                    case R.string.excesses_per_game:
+                        holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
+                        break;
+                }
+        }
+
         // Add images
 
         if (showImages && (viewId != SAVED_GAMES_ACTIVITY)) {
@@ -83,54 +130,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             else {
                 holder.playerImageView.setImageResource(R.drawable.camera);
                 holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
-            }
-        }
-
-        if (viewId == ADD_PLAYER_VIEW) {
-            holder.nameTV.setText(players.get(position).getName());
-            holder.playerView.setSelected(selected_position == position);
-        }
-        if (viewId == SELECT_PLAYER_VIEW) {
-            holder.nameTV.setText(players.get(position).getName());
-            if (selected.get(position)) holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
-            else
-                holder.playerView.setBackgroundResource(R.drawable.gray_background);
-        }
-
-        if (viewId == SAVED_GAMES_ACTIVITY) {
-            holder.nameTV.setText(games.get(position).getData());
-        }
-
-        if (viewId == STATS_ACTIVITY) {
-            holder.valueTV.setVisibility(View.VISIBLE);
-            holder.nameTV.setText(playerStats.get(position).getName());
-            switch (statID) {
-                case R.string.games:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getGamesCount()));
-                    break;
-                case R.string.wins:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getWins()));
-                    break;
-                case R.string.points:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getPoints()));
-                    break;
-                case R.string.tosses:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getTossesCount()));
-                    break;
-                case R.string.points_per_toss:
-                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
-                    break;
-                case R.string.hits_percentage:
-                    int hitsPct = Math.round(100*playerStats.get(position).getHitsPct());
-                    holder.valueTV.setText(String.valueOf(hitsPct));
-                    break;
-                case R.string.elimination_percentage:
-                    int elimPct = Math.round(100*playerStats.get(position).getEliminationsPct());
-                    holder.valueTV.setText(String.valueOf(elimPct));
-                    break;
-                case R.string.excesses_per_game:
-                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
-                    break;
             }
         }
     }
@@ -202,20 +201,16 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
 
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && (viewId == SAVED_GAMES_ACTIVITY || viewId == STATS_ACTIVITY)) {
-                    mListener.onSelectClicked(position);
-                }
-                if (position != RecyclerView.NO_POSITION && viewId==SELECT_PLAYER_VIEW) {
-                    selected.set(position, !selected.get(position));
-                    notifyItemChanged(position);
-                }
-                if (position != RecyclerView.NO_POSITION && viewId==ADD_PLAYER_VIEW) {
-                    notifyItemChanged(selected_position);
-                    selected_position = position;
-                    notifyItemChanged(selected_position);
+                if (position != RecyclerView.NO_POSITION) {
+                    if (viewId == ADD_PLAYER_VIEW) {
+                        notifyItemChanged(selected_position);
+                        selected_position = position;
+                        notifyItemChanged(selected_position);
+                    }
                     mListener.onSelectClicked(position);
                 }
             });
+
             if (removePlayer.getVisibility() == View.VISIBLE) {
             removePlayer.setOnTouchListener((view, motionEvent) -> {
                 int background;

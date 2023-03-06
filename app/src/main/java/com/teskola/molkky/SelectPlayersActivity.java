@@ -97,6 +97,7 @@ public class SelectPlayersActivity extends CommonOptions {
             @Override
             public void onSelectClicked(int position) {
                 selected.set(position, !selected.get(position));
+                listAdapter.notifyItemChanged(position);
             }
 
             @Override
