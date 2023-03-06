@@ -77,7 +77,7 @@ public class SavedGamesActivity extends CommonOptions {
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
             public void onSelectClicked(int position) {
-                int gameId = games.get(position).getId();
+                String gameId = games.get(position).getId();
                 Intent intent = new Intent(getApplicationContext(), GameActivity.class);
                 intent.putExtra("gameId", gameId);
                 startActivity(intent);

@@ -2,20 +2,19 @@ package com.teskola.molkky;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
 
 public class Game {
     private final ArrayList<Player> players;
-    private int id;
-    private String timestamp;
+    private String id;
 
-    public Game(int gameId, ArrayList<Player> players) {
+    public Game(String gameId, ArrayList<Player> players) {
         this.players = players;
         this.id = gameId;
     }
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
-        this.id = 0;
-        this.timestamp ="";
+        this.id = UUID.randomUUID().toString().substring(0,8);
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -59,16 +58,8 @@ public class Game {
         }
         return true;
     }
-
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
 }

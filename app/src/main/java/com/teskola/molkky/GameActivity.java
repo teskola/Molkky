@@ -82,8 +82,8 @@ public class GameActivity extends CommonOptions {
 
         // Saved game
 
-        if (getIntent().getIntExtra("gameId", 0) != 0) {
-            int gameId = getIntent().getIntExtra("gameId", 0);
+        if (getIntent().getStringExtra("gameId") != null) {
+            String gameId = getIntent().getStringExtra("gameId");
             game = new Game(gameId, DBHandler.getInstance(getApplicationContext()).getPlayers(gameId));
             gameEnded = true;
             savedGame = true;
@@ -362,6 +362,7 @@ public class GameActivity extends CommonOptions {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
+        FBHandler.getInstance(getApplicationContext()).addGameToFireBase(game);
     }
 
     @Override

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class PlayerStats extends PlayerInfo {
 
     private final DBHandler db;
-    private final ArrayList<Integer> games;
+    private final ArrayList<String> games;
     private int wins = -1;
     private int points = -1;
     private int tossesCount= -1;
@@ -41,8 +41,8 @@ public class PlayerStats extends PlayerInfo {
 
     public void calculateEliminations() {
         int eliminations = 0;
-        ArrayList<Integer> games = db.getGameIds(getId());
-        for (int gameId : games) {
+        ArrayList<String> games = db.getGameIds(getId());
+        for (String gameId : games) {
             if (db.isEliminated(getId(), gameId)) eliminations++;
         }
         this.eliminations = eliminations;
@@ -55,7 +55,7 @@ public class PlayerStats extends PlayerInfo {
 
     public void calculateExcesses() {
         int excesses = 0;
-        for (int gameId : games) {
+        for (String gameId : games) {
             Player p = new Player(db.getTosses(gameId, getId()));
             excesses = excesses + p.countExcesses();
         }

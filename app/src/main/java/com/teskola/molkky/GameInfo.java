@@ -8,9 +8,9 @@ public class GameInfo {
     private String data;
     private final String timestamp;
     private final String winner;
-    private int id = 0;
+    private String id;
 
-    public GameInfo(int id, String timestamp, String winner) {
+    public GameInfo(String id, String timestamp, String winner) {
         this.id = id;
         this.winner = winner;
         this.timestamp = timestamp;
@@ -20,10 +20,10 @@ public class GameInfo {
         this.data = data;
     }
     public String getData() { return data;}
-    public int getId() {
+    public String getId() {
         return id;
     }
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
