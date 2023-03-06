@@ -9,13 +9,13 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     private final ArrayList<Integer> tosses;
     private Stack<Integer> undoStack;
 
-    public Player(int id, String name) {
+    public Player(String id, String name) {
         super(id,name);
         this.tosses = new ArrayList<>();
         this.undoStack = new Stack<>();
     }
 
-    public Player(int id, String name, ArrayList<Integer> tosses) {
+    public Player(String id, String name, ArrayList<Integer> tosses) {
         super(id, name);
         this.tosses = tosses;
         this.undoStack = new Stack<>();

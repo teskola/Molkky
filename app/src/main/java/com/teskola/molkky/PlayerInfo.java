@@ -1,17 +1,20 @@
 package com.teskola.molkky;
 
+import java.util.UUID;
+
 public class PlayerInfo {
 
-    private int id = 0;
+    private String id;
     private String name;
 
-    public PlayerInfo(int id, String name) {
+    public PlayerInfo(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
     public PlayerInfo(String name) {
         this.name = name;
+        this.id = UUID.randomUUID().toString().substring(0,8);
     }
 
     public PlayerInfo() {}
@@ -24,11 +27,11 @@ public class PlayerInfo {
         this.name = name;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

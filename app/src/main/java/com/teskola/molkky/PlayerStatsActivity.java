@@ -25,7 +25,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import java.util.ArrayList;
 
 public class PlayerStatsActivity extends CommonOptions {
-    private int[] playerIds;
+    private String[] playerIds;
     private int position;
     private PlayerStats playerStats;
     private TextView playerNameTV;
@@ -70,15 +70,15 @@ public class PlayerStatsActivity extends CommonOptions {
         View showGamesView = findViewById(R.id.gamesTableRow);
         playerImage = findViewById(R.id.titleBar_playerImageView);
 
-        if (getIntent().getIntArrayExtra("PLAYER_IDS") != null) {
+        if (getIntent().getStringArrayExtra("PLAYER_IDS") != null) {
 
-            playerIds = getIntent().getIntArrayExtra("PLAYER_IDS");
+            playerIds = getIntent().getStringArrayExtra("PLAYER_IDS");
             position = getIntent().getIntExtra("POSITION", 0);
 
         }
 
         if (savedInstanceState != null) {
-            playerIds = savedInstanceState.getIntArray("PLAYER_IDS");
+            playerIds = savedInstanceState.getStringArray("PLAYER_IDS");
             position = savedInstanceState.getInt("POSITION");
         }
 
@@ -208,7 +208,7 @@ public class PlayerStatsActivity extends CommonOptions {
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putIntArray("PLAYER_IDS", playerIds);
+        savedInstanceState.putStringArray("PLAYER_IDS", playerIds);
         savedInstanceState.putInt("POSITION", position);
     }
 }

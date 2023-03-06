@@ -32,25 +32,25 @@ public class DBHandler extends SQLiteOpenHelper {
 
         String games = ""
                 + "CREATE TABLE \"games\" ( "
-                + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "	\"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
                 + "	\"winner\"	INTEGER, "
-                + " \"time\" TEXT, "
+                + " \"time\" STRFTIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "	FOREIGN KEY(\"winner\") REFERENCES \"players\"(\"id\"));";
 
 
         String players = ""
                 + "CREATE TABLE \"players\" ( "
-                + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "	\"name\"	TEXT UNIQUE, "
-                + " \"image\" INTEGER)";
+                + "	\"id\"	TEXT NOT NULL PRIMARY KEY, "
+                + "	\"name\" TEXT NOT NULL)";
+
 
 
         String tosses = ""
                 + "CREATE TABLE \"tosses\" ( "
                 + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "	\"gameId\"	INTEGER, "
-                + "	\"toss\"	INTEGER, "
-                + "	\"playerId\"	INTEGER, "
+                + "	\"gameId\"	INTEGER NOT NULL, "
+                + "	\"toss\"	INTEGER NOT NULL, "
+                + "	\"playerId\"	TEXT NOT NULL, "
                 + "	FOREIGN KEY(\"playerId\") REFERENCES \"players\"(\"id\"), "
                 + "	FOREIGN KEY(\"gameId\") REFERENCES \"game\"(\"id\"));";
 
@@ -79,9 +79,9 @@ public class DBHandler extends SQLiteOpenHelper {
         return false;
     }
 
-    public ArrayList<Integer> getGameIds(int playerId) {
+    public ArrayList<Integer> getGameIds(String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId=" + playerId, null);
+        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId FROM tosses WHERE playerId= \"" + playerId + "\"", null);
         ArrayList<Integer> gameIds = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
@@ -92,45 +92,45 @@ public class DBHandler extends SQLiteOpenHelper {
         return gameIds;
     }
 
-    public int getWins(int playerId) {
+    public int getWins(String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT (id) FROM games WHERE winner=" + playerId, null);
+        Cursor cursor = db.rawQuery("SELECT COUNT (id) FROM games WHERE winner=\"" + playerId + "\"", null);
         cursor.moveToFirst();
         int count = cursor.getInt(0);
         cursor.close();
         return count;
     }
 
-    public int getTotalPoints (int playerId) {
+    public int getTotalPoints (String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(toss) FROM tosses WHERE playerId=" + playerId, null);
+        Cursor cursor = db.rawQuery("SELECT SUM(toss) FROM tosses WHERE playerId=\"" + playerId + "\"", null);
         cursor.moveToFirst();
         int sum = cursor.getInt(0);
         cursor.close();
         return sum;
     }
 
-    public int getTotalTosses (int playerId) {
+    public int getTotalTosses (String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=" + playerId, null);
+        Cursor cursor = db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=\"" + playerId + "\"", null);
         cursor.moveToFirst();
         int sum = cursor.getInt(0);
         cursor.close();
         return sum;
     }
 
-    public int countTosses (int playerId, int value) {
+    public int countTosses (String playerId, int value) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor =db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=" + playerId + " AND toss=" + value, null);
+        Cursor cursor =db.rawQuery("SELECT COUNT(toss) FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND toss=" + value, null);
         cursor.moveToFirst();
         int result = cursor.getInt(0);
         cursor.close();
         return result;
     }
 
-    public boolean isEliminated (int playerId, int gameId) {
+    public boolean isEliminated (String playerId, int gameId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId + " ORDER BY ROWID DESC LIMIT 3;", null);
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId=" + gameId + " ORDER BY ROWID DESC LIMIT 3;", null);
         if (cursor.moveToFirst()) {
             do {
                 if (cursor.getInt(0) != 0) {
@@ -143,19 +143,17 @@ public class DBHandler extends SQLiteOpenHelper {
         return true;
     }
 
-    public ArrayList<GameInfo> getGames(int playerId) {
+    public ArrayList<GameInfo> getGames(String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, time, name FROM tosses " +
+        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, strftime('%d-%m-%Y %H:%M', time), name FROM tosses " +
                 "LEFT JOIN games ON gameId=games.id " +
                 "LEFT JOIN players ON games.winner=players.id " +
-                "WHERE playerId=" + playerId + " ORDER BY gameId DESC", null);
+                "WHERE playerId=\"" + playerId + "\" ORDER BY gameId DESC", null);
 
         ArrayList<GameInfo> games = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                GameInfo newGame = new GameInfo();
-                newGame.setId(cursor.getInt(0));
-                newGame.setData(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                GameInfo newGame = new GameInfo(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
                 games.add(newGame);
             } while (cursor.moveToNext());
         }
@@ -166,13 +164,11 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<GameInfo> getGames() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT games.id, time, name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
+        Cursor cursor = db.rawQuery("SELECT games.id, strftime('%d-%m-%Y %H:%M', time), name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
         ArrayList<GameInfo> games = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                GameInfo newGame = new GameInfo();
-                newGame.setId(cursor.getInt(0));
-                newGame.setData(cursor.getString(1) + " (" + cursor.getString(2) + ")");
+                GameInfo newGame = new GameInfo(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
                 games.add(newGame);
             } while (cursor.moveToNext());
         }
@@ -180,9 +176,9 @@ public class DBHandler extends SQLiteOpenHelper {
         return games;
     }
 
-    public String getPlayerName(int playerId) {
+    public String getPlayerName(String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM players WHERE id=" + playerId, null);
+        Cursor cursor = db.rawQuery("SELECT name FROM players WHERE id=\"" + playerId + "\"", null);
         cursor.moveToFirst();
         String name = cursor.getString(0);
         cursor.close();
@@ -209,7 +205,7 @@ public class DBHandler extends SQLiteOpenHelper {
         ArrayList<PlayerInfo> players = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                players.add(new PlayerInfo(cursor.getInt(0), cursor.getString(1)));
+                players.add(new PlayerInfo(cursor.getString(0), cursor.getString(1)));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -218,13 +214,12 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<Player> getPlayers(int gameId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT playerId, name, image FROM tosses LEFT JOIN players ON playerId=players.id  WHERE gameId=" + gameId, null);
+        Cursor cursor = db.rawQuery("SELECT DISTINCT playerId, name FROM tosses LEFT JOIN players ON playerId=players.id  WHERE gameId=" + gameId, null);
         ArrayList<Player> players = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
-                int playerId = cursor.getInt(0);
+                String playerId = cursor.getString(0);
                 String name = cursor.getString(1);
-                // int image = cursor.getInt(2);
                 players.add(new Player(playerId, name, getTosses(gameId, playerId)));
             } while (cursor.moveToNext());
         }
@@ -254,9 +249,9 @@ public class DBHandler extends SQLiteOpenHelper {
         return players;
     }
 
-    public ArrayList<Integer> getTosses (int gameId, int playerId) {
+    public ArrayList<Integer> getTosses (int gameId, String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=" + playerId + " AND gameId=" + gameId, null);
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId=" + gameId, null);
         ArrayList<Integer> tosses = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
@@ -294,21 +289,18 @@ public class DBHandler extends SQLiteOpenHelper {
         for (Player player : game.getPlayers()) {
             ContentValues values = new ContentValues();
             values.put("name", player.getName());
-            // values.put("image", player.getImage());
+            values.put("id", player.getId());
             db.insert("players", null, values);
             cursor = db.rawQuery("SELECT id FROM players WHERE name= \"" + player.getName() + "\";", null);
             cursor.moveToFirst();
-            player.setId(cursor.getInt(0));
         }
 
         // Add game to database
 
-        String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(new Date());
-        game.setTimestamp(timestamp);
-        int winner = game.getPlayers().get(0).getId();
+
+        String winner = game.getPlayers().get(0).getId();
         ContentValues values = new ContentValues();
         values.put("winner", winner);
-        values.put("time", timestamp);
         db.insert("games", null, values);
         cursor = db.rawQuery("SELECT last_insert_rowid();", null);
         cursor.moveToFirst();

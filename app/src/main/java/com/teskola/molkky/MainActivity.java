@@ -40,77 +40,6 @@ public class MainActivity extends CommonOptions {
     private EditText editPlayerName;
     private Button startButton;
 
-
-
-    // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (getCurrentFocus() != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-        }
-        return super.dispatchTouchEvent(ev);
-    }
-
-    public void setStarter(int position) {
-        start_position = position;
-        firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
-        if (!random) showFirstTextView();
-    }
-
-    public void addPlayer () {
-        PlayerInfo newPlayer = new Player(editPlayerName.getText().toString());
-        for (PlayerInfo player : playersList) {
-            if (player.getName().equals(newPlayer.getName())) {
-                Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }
-        if (!DBHandler.getInstance(this).PlayerNameIsOnDatabase(newPlayer.getName()))
-            imageHandler.findAndDeleteImage(newPlayer.getName());
-        playersList.add(0, newPlayer);
-        if (playersList.size() > 1) {
-            startButton.setEnabled(true);
-        }
-        editPlayerName.setText("");
-        listAdapter.notifyItemInserted(0);
-        if (!random && listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            listAdapter.setSelected_position(listAdapter.getSelected_position() + 1);
-            setStarter(listAdapter.getSelected_position());
-        }
-        Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
-    }
-
-    public void deletePlayer (int position) {
-        playersList.remove(position);
-        if (playersList.size() < 2) {
-            startButton.setEnabled(false);
-        }
-        start_position = listAdapter.getSelected_position();
-        if (playersList.isEmpty() || start_position == RecyclerView.NO_POSITION) {
-            hideFirstTextView();
-        }
-        listAdapter.notifyItemRemoved(position);
-    }
-
-    public void randomSelected() {
-        hideFirstTextView();
-        random = true;
-        int selPos = listAdapter.getSelected_position();
-        listAdapter.setSelected_position(RecyclerView.NO_POSITION);
-        start_position = RecyclerView.NO_POSITION;
-        listAdapter.notifyItemChanged(selPos);
-    }
-
-    public void showFirstTextView() {
-        firstTextView.setVisibility(View.VISIBLE);
-    }
-
-    public void hideFirstTextView() {
-        firstTextView.setVisibility(View.INVISIBLE);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -260,6 +189,77 @@ public class MainActivity extends CommonOptions {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
         }
     }
+
+
+    // https://stackoverflow.com/questions/4165414/how-to-hide-soft-keyboard-on-android-after-clicking-outside-edittext
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (getCurrentFocus() != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    public void setStarter(int position) {
+        start_position = position;
+        firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
+        if (!random) showFirstTextView();
+    }
+
+    public void addPlayer () {
+        PlayerInfo newPlayer = new PlayerInfo(editPlayerName.getText().toString());
+        for (PlayerInfo player : playersList) {
+            if (player.getName().equals(newPlayer.getName())) {
+                Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (!DBHandler.getInstance(this).PlayerNameIsOnDatabase(newPlayer.getName()))
+            imageHandler.findAndDeleteImage(newPlayer.getName());
+        playersList.add(0, newPlayer);
+        if (playersList.size() > 1) {
+            startButton.setEnabled(true);
+        }
+        editPlayerName.setText("");
+        listAdapter.notifyItemInserted(0);
+        if (!random && listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+            listAdapter.setSelected_position(listAdapter.getSelected_position() + 1);
+            setStarter(listAdapter.getSelected_position());
+        }
+        Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
+    }
+
+    public void deletePlayer (int position) {
+        playersList.remove(position);
+        if (playersList.size() < 2) {
+            startButton.setEnabled(false);
+        }
+        start_position = listAdapter.getSelected_position();
+        if (playersList.isEmpty() || start_position == RecyclerView.NO_POSITION) {
+            hideFirstTextView();
+        }
+        listAdapter.notifyItemRemoved(position);
+    }
+
+    public void randomSelected() {
+        hideFirstTextView();
+        random = true;
+        int selPos = listAdapter.getSelected_position();
+        listAdapter.setSelected_position(RecyclerView.NO_POSITION);
+        start_position = RecyclerView.NO_POSITION;
+        listAdapter.notifyItemChanged(selPos);
+    }
+
+    public void showFirstTextView() {
+        firstTextView.setVisibility(View.VISIBLE);
+    }
+
+    public void hideFirstTextView() {
+        firstTextView.setVisibility(View.INVISIBLE);
+    }
+
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {

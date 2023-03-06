@@ -102,7 +102,7 @@ public class AllStatsActivity extends CommonOptions {
         listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
             @Override
             public void onSelectClicked(int position) {
-                int[] playerIds = new int[playerStats.size()];
+                String[] playerIds = new String[playerStats.size()];
                 for (int i = 0; i < playerStats.size(); i++) {
                     playerIds[i] = playerStats.get(i).getId();
                 }

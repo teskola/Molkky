@@ -72,7 +72,7 @@ public class ScoreCardActivity extends CommonOptions {
             updateUI();
         });
         allTimeButton.setOnClickListener(view -> {
-            int[] playerIds = new int[game.getPlayers().size()];
+            String[] playerIds = new String[game.getPlayers().size()];
             for (int i = 0 ; i < game.getPlayers().size(); i++) {
                 playerIds[i] = game.getPlayer(i).getId();
             }

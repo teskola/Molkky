@@ -40,7 +40,7 @@ public class SavedGamesActivity extends CommonOptions {
         SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         if (getIntent().getExtras() != null) {
-            int playerID = getIntent().getIntExtra("PLAYER_ID", 0);
+            String playerID = getIntent().getStringExtra("PLAYER_ID");
             games = DBHandler.getInstance(getApplicationContext()).getGames(playerID);
             String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
@@ -98,7 +98,7 @@ public class SavedGamesActivity extends CommonOptions {
         super.onActivityResult(position, resultCode, data);
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(getIntent().getIntExtra("PLAYER_ID", 0));
+            String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(getIntent().getStringExtra("PLAYER_ID"));
             imageHandler.BitmapToJpg(photo, name);
             setImage(name);
         }

@@ -56,8 +56,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/remove_player"
-            tools:visibility="gone" />
+            app:srcCompat="@drawable/remove_player" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
