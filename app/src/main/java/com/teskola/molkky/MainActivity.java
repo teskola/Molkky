@@ -207,9 +207,10 @@ public class MainActivity extends CommonOptions {
 
     public void addPlayer () {
 
+        PlayerInfo newPlayer = new PlayerInfo(editPlayerName.getText().toString());
+
         // Check if name is already added
 
-        PlayerInfo newPlayer = new PlayerInfo(editPlayerName.getText().toString());
         for (PlayerInfo player : playersList) {
             if (player.getName().equals(newPlayer.getName())) {
                 Toast.makeText(this, getString(R.string.already_added, newPlayer.getName()), Toast.LENGTH_SHORT).show();
@@ -217,7 +218,7 @@ public class MainActivity extends CommonOptions {
             }
         }
 
-        // Check if name is already in database
+        // Check if name is already in database. If not, give player unique id.
 
         String playerId = DBHandler.getInstance(this).getPlayerId(newPlayer.getName());
         if (playerId != null)

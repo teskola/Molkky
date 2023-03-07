@@ -69,8 +69,7 @@ public class GameActivity extends CommonOptions {
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
-
-        fbHandler = FBHandler.getInstance(getApplicationContext());
+        fbHandler = new FBHandler(this);
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
@@ -364,7 +363,8 @@ public class GameActivity extends CommonOptions {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
-        if (preferences.getBoolean("USE_CLOUD_DATABASE", false)) fbHandler.addGameToFireBase(game);
+        String db = preferences.getString("DATABASE", fbHandler.getShortId());
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", false)) fbHandler.addGameToFireBase(db, game);
     }
 
     @Override
@@ -377,30 +377,8 @@ public class GameActivity extends CommonOptions {
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent intent = null;
-        switch (item.getItemId()) {
-            case R.id.new_game:
-                intent = new Intent(this, MainActivity.class);
-                break;
-            case R.id.stats:
-                intent = new Intent(this, AllStatsActivity.class);
-                break;
-            case R.id.saved_games:
-                intent = new Intent(this, SavedGamesActivity.class);
-                break;
-            case R.id.images_switch:
-                preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putBoolean("SHOW_IMAGES", !preferences.getBoolean("SHOW_IMAGES", false));
-                editor.apply();
-                invalidateOptionsMenu();
-                return false;
-            case R.id.rules:
-                intent = new Intent(this, RulesActivity.class);
-                break;
-        }
         savedGame = true;
-        startActivity(intent);
+        super.onOptionsItemSelected(item);
         return false;
     }
 

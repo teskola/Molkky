@@ -49,7 +49,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
         String tosses = ""
                 + "CREATE TABLE \"tosses\" ( "
-                + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "	\"gameId\"	INTEGER NOT NULL, "
                 + "	\"toss\"	INTEGER , "
                 + "	\"playerId\"	TEXT NOT NULL, "
