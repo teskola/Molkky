@@ -362,6 +362,7 @@ public class GameActivity extends CommonOptions {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
+
         FBHandler.getInstance(getApplicationContext()).addGameToFireBase(game);
     }
 
