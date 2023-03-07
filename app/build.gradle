@@ -1,15 +1,17 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
+
 }
 
 android {
     namespace 'com.teskola.molkky'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.teskola.molkky"
-        minSdk 16
-        targetSdk 32
+        minSdk 19
+        targetSdk 33
         versionCode 1
         versionName "1.2"
 
@@ -32,6 +34,7 @@ android {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation platform('com.google.firebase:firebase-bom:31.2.3')
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

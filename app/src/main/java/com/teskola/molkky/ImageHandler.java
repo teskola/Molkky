@@ -36,8 +36,8 @@ public class ImageHandler {
         }
     }
 
-    public String getImagePath (String name) {
-        File file = new File(context.getFilesDir(), name + ".jpg");
+    public String getImagePath (String id) {
+        File file = new File(context.getFilesDir(), id + ".jpg");
         if (file.exists()) {
             return file.getAbsolutePath();
         }
