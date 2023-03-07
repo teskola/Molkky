@@ -51,7 +51,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 + "CREATE TABLE \"tosses\" ( "
                 + "	\"id\"	INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "	\"gameId\"	INTEGER NOT NULL, "
-                + "	\"toss\"	INTEGER NOT NULL, "
+                + "	\"toss\"	INTEGER , "
                 + "	\"playerId\"	TEXT NOT NULL, "
                 + "	FOREIGN KEY(\"playerId\") REFERENCES \"players\"(\"id\"), "
                 + "	FOREIGN KEY(\"gameId\") REFERENCES \"game\"(\"id\"));";
@@ -130,7 +130,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public boolean isEliminated(String playerId, String gameId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId=" + gameId + " ORDER BY ROWID DESC LIMIT 3;", null);
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId= \"" + gameId + "\" ORDER BY ROWID DESC LIMIT 3;", null);
         if (cursor.moveToFirst()) {
             do {
                 if (cursor.getInt(0) != 0) {
@@ -145,7 +145,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<GameInfo> getGames(String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, strftime('%d-%m-%Y %H:%M', time), name FROM tosses " +
+        Cursor cursor = db.rawQuery("SELECT DISTINCT gameId, strftime('%d-%m-%Y %H:%M', time, \"localtime\"), name FROM tosses " +
                 "LEFT JOIN games ON gameId=games.id " +
                 "LEFT JOIN players ON games.winner=players.id " +
                 "WHERE playerId=\"" + playerId + "\" ORDER BY gameId DESC", null);
@@ -164,7 +164,8 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<GameInfo> getGames() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT games.id, strftime('%d-%m-%Y %H:%M', time), name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
+        Cursor cursor = db.rawQuery("SELECT games.id, strftime('%d-%m-%Y %H:%M', time, \"localtime\"), " +
+                "name FROM games LEFT JOIN players ON games.winner = players.id ORDER BY games.id DESC", null);
         ArrayList<GameInfo> games = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
@@ -214,7 +215,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<Player> getPlayers(String gameId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT playerId, name FROM tosses LEFT JOIN players ON playerId=players.id  WHERE gameId=" + gameId, null);
+        Cursor cursor = db.rawQuery("SELECT DISTINCT playerId, name FROM tosses LEFT JOIN players ON playerId=players.id  WHERE gameId=\"" + gameId + "\"", null);
         ArrayList<Player> players = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
@@ -252,7 +253,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public ArrayList<Integer> getTosses(String gameId, String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId=" + gameId, null);
+        Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId=\"" + playerId + "\"" + " AND gameId= \"" + gameId + "\"", null);
         ArrayList<Integer> tosses = new ArrayList<>();
         if (cursor.moveToFirst()) {
             do {
@@ -275,13 +276,22 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public void removeGameFromDatabase(String gameId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String games = "DELETE FROM games WHERE id = " + gameId + ";";
-        String tosses = "DELETE FROM tosses WHERE gameId = " + gameId + ";";
+        String games = "DELETE FROM games WHERE id = \"" + gameId + "\";";
+        String tosses = "DELETE FROM tosses WHERE gameId = \"" + gameId + "\";";
         db.execSQL(games);
         db.execSQL(tosses);
     }
 
+    /*
+    *
+    * Saves game to local database. If game with same id is already in database, overwrite.
+    *
+    * */
+
     public void saveGameToDatabase(Game game) {
+
+        removeGameFromDatabase(game.getId());
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         // Add player to database if player is already in database throws SQLiteConstraintException
@@ -292,6 +302,7 @@ public class DBHandler extends SQLiteOpenHelper {
             values.put("name", player.getName());
             values.put("id", player.getId());
             db.insert("players", null, values);
+
         }
 
         // Add game to database
@@ -299,12 +310,13 @@ public class DBHandler extends SQLiteOpenHelper {
         String winner = game.getPlayers().get(0).getId();
         ContentValues values = new ContentValues();
         values.put("winner", winner);
-        values.put("gameId", game.getId());
+        values.put("id", game.getId());
         db.insert("games", null, values);
 
         // Add tosses to database
 
         values.clear();
+        values.put("gameId", game.getId());
         for (Player p : game.getPlayers()) {
             values.put("playerId", p.getId());
             for (int i : p.getTosses()) {

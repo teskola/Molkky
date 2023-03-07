@@ -1,9 +1,5 @@
 package com.teskola.molkky;
 
-
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-
 public class GameInfo {
     private String data;
     private final String timestamp;

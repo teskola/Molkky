@@ -49,6 +49,7 @@ public class GameActivity extends CommonOptions {
     private ImageView playerImage;
 
     private final ImageHandler imageHandler = new ImageHandler(this);
+    private FBHandler fbHandler;
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
@@ -69,7 +70,9 @@ public class GameActivity extends CommonOptions {
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
 
+        fbHandler = FBHandler.getInstance(getApplicationContext());
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
@@ -324,7 +327,6 @@ public class GameActivity extends CommonOptions {
         VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        DBHandler.getInstance(getApplicationContext()).removeGameFromDatabase(game.getId());
 
     }
 
@@ -362,7 +364,7 @@ public class GameActivity extends CommonOptions {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
-        FBHandler.getInstance(getApplicationContext()).addGameToFireBase(game);
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", false)) fbHandler.addGameToFireBase(game);
     }
 
     @Override
