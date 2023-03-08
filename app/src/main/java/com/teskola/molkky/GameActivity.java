@@ -23,7 +23,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.google.gson.Gson;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +52,6 @@ public class GameActivity extends CommonOptions {
     private ImageView playerImage;
 
     private final ImageHandler imageHandler = new ImageHandler(this);
-    private FBHandler fbHandler;
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
@@ -69,7 +71,6 @@ public class GameActivity extends CommonOptions {
         verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
-        fbHandler = new FBHandler(this);
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
@@ -363,8 +364,48 @@ public class GameActivity extends CommonOptions {
 
     public void saveGame() {
         new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
+        FBHandler fbHandler = FBHandler.getInstance(getApplicationContext());
         String db = preferences.getString("DATABASE", fbHandler.getShortId());
-        if (preferences.getBoolean("USE_CLOUD_DATABASE", false)) fbHandler.addGameToFireBase(db, game);
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
+            fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
+                @Override
+                public void onResponseReceived(JSONObject response) {
+                    Toast.makeText(GameActivity.this, R.string.database_game_added, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onErrorReceived(VolleyError error) {
+                    if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
+                        fbHandler.refreshToken();
+                    } else {
+                        Toast.makeText(GameActivity.this, R.string.database_read_error, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onSignIn() {
+                    fbHandler.refreshToken();
+                }
+
+                @Override
+                public void onTokenRefreshed() {
+                    fbHandler.testDatabase(preferences.getString("DATABASE", fbHandler.getShortId()), true);
+                    fbHandler.addGameToFireBase(preferences.getString("DATABASE", fbHandler.getShortId()), game);
+                }
+
+                @Override
+                public void onSignInFailed() {
+                    Toast.makeText(GameActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+
+                }
+            });
+            if (fbHandler.getUser() != null) {
+                fbHandler.refreshToken();
+            } else {
+                fbHandler.signIn();
+            }
+
+        }
     }
 
     @Override

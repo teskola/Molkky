@@ -1,24 +1,23 @@
 package com.teskola.molkky;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.InputType;
-import android.text.TextWatcher;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.VolleyError;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class SettingsActivity extends CommonOptions {
     private SwitchCompat imageSwitch;
@@ -29,8 +28,7 @@ public class SettingsActivity extends CommonOptions {
     private boolean showImages;
     private boolean useCloud;
     private SharedPreferences preferences;
-    private FBHandler fbHandler;
-    private String newDatabase;
+    private String current;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +41,12 @@ public class SettingsActivity extends CommonOptions {
         editTV = findViewById(R.id.editDBID);
         instructionsTV = findViewById(R.id.instructionsTV);
 
-        fbHandler = new FBHandler(this);
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        String database = preferences.getString("DATABASE", fbHandler.getShortId());
-        editTV.setText(database);
+        current = preferences.getString("DATABASE", FBHandler.getInstance(getApplicationContext()).getShortId());
+        editTV.setText(current);
+        editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        useCloud = preferences.getBoolean("USE_CLOUD_DATABASE", false);
+        useCloud = preferences.getBoolean("USE_CLOUD_DATABASE", true);
         imageSwitch.setChecked(showImages);
         cloudSwitch.setChecked(useCloud);
         setDBOptionsColors();
@@ -64,48 +62,27 @@ public class SettingsActivity extends CommonOptions {
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                if (textView.getText().length() != 6) {
-                    textView.setText(database);
-                    Toast.makeText(this, getString(R.string.too_short_id), Toast.LENGTH_SHORT).show();
+                String input = textView.getText().toString();
+                if (input.length() < FBHandler.ID_LENGTH) {
+                    discardChanges();
+                } else if (!input.equals(current)) {
+                    validateDatabaseInput(input);
                 }
             }
             return false;
         });
-
-        editTV.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() > 5) {
-                    validateDatabaseInput(s.toString());
-                }
-                else {
-                    newDatabase = null;
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-
-
-
 
         confirmBtn.setOnClickListener(view -> {
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean("SHOW_IMAGES", showImages);
             editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
 
-            String db = editTV.getText().toString();
-            if (db.length() == 6 && newDatabase != null && useCloud) {
-                editor.putString("DATABASE", db);
+            String editText = editTV.getText().toString();
+            String database = preferences.getString("DATABASE", FBHandler.getInstance(getApplicationContext()).getShortId());
+            if (editText.length() == FBHandler.ID_LENGTH && !editText.equals(database) && useCloud) {
+                FBHandler.getInstance(getApplicationContext()).disconnect(database);
+                FBHandler.getInstance(getApplicationContext()).addUser(editText);
+                editor.putString("DATABASE", editText);
             }
             editor.apply();
             finish();
@@ -113,7 +90,7 @@ public class SettingsActivity extends CommonOptions {
 
     }
 
-    public void setDBOptionsColors () {
+    public void setDBOptionsColors() {
         if (useCloud) {
             idTV.setTextColor(getResources().getColor(R.color.black));
             editTV.setTextColor(getResources().getColor(R.color.black));
@@ -126,32 +103,80 @@ public class SettingsActivity extends CommonOptions {
             instructionsTV.setTextColor(getResources().getColor(R.color.light_gray));
         }
     }
-    public void validateDatabaseInput(String id) {
+
+    public void validateDatabaseInput(String input) {
+        FBHandler fbHandler = FBHandler.getInstance(getApplicationContext());
         fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
             @Override
-            public void onResponseReceived(String response) {
-                if (response.equals("null")) {
-                    Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
-                    newDatabase = null;
-                    String database = preferences.getString("DATABASE", fbHandler.getShortId());
-                    editTV.setText(database);
-                }
-                else {
-                    newDatabase = response;
+            public void onResponseReceived(JSONObject response) {
 
+                try {
+                    String created = response.getString("created");
+                    if (created.equals("null")) {
+                        Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
+                        editTV.setText(current);
+                    }
+                    else {
+                        current = input;
+                        Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
+            @Override
+            public void onErrorReceived(VolleyError error) {
+                if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
+                    fbHandler.refreshToken();
+                } else {
+                    Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onSignIn() {
+                fbHandler.refreshToken();
+            }
+
+            @Override
+            public void onTokenRefreshed() {
+                current = preferences.getString("DATABASE", fbHandler.getShortId());
+                fbHandler.testDatabase(current, true);
+                fbHandler.testDatabase(input, false);
+            }
+
+            @Override
+            public void onSignInFailed() {
+                Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+            }
         });
-        fbHandler.getGamesJson(id);
+        if (fbHandler.getUser() != null) {
+            fbHandler.refreshToken();
+        } else {
+            fbHandler.signIn();
+        }
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (getCurrentFocus() != null) {
+        if (getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
+            String input = editTV.getText().toString();
+            if (input.length() < FBHandler.ID_LENGTH) {
+                discardChanges();
+            } else if (!input.equals(current)) {
+                validateDatabaseInput(input);
+            }
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+    public void discardChanges() {
+
+        editTV.setText(current);
+        Toast.makeText(this, getString(R.string.too_short_id), Toast.LENGTH_SHORT).show();
+
     }
 
 

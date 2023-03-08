@@ -11,6 +11,7 @@
     <string name="ok">OK</string>
     <string name="dash">-</string>
     <string name="add">Lisää</string>
+    <string name="confirm">Valmis</string>
     <string name="yes">kyllä</string>
     <string name="no">ei</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
@@ -43,14 +44,16 @@
     <string name="hide_images">Piilota kuvat</string>
     <string name="rules_content">Pisteiden lasku:\n\nYksi kaatunut keila: keilaan merkitty numero\nUseampi kaatunut keila: kaatuneiden keilojen lukumäärä.\nKeilaa ei lasketa kaatuneeksi, jos se nojaa toiseen keilaan tai heittokapulaan.\nKaatuneet keilat nostetaan samaan paikkaan, johon ne ovat kaatuneet.\n\nPelin kulku: \n\nPeli päättyy, kun pelaaja saavuttaa 50 pistettä. Jos 50 pistettä ylittyy, pelaajan pisteet lasketaan 25 pisteeseen. Kolme peräkkäistä nollaa heittänyt pelaaja putoaa pelistä.\n\nHeittolinja: 3-4 metriä muodostelmasta.</string>
     <string name="source">Lähde: https://www.molkky.com/wp/saannot/</string>
-    <string name="confirm">Vahvista muutokset</string>
+    <string name="confirm_changes">Vahvista muutokset</string>
     <string name="use_cloud_database">Käytä pilvitietokantaa</string>
-    <string name="unable_to_connect">Yhdistäminen pilvitietokantaan epäonnistui.</string>
     <string name="database_id">Tietokannan tunnus</string>
     <string name="instructuons">Voit käyttää ystäviesi kanssa yhteistä tietokantaa asettamalla saman tunnuksen.</string>
     <string name="too_short_id">Virheellinen tunnus</string>
     <string name="post_to_database_failed">Pelin lisääminen pilvitietokantaan epäonnistui.</string>
-    <string name="database_read_error">Tapahtui virhe lukiessa tietokantaa.</string>
+    <string name="database_read_error">Virhe lukiessa tietokantaa. Tarkista internet-yhteys.</string>
     <string name="database_not_found">Tietokantaa ei löytynyt.</string>
+    <string name="database_changed">Tietokanta vaihdettu.</string>
+    <string name="database_game_added">Peli lisätty tietokantaan</string>
+    <string name="database_connected">Yhdistetty tietokantaan.</string>
 
 </resources>

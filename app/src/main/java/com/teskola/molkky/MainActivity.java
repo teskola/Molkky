@@ -21,7 +21,11 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +48,18 @@ public class MainActivity extends CommonOptions {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
+
+        setContentView(R.layout.activity_main);
+        startButton = findViewById(R.id.startButton);
+        recyclerview = findViewById(R.id.recyclerView);
+        editPlayerName = findViewById(R.id.editTextPlayerName);
+        editPlayerName.setImeActionLabel(getResources().getString(R.string.add), EditorInfo.IME_ACTION_DONE);
+        firstTextView = findViewById(R.id.firstTextView);
+        CheckBox randomCheckBox = findViewById(R.id.randomCheckBox);
+        ImageButton addButton = findViewById(R.id.addButton);
+        ImageButton selectButton = findViewById(R.id.selectButton);
+
+        if (savedInstanceState != null && savedInstanceState.getString("PLAYERS") != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
             Collections.addAll(playersList, players);
@@ -61,21 +76,7 @@ public class MainActivity extends CommonOptions {
 
         start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
         random = getIntent().getBooleanExtra("RANDOM", false);
-
-
-        setContentView(R.layout.activity_main);
-        startButton = findViewById(R.id.startButton);
-        recyclerview = findViewById(R.id.recyclerView);
-        editPlayerName = findViewById(R.id.editTextPlayerName);
-        editPlayerName.setImeActionLabel(getResources().getString(R.string.add), EditorInfo.IME_ACTION_DONE);
-        firstTextView = findViewById(R.id.firstTextView);
-
-        CheckBox randomCheckBox = findViewById(R.id.randomCheckBox);
-        ImageButton addButton = findViewById(R.id.addButton);
-        ImageButton selectButton = findViewById(R.id.selectButton);
-
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        createRecyclerView();
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
@@ -83,6 +84,9 @@ public class MainActivity extends CommonOptions {
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
+
+        createRecyclerView();
+
 
         if (random) {
             randomCheckBox.setChecked(true);
@@ -93,6 +97,7 @@ public class MainActivity extends CommonOptions {
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
+
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             boolean handled = false;
@@ -126,7 +131,62 @@ public class MainActivity extends CommonOptions {
 
         startButton.setOnClickListener(view -> startGame());
 
+        // Do this only when activity runs the first time.
 
+        if (savedInstanceState == null && getIntent().getExtras() == null) {
+
+            // Create FBHandler singleton.
+
+            FBHandler fbHandler = FBHandler.getInstance(this);
+
+            if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
+                fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
+                    @Override
+                    public void onResponseReceived(JSONObject response) {
+                        try {
+                            boolean conn = response.getBoolean("connected");
+                            if (conn) Toast.makeText(MainActivity.this, getResources().getString(R.string.database_connected), Toast.LENGTH_SHORT).show();
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onErrorReceived(VolleyError error) {
+                        if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
+                            fbHandler.refreshToken();
+                        } else {
+                            Toast.makeText(MainActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onSignIn() {
+                        fbHandler.refreshToken();
+                    }
+
+                    @Override
+                    public void onTokenRefreshed() {
+                        fbHandler.initializeDatabase();
+                    }
+
+                    @Override
+                    public void onSignInFailed() {
+                        Toast.makeText(MainActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+            if (fbHandler.getUser() == null) {
+                fbHandler.signIn();
+            }
+        }
+
+
+    }
+    @Override
+    protected void onStart () {
+        super.onStart();
     }
 
     public void createRecyclerView () {
@@ -192,7 +252,7 @@ public class MainActivity extends CommonOptions {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (getCurrentFocus() != null) {
+        if (getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
         }
