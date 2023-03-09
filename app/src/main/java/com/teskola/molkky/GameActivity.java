@@ -121,8 +121,8 @@ public class GameActivity extends CommonOptions {
             endGame();
             pointsToWinTV.setText(getString(R.string.points_to_win, game.getPlayer(0).getToss(game.getPlayer(0).getTossesSize() - 1)));
         } else {
-            VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
-            verticalRecyclerView.setAdapter(verticalAdapter);
+            ListAdapter listAdapter = new ListAdapter(game.getPlayers(), false, true);
+            verticalRecyclerView.setAdapter(listAdapter);
             verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         }
 
@@ -288,10 +288,25 @@ public class GameActivity extends CommonOptions {
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.start_new_game));
         okButton.setEnabled(true);
-        VerticalAdapter verticalAdapter = new VerticalAdapter(sortedPlayers, true, false);
-        verticalRecyclerView.setAdapter(verticalAdapter);
+        ListAdapter listAdapter = new ListAdapter(sortedPlayers, true, false);
+        verticalRecyclerView.setAdapter(listAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        verticalAdapter.setOnItemClickListener(this::openScorecard);
+        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
+            @Override
+            public void onSelectClicked(int position) {
+                openScorecard(position);
+            }
+
+            @Override
+            public void onDeleteClicked(int position) {
+
+            }
+
+            @Override
+            public void onImageClicked(int position) {
+
+            }
+        });
     }
 
     public void resumeGame() {
@@ -324,7 +339,7 @@ public class GameActivity extends CommonOptions {
         topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
         congratsView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
-        VerticalAdapter verticalAdapter = new VerticalAdapter(game.getPlayers(), false, true);
+        ListAdapter verticalAdapter = new ListAdapter(game.getPlayers(), false, true);
         verticalRecyclerView.setAdapter(verticalAdapter);
         verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 

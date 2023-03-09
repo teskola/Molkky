@@ -130,6 +130,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                 else
                     holder.pointsTV.setVisibility(View.GONE);
                 holder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
+                break;
         }
 
         // Add images
@@ -193,6 +194,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     }
 
     public ListAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses) {
+        this.viewId = GAME_ACTIVITY;
         this.showTosses = showTosses;
         this.onlyGray = onlyGray;
         this.players = playersList;
