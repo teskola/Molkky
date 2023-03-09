@@ -18,24 +18,24 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class FBHandler {
+public class FirebaseManager {
     private final RequestQueue mRequestqueue;
     private FirebaseUser user;
     private onResponseListener mListener;
-    private static FBHandler instance;
+    private static FirebaseManager instance;
     private String token;
     private Context context;
 
     private static final String FB_URL = "https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/";
     public static final int ID_LENGTH = 6; // only even numbers allowed;
 
-    public static FBHandler getInstance(Context context) {
+    public static FirebaseManager getInstance(Context context) {
         if (instance == null)
-            instance = new FBHandler(context.getApplicationContext());
+            instance = new FirebaseManager(context.getApplicationContext());
         return instance;
     }
 
-    private FBHandler(Context context) {
+    private FirebaseManager(Context context) {
         mRequestqueue = Volley.newRequestQueue(context);
         user = FirebaseAuth.getInstance().getCurrentUser();
         this.context = context;
@@ -287,7 +287,7 @@ public class FBHandler {
                 response -> {
                     Game[] games = new Gson().fromJson(response, Game[].class);
                     for (Game game : games) {
-                        DBHandler.getInstance(context).saveGameToDatabase(game);
+                        LocalDatabaseManager.getInstance(context).saveGameToDatabase(game);
                     }
 
                 },

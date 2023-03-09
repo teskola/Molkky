@@ -10,18 +10,18 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class DBHandler extends SQLiteOpenHelper {
+public class LocalDatabaseManager extends SQLiteOpenHelper {
     private static final String DB_NAME = "molkky_db";
     private static final int DB_VERSION = 1;
-    private static DBHandler instance;
+    private static LocalDatabaseManager instance;
 
-    private DBHandler(Context context) {
+    private LocalDatabaseManager(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
-    public static DBHandler getInstance(Context context) {
+    public static LocalDatabaseManager getInstance(Context context) {
         if (instance == null)
-            instance = new DBHandler(context.getApplicationContext());
+            instance = new LocalDatabaseManager(context.getApplicationContext());
         return instance;
     }
 

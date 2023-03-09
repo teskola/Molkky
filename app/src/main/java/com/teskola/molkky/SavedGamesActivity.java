@@ -42,8 +42,8 @@ public class SavedGamesActivity extends CommonOptions {
 
         if (getIntent().getExtras() != null) {
             String playerID = getIntent().getStringExtra("PLAYER_ID");
-            games = DBHandler.getInstance(getApplicationContext()).getGames(playerID);
-            String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerID);
+            games = LocalDatabaseManager.getInstance(getApplicationContext()).getGames(playerID);
+            String name = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
             if (preferences.getBoolean("SHOW_IMAGES", false))
@@ -65,7 +65,7 @@ public class SavedGamesActivity extends CommonOptions {
         } else {
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            games = DBHandler.getInstance(getApplicationContext()).getGames();
+            games = LocalDatabaseManager.getInstance(getApplicationContext()).getGames();
 
         }
         showAllBtn.setOnClickListener(view -> showAllGames());
@@ -122,7 +122,7 @@ public class SavedGamesActivity extends CommonOptions {
 
     @SuppressLint("NotifyDataSetChanged")
     public void showAllGames() {
-        ArrayList<GameInfo> allGames = DBHandler.getInstance(getApplicationContext()).getGames();
+        ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(getApplicationContext()).getGames();
         while (!games.isEmpty()) {
             games.remove(0);
             recyclerView.getAdapter().notifyItemRemoved(0);

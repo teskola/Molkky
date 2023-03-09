@@ -56,7 +56,7 @@ public class AllStatsActivity extends CommonOptions {
         nextIB.setVisibility(View.VISIBLE);
         statID = getIntent().getIntExtra("STAT_ID", 0);
 
-        ArrayList<PlayerInfo> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
+        ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayers();
         for (PlayerInfo player : players) {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }

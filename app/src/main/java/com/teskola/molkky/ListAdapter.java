@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,18 +26,21 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     public static final int SELECT_PLAYER_VIEW = 1;
     public static final int SAVED_GAMES_ACTIVITY = 2;
     public static final int STATS_ACTIVITY = 3;
+    public static final int GAME_ACTIVITY = 4;
 
-    private final ArrayList<PlayerInfo> players;
+    private ArrayList<PlayerInfo> playerInfos;
+    private ArrayList<Player> players;
     private ArrayList<GameInfo> games = null;
     private ArrayList<PlayerStats> playerStats = null;
 
-    private final Context context;
-    private final int viewId;
+    private Context context;
+    private int viewId;
     private int statID = 0;
-    private final boolean showImages;
+    private boolean showImages;
 
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
+    private boolean showTosses, onlyGray;
     private onItemClickListener mListener;
 
 
@@ -57,7 +61,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     @Override
     public ListAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View view = inflater.inflate(R.layout.player_card, parent, false);
+        View view = viewId == GAME_ACTIVITY ? inflater.inflate(R.layout.vertical_player_view, parent, false)
+                : inflater.inflate(R.layout.player_card, parent, false);
 
         return new MyViewHolder(view);
     }
@@ -68,11 +73,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
 
         switch (viewId) {
             case ADD_PLAYER_VIEW:
-                holder.nameTV.setText(players.get(position).getName());
+                holder.nameTV.setText(playerInfos.get(position).getName());
                 holder.playerView.setSelected(selected_position == position);
                 break;
             case SELECT_PLAYER_VIEW:
-                holder.nameTV.setText(players.get(position).getName());
+                holder.nameTV.setText(playerInfos.get(position).getName());
                 if (selected.get(position))
                     holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
                 else
@@ -112,15 +117,28 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                         holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
                         break;
                 }
+            case GAME_ACTIVITY:
+
+                Player player = players.get(position);
+                int total = player.countAll();
+                holder.playerNameTextView.setText(player.getName());
+                holder.totalPointsTextView.setText(String.valueOf(total));
+                if (showTosses) {
+                    holder.pointsTV.setVisibility(View.VISIBLE);
+                    holder.pointsTV.setText(buildTossesString(position));
+                }
+                else
+                    holder.pointsTV.setVisibility(View.GONE);
+                holder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
         }
 
         // Add images
 
-        if (showImages && (viewId != SAVED_GAMES_ACTIVITY)) {
+        if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
             ImageHandler imageHandler = new ImageHandler(context);
             String path = "";
-            if (players != null)
-                path = imageHandler.getImagePath(players.get(position).getId());
+            if (playerInfos != null)
+                path = imageHandler.getImagePath(playerInfos.get(position).getId());
             else if (playerStats != null)
                 path = imageHandler.getImagePath(playerStats.get(position).getId());
             if (path != null) {
@@ -136,8 +154,9 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
 
     @Override
     public int getItemCount() {
-        if (players != null) return players.size();
+        if (playerInfos != null) return playerInfos.size();
         if (games != null) return games.size();
+        if (players != null) return players.size();
         return playerStats.size();
     }
 
@@ -159,30 +178,65 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         this.viewId = viewId;
         this.showImages = showImages;
 
-        this.players = (ArrayList<PlayerInfo>) data;
+        this.playerInfos = (ArrayList<PlayerInfo>) data;
         this.playerStats = (ArrayList<PlayerStats>) data;
         this.games = (ArrayList<GameInfo>) data;
 
     }
 
-    public ListAdapter(Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
+    public ListAdapter(Context context, ArrayList<PlayerInfo> playerInfos, ArrayList<Boolean> selected, boolean showImages) {
         this.viewId = SELECT_PLAYER_VIEW;
-        this.players = players;
+        this.playerInfos = playerInfos;
         this.selected = selected;
         this.showImages = showImages;
         this.context = context;
     }
 
+    public ListAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses) {
+        this.showTosses = showTosses;
+        this.onlyGray = onlyGray;
+        this.players = playersList;
+    }
+
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        private final TextView nameTV;
-        private final TextView valueTV;
-        private final View playerView;
-        private final ShapeableImageView playerImageView;
+        private  TextView nameTV;
+        private  TextView valueTV;
+        private  View playerView;
+        private  ShapeableImageView playerImageView;
+
+        private  TextView playerNameTextView;
+        private  TextView totalPointsTextView;
+        private  TextView pointsTV;
+        private  View playerCardView;
 
         @SuppressLint("ClickableViewAccessibility")
         public MyViewHolder(View itemView) {
             super(itemView);
+
+            if (viewId == GAME_ACTIVITY) {
+
+                playerCardView = itemView.findViewById(R.id.playerCardView);
+                playerNameTextView = itemView.findViewById(R.id.playerNameTextView);
+                totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
+                pointsTV = itemView.findViewById(R.id.pointsTV);
+
+                // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
+
+                pointsTV.setOnTouchListener((view, motionEvent) -> {
+                    view.getParent().requestDisallowInterceptTouchEvent(true);
+                    return false;
+                });
+                pointsTV.setMovementMethod(new ScrollingMovementMethod());
+                playerCardView.setOnClickListener(view -> {
+                    int position = getAbsoluteAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && mListener != null) {
+                        mListener.onSelectClicked(position);
+                    }
+                });
+                return;
+            }
+
             nameTV = itemView.findViewById(R.id.nameTV);
             valueTV = itemView.findViewById(R.id.valueTV);
             playerView = itemView.findViewById(R.id.listItemView);
@@ -252,4 +306,18 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
             }
         }
     }
+
+    public String buildTossesString(int position) {
+        ArrayList<Integer> tosses = players.get(position).getTosses();
+        StringBuilder sb = new StringBuilder();
+        for (Integer toss : tosses) {
+            if (toss < 10)
+                sb.append(" ").append(toss);
+            else
+                sb.append(toss);
+            sb.append("  ");
+        }
+        return sb.toString();
+    }
+
 }

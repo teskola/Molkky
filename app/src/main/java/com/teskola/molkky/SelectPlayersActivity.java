@@ -45,8 +45,8 @@ public class SelectPlayersActivity extends CommonOptions {
         }
 
 
-        DBHandler dbHandler = DBHandler.getInstance(getApplicationContext());
-        ArrayList<PlayerInfo> savedPlayers = dbHandler.getPlayers(allPlayers);
+        LocalDatabaseManager localDatabaseManager = LocalDatabaseManager.getInstance(getApplicationContext());
+        ArrayList<PlayerInfo> savedPlayers = localDatabaseManager.getPlayers(allPlayers);
         for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);
             selected.add(false);

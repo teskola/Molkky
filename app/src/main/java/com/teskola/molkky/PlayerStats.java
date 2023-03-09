@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class PlayerStats extends PlayerInfo {
 
-    private final DBHandler db;
+    private final LocalDatabaseManager db;
     private final ArrayList<String> games;
     private int wins = -1;
     private int points = -1;
@@ -16,7 +16,7 @@ public class PlayerStats extends PlayerInfo {
 
     public PlayerStats(PlayerInfo player, Context context) {
         super(player.getId(), player.getName());
-        db = DBHandler.getInstance(context);
+        db = LocalDatabaseManager.getInstance(context);
         this.games = db.getGameIds(getId());
     }
 

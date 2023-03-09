@@ -42,7 +42,7 @@ public class SettingsActivity extends CommonOptions {
         instructionsTV = findViewById(R.id.instructionsTV);
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        current = preferences.getString("DATABASE", FBHandler.getInstance(getApplicationContext()).getShortId());
+        current = preferences.getString("DATABASE", FirebaseManager.getInstance(getApplicationContext()).getShortId());
         editTV.setText(current);
         editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
@@ -63,7 +63,7 @@ public class SettingsActivity extends CommonOptions {
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 String input = textView.getText().toString();
-                if (input.length() < FBHandler.ID_LENGTH) {
+                if (input.length() < FirebaseManager.ID_LENGTH) {
                     discardChanges();
                 } else if (!input.equals(current)) {
                     validateDatabaseInput(input);
@@ -78,10 +78,10 @@ public class SettingsActivity extends CommonOptions {
             editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
 
             String editText = editTV.getText().toString();
-            String database = preferences.getString("DATABASE", FBHandler.getInstance(getApplicationContext()).getShortId());
-            if (editText.length() == FBHandler.ID_LENGTH && !editText.equals(database) && useCloud) {
-                FBHandler.getInstance(getApplicationContext()).disconnect(database);
-                FBHandler.getInstance(getApplicationContext()).addUser(editText);
+            String database = preferences.getString("DATABASE", FirebaseManager.getInstance(getApplicationContext()).getShortId());
+            if (editText.length() == FirebaseManager.ID_LENGTH && !editText.equals(database) && useCloud) {
+                FirebaseManager.getInstance(getApplicationContext()).disconnect(database);
+                FirebaseManager.getInstance(getApplicationContext()).addUser(editText);
                 editor.putString("DATABASE", editText);
             }
             editor.apply();
@@ -105,8 +105,8 @@ public class SettingsActivity extends CommonOptions {
     }
 
     public void validateDatabaseInput(String input) {
-        FBHandler fbHandler = FBHandler.getInstance(getApplicationContext());
-        fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
+        FirebaseManager firebaseManager = FirebaseManager.getInstance(getApplicationContext());
+        firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
             @Override
             public void onResponseReceived(JSONObject response) {
 
@@ -127,7 +127,7 @@ public class SettingsActivity extends CommonOptions {
             @Override
             public void onErrorReceived(VolleyError error) {
                 if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                    fbHandler.refreshToken();
+                    firebaseManager.refreshToken();
                 } else {
                     Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
                 }
@@ -135,14 +135,14 @@ public class SettingsActivity extends CommonOptions {
 
             @Override
             public void onSignIn() {
-                fbHandler.refreshToken();
+                firebaseManager.refreshToken();
             }
 
             @Override
             public void onTokenRefreshed() {
-                current = preferences.getString("DATABASE", fbHandler.getShortId());
-                fbHandler.testDatabase(current, true);
-                fbHandler.testDatabase(input, false);
+                current = preferences.getString("DATABASE", firebaseManager.getShortId());
+                firebaseManager.testDatabase(current, true);
+                firebaseManager.testDatabase(input, false);
             }
 
             @Override
@@ -150,10 +150,10 @@ public class SettingsActivity extends CommonOptions {
                 Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
             }
         });
-        if (fbHandler.getUser() != null) {
-            fbHandler.refreshToken();
+        if (firebaseManager.getUser() != null) {
+            firebaseManager.refreshToken();
         } else {
-            fbHandler.signIn();
+            firebaseManager.signIn();
         }
     }
 
@@ -161,7 +161,7 @@ public class SettingsActivity extends CommonOptions {
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
             String input = editTV.getText().toString();
-            if (input.length() < FBHandler.ID_LENGTH) {
+            if (input.length() < FirebaseManager.ID_LENGTH) {
                 discardChanges();
             } else if (!input.equals(current)) {
                 validateDatabaseInput(input);

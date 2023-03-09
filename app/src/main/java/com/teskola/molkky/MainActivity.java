@@ -137,10 +137,10 @@ public class MainActivity extends CommonOptions {
 
             // Create FBHandler singleton.
 
-            FBHandler fbHandler = FBHandler.getInstance(this);
+            FirebaseManager firebaseManager = FirebaseManager.getInstance(this);
 
             if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-                fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
+                firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
                     @Override
                     public void onResponseReceived(JSONObject response) {
                         try {
@@ -155,7 +155,7 @@ public class MainActivity extends CommonOptions {
                     @Override
                     public void onErrorReceived(VolleyError error) {
                         if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                            fbHandler.refreshToken();
+                            firebaseManager.refreshToken();
                         } else {
                             Toast.makeText(MainActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
                         }
@@ -163,12 +163,12 @@ public class MainActivity extends CommonOptions {
 
                     @Override
                     public void onSignIn() {
-                        fbHandler.refreshToken();
+                        firebaseManager.refreshToken();
                     }
 
                     @Override
                     public void onTokenRefreshed() {
-                        fbHandler.initializeDatabase();
+                        firebaseManager.initializeDatabase();
                     }
 
                     @Override
@@ -177,8 +177,8 @@ public class MainActivity extends CommonOptions {
                     }
                 });
             }
-            if (fbHandler.getUser() == null) {
-                fbHandler.signIn();
+            if (firebaseManager.getUser() == null) {
+                firebaseManager.signIn();
             }
         }
 
@@ -240,7 +240,7 @@ public class MainActivity extends CommonOptions {
             String json = new Gson().toJson(playersList);
             intent.putExtra("SELECTED_PLAYERS", json);
         }
-        if (DBHandler.getInstance(getApplicationContext()).getPlayerCount() > 0) {
+        if (LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerCount() > 0) {
             startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
@@ -280,7 +280,7 @@ public class MainActivity extends CommonOptions {
 
         // Check if name is already in database. If not, give player unique id.
 
-        String playerId = DBHandler.getInstance(this).getPlayerId(newPlayer.getName());
+        String playerId = LocalDatabaseManager.getInstance(this).getPlayerId(newPlayer.getName());
         if (playerId != null)
             newPlayer.setId(playerId);
 

@@ -87,7 +87,7 @@ public class GameActivity extends CommonOptions {
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            game = new Game(gameId, DBHandler.getInstance(getApplicationContext()).getPlayers(gameId));
+            game = new Game(gameId, LocalDatabaseManager.getInstance(getApplicationContext()).getPlayers(gameId));
             gameEnded = true;
             savedGame = true;
             chartButton.setVisibility(View.VISIBLE);
@@ -363,11 +363,11 @@ public class GameActivity extends CommonOptions {
     }
 
     public void saveGame() {
-        new Thread(() -> DBHandler.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
-        FBHandler fbHandler = FBHandler.getInstance(getApplicationContext());
-        String db = preferences.getString("DATABASE", fbHandler.getShortId());
+        new Thread(() -> LocalDatabaseManager.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
+        FirebaseManager firebaseManager = FirebaseManager.getInstance(getApplicationContext());
+        String db = preferences.getString("DATABASE", firebaseManager.getShortId());
         if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-            fbHandler.setOnResponseListener(new FBHandler.onResponseListener() {
+            firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
                 @Override
                 public void onResponseReceived(JSONObject response) {
                     Toast.makeText(GameActivity.this, R.string.database_game_added, Toast.LENGTH_SHORT).show();
@@ -376,7 +376,7 @@ public class GameActivity extends CommonOptions {
                 @Override
                 public void onErrorReceived(VolleyError error) {
                     if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                        fbHandler.refreshToken();
+                        firebaseManager.refreshToken();
                     } else {
                         Toast.makeText(GameActivity.this, R.string.database_read_error, Toast.LENGTH_SHORT).show();
                     }
@@ -384,13 +384,13 @@ public class GameActivity extends CommonOptions {
 
                 @Override
                 public void onSignIn() {
-                    fbHandler.refreshToken();
+                    firebaseManager.refreshToken();
                 }
 
                 @Override
                 public void onTokenRefreshed() {
-                    fbHandler.testDatabase(preferences.getString("DATABASE", fbHandler.getShortId()), true);
-                    fbHandler.addGameToFireBase(preferences.getString("DATABASE", fbHandler.getShortId()), game);
+                    firebaseManager.testDatabase(preferences.getString("DATABASE", firebaseManager.getShortId()), true);
+                    firebaseManager.addGameToFireBase(preferences.getString("DATABASE", firebaseManager.getShortId()), game);
                 }
 
                 @Override
@@ -399,10 +399,10 @@ public class GameActivity extends CommonOptions {
 
                 }
             });
-            if (fbHandler.getUser() != null) {
-                fbHandler.refreshToken();
+            if (firebaseManager.getUser() != null) {
+                firebaseManager.refreshToken();
             } else {
-                fbHandler.signIn();
+                firebaseManager.signIn();
             }
 
         }

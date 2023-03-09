@@ -167,7 +167,7 @@ public class PlayerStatsActivity extends CommonOptions {
     }
 
     public void getPlayerData() {
-        String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
+        String name = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
         PlayerInfo player = new PlayerInfo(playerIds[position], name);
         playerStats = new PlayerStats(player, getApplicationContext());
     }
