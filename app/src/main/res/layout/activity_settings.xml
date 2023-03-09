@@ -48,17 +48,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageSwitch" />
 
-        <TextView
-            android:id="@+id/idTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/database_id"
-            android:textColor="@color/light_gray"
-            app:layout_constraintEnd_toEndOf="@+id/cloudSwitch"
-            app:layout_constraintStart_toStartOf="@+id/cloudSwitch"
-            app:layout_constraintTop_toBottomOf="@+id/cloudSwitch" />
-
         <EditText
             android:id="@+id/editDBID"
             android:layout_width="0dp"
@@ -72,7 +61,7 @@
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="@+id/cloudSwitch"
             app:layout_constraintStart_toStartOf="@+id/cloudSwitch"
-            app:layout_constraintTop_toBottomOf="@+id/idTV" />
+            app:layout_constraintTop_toBottomOf="@+id/cloudSwitch" />
 
         <TextView
             android:id="@+id/instructionsTV"

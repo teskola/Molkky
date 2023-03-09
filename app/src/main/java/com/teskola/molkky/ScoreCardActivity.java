@@ -89,7 +89,6 @@ public class ScoreCardActivity extends CommonOptions {
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 setImage();
-                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);

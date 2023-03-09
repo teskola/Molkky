@@ -20,7 +20,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 
-public class SavedGamesActivity extends CommonOptions {
+public class SavedGamesActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
 
     private ArrayList<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
@@ -42,8 +42,8 @@ public class SavedGamesActivity extends CommonOptions {
 
         if (getIntent().getExtras() != null) {
             String playerID = getIntent().getStringExtra("PLAYER_ID");
-            games = LocalDatabaseManager.getInstance(getApplicationContext()).getGames(playerID);
-            String name = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerName(playerID);
+            games = LocalDatabaseManager.getInstance(this).getGames(playerID);
+            String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
             if (preferences.getBoolean("SHOW_IMAGES", false))
@@ -65,33 +65,15 @@ public class SavedGamesActivity extends CommonOptions {
         } else {
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            games = LocalDatabaseManager.getInstance(getApplicationContext()).getGames();
+            games = LocalDatabaseManager.getInstance(this).getGames();
 
         }
         showAllBtn.setOnClickListener(view -> showAllGames());
 
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.SAVED_GAMES_ACTIVITY);
+        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.SAVED_GAMES_ACTIVITY, this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                String gameId = games.get(position).getId();
-                Intent intent = new Intent(getApplicationContext(), GameActivity.class);
-                intent.putExtra("gameId", gameId);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-            }
-        });
         playerImageView.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
     }
 
@@ -122,7 +104,7 @@ public class SavedGamesActivity extends CommonOptions {
 
     @SuppressLint("NotifyDataSetChanged")
     public void showAllGames() {
-        ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(getApplicationContext()).getGames();
+        ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(this).getGames();
         while (!games.isEmpty()) {
             games.remove(0);
             recyclerView.getAdapter().notifyItemRemoved(0);
@@ -142,5 +124,23 @@ public class SavedGamesActivity extends CommonOptions {
         super.onCreateOptionsMenu(menu);
         menu.findItem(R.id.saved_games).setVisible(false);
         return true;
+    }
+
+    @Override
+    public void onSelectClicked(int position) {
+        String gameId = games.get(position).getId();
+        Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+        intent.putExtra("gameId", gameId);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onDeleteClicked(int position) {
+
+    }
+
+    @Override
+    public void onImageClicked(int position) {
+
     }
 }

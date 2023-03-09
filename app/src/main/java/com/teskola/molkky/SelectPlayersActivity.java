@@ -1,6 +1,8 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,14 +21,13 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class SelectPlayersActivity extends CommonOptions {
+public class SelectPlayersActivity extends BaseActivity implements ListAdapter.OnItemClickListener {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
     private RecyclerView recyclerView;
-    private ListAdapter listAdapter;
     private final ImageHandler imageHandler = new ImageHandler(this);
 
 
@@ -45,8 +46,7 @@ public class SelectPlayersActivity extends CommonOptions {
         }
 
 
-        LocalDatabaseManager localDatabaseManager = LocalDatabaseManager.getInstance(getApplicationContext());
-        ArrayList<PlayerInfo> savedPlayers = localDatabaseManager.getPlayers(allPlayers);
+        ArrayList<PlayerInfo> savedPlayers = LocalDatabaseManager.getInstance(this).getPlayers(allPlayers);
         for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);
             selected.add(false);
@@ -68,7 +68,6 @@ public class SelectPlayersActivity extends CommonOptions {
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
-                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
@@ -81,33 +80,18 @@ public class SelectPlayersActivity extends CommonOptions {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             String json = new Gson().toJson(selectedPlayers);
             intent.putExtra("PLAYERS", json);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
+            finish();
         });
 
 
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(getApplicationContext(), allPlayers, selected, preferences.getBoolean("SHOW_IMAGES", false));
-        recyclerView.setAdapter(listAdapter);
+        recyclerView.setAdapter(new ListAdapter(getApplicationContext(), allPlayers, selected, preferences.getBoolean("SHOW_IMAGES", false), this));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                selected.set(position, !selected.get(position));
-                listAdapter.notifyItemChanged(position);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-                imageHandler.takePicture(position);
-            }
-        });
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {
@@ -115,7 +99,7 @@ public class SelectPlayersActivity extends CommonOptions {
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             imageHandler.BitmapToJpg(photo, allPlayers.get(position).getId());
-            listAdapter.notifyItemChanged(position);
+            recyclerView.getAdapter().notifyItemChanged(position);
         }
     }
 
@@ -129,9 +113,18 @@ public class SelectPlayersActivity extends CommonOptions {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        menu.findItem(R.id.new_game).setVisible(false);
-        return true;
+    public void onSelectClicked(int position) {
+        selected.set(position, !selected.get(position));
+        recyclerView.getAdapter().notifyItemChanged(position);
+    }
+
+    @Override
+    public void onDeleteClicked(int position) {
+
+    }
+
+    @Override
+    public void onImageClicked(int position) {
+        imageHandler.takePicture(position);
     }
 }

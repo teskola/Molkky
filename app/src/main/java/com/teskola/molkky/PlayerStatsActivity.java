@@ -87,7 +87,6 @@ public class PlayerStatsActivity extends CommonOptions {
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
-                invalidateOptionsMenu();
                 updateUI();
             }
         };
@@ -167,7 +166,7 @@ public class PlayerStatsActivity extends CommonOptions {
     }
 
     public void getPlayerData() {
-        String name = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
+        String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerIds[position]);
         PlayerInfo player = new PlayerInfo(playerIds[position], name);
         playerStats = new PlayerStats(player, getApplicationContext());
     }

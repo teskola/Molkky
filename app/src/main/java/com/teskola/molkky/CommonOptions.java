@@ -7,7 +7,7 @@ import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public abstract class CommonOptions extends AppCompatActivity {
+public abstract class CommonOptions extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -20,6 +20,7 @@ public abstract class CommonOptions extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.new_game:
                 intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 break;
             case R.id.stats:
                 intent = new Intent(this, AllStatsActivity.class);

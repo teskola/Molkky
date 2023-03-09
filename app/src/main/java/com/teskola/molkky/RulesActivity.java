@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class RulesActivity extends AppCompatActivity {
+public class RulesActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

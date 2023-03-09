@@ -1,34 +1,70 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.VolleyError;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class SettingsActivity extends CommonOptions {
+public class SettingsActivity extends BaseActivity {
     private SwitchCompat imageSwitch;
     private SwitchCompat cloudSwitch;
     private Button confirmBtn;
-    private TextView idTV, editTV, instructionsTV;
+    private TextView editTV, instructionsTV;
 
     private boolean showImages;
     private boolean useCloud;
     private SharedPreferences preferences;
     private String current;
+    private String input;
+    private FirebaseAuth.AuthStateListener authStateListener;
+    private final FirebaseManagerListener validationListener = new FirebaseManagerListener() {
+        @Override
+        public void onResponseReceived(JSONObject response) {
+            try {
+                String created = response.getString("created");
+                if (created.equals("null")) {
+                    Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
+                    editTV.setText(current);
+                }
+                else {
+                    current = input;
+                    Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onErrorReceived(VolleyError error) {
+            Toast.makeText(SettingsActivity.this, getResources().getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onSignInFailed(Exception e) {
+            Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+
+        }
+    };;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,12 +73,11 @@ public class SettingsActivity extends CommonOptions {
         confirmBtn = findViewById(R.id.confirmButton);
         imageSwitch = findViewById(R.id.imageSwitch);
         cloudSwitch = findViewById(R.id.cloudSwitch);
-        idTV = findViewById(R.id.idTV);
         editTV = findViewById(R.id.editDBID);
         instructionsTV = findViewById(R.id.instructionsTV);
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        current = preferences.getString("DATABASE", FirebaseManager.getInstance(getApplicationContext()).getShortId());
+        current = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
         editTV.setText(current);
         editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
@@ -58,15 +93,20 @@ public class SettingsActivity extends CommonOptions {
         cloudSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             useCloud = isChecked;
             setDBOptionsColors();
+            if (isChecked)
+                FirebaseManager.getInstance(SettingsActivity.this).addListener(validationListener);
+            else
+                FirebaseManager.getInstance(SettingsActivity.this).removeListener(validationListener);
+
         });
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                String input = textView.getText().toString();
+                input = textView.getText().toString();
                 if (input.length() < FirebaseManager.ID_LENGTH) {
                     discardChanges();
                 } else if (!input.equals(current)) {
-                    validateDatabaseInput(input);
+                    FirebaseManager.getInstance(SettingsActivity.this).testDatabase(input, false);
                 }
             }
             return false;
@@ -78,10 +118,10 @@ public class SettingsActivity extends CommonOptions {
             editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
 
             String editText = editTV.getText().toString();
-            String database = preferences.getString("DATABASE", FirebaseManager.getInstance(getApplicationContext()).getShortId());
+            String database = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
             if (editText.length() == FirebaseManager.ID_LENGTH && !editText.equals(database) && useCloud) {
-                FirebaseManager.getInstance(getApplicationContext()).disconnect(database);
-                FirebaseManager.getInstance(getApplicationContext()).addUser(editText);
+                FirebaseManager.getInstance(this).disconnect(database);
+                FirebaseManager.getInstance(this).addUser(editText);
                 editor.putString("DATABASE", editText);
             }
             editor.apply();
@@ -92,68 +132,13 @@ public class SettingsActivity extends CommonOptions {
 
     public void setDBOptionsColors() {
         if (useCloud) {
-            idTV.setTextColor(getResources().getColor(R.color.black));
             editTV.setTextColor(getResources().getColor(R.color.black));
-            editTV.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+            editTV.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             instructionsTV.setTextColor(getResources().getColor(R.color.black));
         } else {
-            idTV.setTextColor(getResources().getColor(R.color.light_gray));
             editTV.setTextColor(getResources().getColor(R.color.light_gray));
             editTV.setInputType(InputType.TYPE_NULL);
             instructionsTV.setTextColor(getResources().getColor(R.color.light_gray));
-        }
-    }
-
-    public void validateDatabaseInput(String input) {
-        FirebaseManager firebaseManager = FirebaseManager.getInstance(getApplicationContext());
-        firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
-            @Override
-            public void onResponseReceived(JSONObject response) {
-
-                try {
-                    String created = response.getString("created");
-                    if (created.equals("null")) {
-                        Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
-                        editTV.setText(current);
-                    }
-                    else {
-                        current = input;
-                        Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-            @Override
-            public void onErrorReceived(VolleyError error) {
-                if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                    firebaseManager.refreshToken();
-                } else {
-                    Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onSignIn() {
-                firebaseManager.refreshToken();
-            }
-
-            @Override
-            public void onTokenRefreshed() {
-                current = preferences.getString("DATABASE", firebaseManager.getShortId());
-                firebaseManager.testDatabase(current, true);
-                firebaseManager.testDatabase(input, false);
-            }
-
-            @Override
-            public void onSignInFailed() {
-                Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-            }
-        });
-        if (firebaseManager.getUser() != null) {
-            firebaseManager.refreshToken();
-        } else {
-            firebaseManager.signIn();
         }
     }
 
@@ -164,7 +149,7 @@ public class SettingsActivity extends CommonOptions {
             if (input.length() < FirebaseManager.ID_LENGTH) {
                 discardChanges();
             } else if (!input.equals(current)) {
-                validateDatabaseInput(input);
+                FirebaseManager.getInstance(SettingsActivity.this).testDatabase(input, false);
             }
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
@@ -179,12 +164,37 @@ public class SettingsActivity extends CommonOptions {
 
     }
 
-
+    protected void onStart() {
+        super.onStart();
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", true) && FirebaseManager.getInstance(this).getUser() == null ) {
+            authStateListener = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (firebaseAuth.getCurrentUser() != null) {
+                        Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_connected), Toast.LENGTH_SHORT).show();
+                        current = preferences.getString("DATABASE", FirebaseManager.getInstance(SettingsActivity.this).getShortId());
+                        FirebaseAuth.getInstance().removeAuthStateListener(this);
+                    }
+                }
+            };
+            FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
+        }
+    }
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        menu.findItem(R.id.settings).setVisible(false);
-        return true;
+    protected void onStop() {
+        super.onStop();
+        if (authStateListener != null) {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+        }
+        FirebaseManager.getInstance(this).removeListener(validationListener);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (authStateListener != null) {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+        }
+        FirebaseManager.getInstance(this).removeListener(validationListener);
+    }
 }

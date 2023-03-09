@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -19,7 +20,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class AllStatsActivity extends CommonOptions {
+public class AllStatsActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
 
     private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID;
@@ -56,7 +57,7 @@ public class AllStatsActivity extends CommonOptions {
         nextIB.setVisibility(View.VISIBLE);
         statID = getIntent().getIntExtra("STAT_ID", 0);
 
-        ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(getApplicationContext()).getPlayers();
+        ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(this).getPlayers();
         for (PlayerInfo player : players) {
             playerStats.add(new PlayerStats(player, getApplicationContext()));
         }
@@ -64,7 +65,6 @@ public class AllStatsActivity extends CommonOptions {
 
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
-                invalidateOptionsMenu();
                 createRecyclerView();
                 updateUI();
             }
@@ -95,31 +95,9 @@ public class AllStatsActivity extends CommonOptions {
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(this, playerStats, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.STATS_ACTIVITY);
+        listAdapter = new ListAdapter(this, playerStats, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.STATS_ACTIVITY, this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                String[] playerIds = new String[playerStats.size()];
-                for (int i = 0; i < playerStats.size(); i++) {
-                    playerIds[i] = playerStats.get(i).getId();
-                }
-                Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-                intent.putExtra("PLAYER_IDS", playerIds);
-                intent.putExtra("POSITION", position);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-                imageHandler.takePicture(position);
-            }
-        });
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {
@@ -172,4 +150,25 @@ public class AllStatsActivity extends CommonOptions {
         return true;
     }
 
+    @Override
+    public void onSelectClicked(int position) {
+        String[] playerIds = new String[playerStats.size()];
+        for (int i = 0; i < playerStats.size(); i++) {
+            playerIds[i] = playerStats.get(i).getId();
+        }
+        Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
+        intent.putExtra("PLAYER_IDS", playerIds);
+        intent.putExtra("POSITION", position);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onDeleteClicked(int position) {
+    }
+
+    @Override
+    public void onImageClicked(int position) {
+        imageHandler.takePicture(position);
+
+    }
 }

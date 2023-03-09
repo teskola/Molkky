@@ -29,19 +29,19 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     public static final int GAME_ACTIVITY = 4;
 
     private ArrayList<PlayerInfo> playerInfos;
-    private ArrayList<Player> players;
+    private ArrayList<Player> players = null;
     private ArrayList<GameInfo> games = null;
     private ArrayList<PlayerStats> playerStats = null;
 
     private Context context;
-    private int viewId;
+    private final int viewId;
     private int statID = 0;
     private boolean showImages;
 
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
     private boolean showTosses, onlyGray;
-    private onItemClickListener mListener;
+    private OnItemClickListener onItemClickListener;
 
 
     public void setSelected_position(int selected_position) {
@@ -117,6 +117,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                         holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
                         break;
                 }
+                break;
             case GAME_ACTIVITY:
 
                 Player player = players.get(position);
@@ -161,7 +162,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         return playerStats.size();
     }
 
-    public interface onItemClickListener {
+    public interface OnItemClickListener {
         void onSelectClicked(int position);
 
         void onDeleteClicked(int position);
@@ -169,12 +170,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         void onImageClicked(int position);
     }
 
-    public void setOnItemClickListener(onItemClickListener listener) {
-        mListener = listener;
-    }
-
-
-    public ListAdapter(Context context, ArrayList<?> data, boolean showImages, int viewId) {
+    public ListAdapter(Context context, ArrayList<?> data, boolean showImages, int viewId, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
         this.context = context;
         this.viewId = viewId;
         this.showImages = showImages;
@@ -185,7 +182,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
 
     }
 
-    public ListAdapter(Context context, ArrayList<PlayerInfo> playerInfos, ArrayList<Boolean> selected, boolean showImages) {
+    public ListAdapter(Context context, ArrayList<PlayerInfo> playerInfos, ArrayList<Boolean> selected, boolean showImages, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
         this.viewId = SELECT_PLAYER_VIEW;
         this.playerInfos = playerInfos;
         this.selected = selected;
@@ -193,7 +191,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         this.context = context;
     }
 
-    public ListAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses) {
+    public ListAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
         this.viewId = GAME_ACTIVITY;
         this.showTosses = showTosses;
         this.onlyGray = onlyGray;
@@ -232,8 +231,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                 pointsTV.setMovementMethod(new ScrollingMovementMethod());
                 playerCardView.setOnClickListener(view -> {
                     int position = getAbsoluteAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && mListener != null) {
-                        mListener.onSelectClicked(position);
+                    if (position != RecyclerView.NO_POSITION && onItemClickListener != null) {
+                        onItemClickListener.onSelectClicked(position);
                     }
                 });
                 return;
@@ -254,7 +253,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                 playerImageView.setOnClickListener(view -> {
                     int position = getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        mListener.onImageClicked(position);
+                        onItemClickListener.onImageClicked(position);
                 });
             } else playerImageView.setVisibility(View.GONE);
 
@@ -267,7 +266,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                         selected_position = position;
                         notifyItemChanged(selected_position);
                     }
-                    mListener.onSelectClicked(position);
+                    onItemClickListener.onSelectClicked(position);
                 }
             });
 
@@ -284,7 +283,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                             break;
                         }
                         case MotionEvent.ACTION_UP: {
-                            if (mListener != null) {
+                            if (onItemClickListener != null) {
                                 int position = getAbsoluteAdapterPosition();
                                 if (selected_position == position) {
                                     selected_position = RecyclerView.NO_POSITION;
@@ -292,7 +291,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
                                     selected_position -= 1;
                                 }
                                 if (position != RecyclerView.NO_POSITION) {
-                                    mListener.onDeleteClicked(position);
+                                    onItemClickListener.onDeleteClicked(position);
                                 }
                             }
                             playerView.setBackgroundResource(R.drawable.beige_white_background);

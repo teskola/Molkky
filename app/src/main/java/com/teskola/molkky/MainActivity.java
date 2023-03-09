@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class MainActivity extends CommonOptions {
+public class MainActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
 
     private ArrayList<PlayerInfo> playersList = new ArrayList<>();
     private boolean random = false;
@@ -44,22 +44,22 @@ public class MainActivity extends CommonOptions {
     private RecyclerView recyclerview;
     private EditText editPlayerName;
     private Button startButton;
+    private CheckBox randomCheckBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
         recyclerview = findViewById(R.id.recyclerView);
         editPlayerName = findViewById(R.id.editTextPlayerName);
         editPlayerName.setImeActionLabel(getResources().getString(R.string.add), EditorInfo.IME_ACTION_DONE);
         firstTextView = findViewById(R.id.firstTextView);
-        CheckBox randomCheckBox = findViewById(R.id.randomCheckBox);
+        randomCheckBox = findViewById(R.id.randomCheckBox);
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        if (savedInstanceState != null && savedInstanceState.getString("PLAYERS") != null) {
+        if (savedInstanceState != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
             Collections.addAll(playersList, players);
@@ -67,36 +67,13 @@ public class MainActivity extends CommonOptions {
             random = savedInstanceState.getBoolean("RANDOM");
         }
 
-        if (getIntent().getStringExtra("PLAYERS") != null) {
-            playersList = new ArrayList<>();
-            String json = getIntent().getStringExtra("PLAYERS");
-            PlayerInfo[] players = new Gson().fromJson(json, PlayerInfo[].class);
-            Collections.addAll(playersList, players);
-        }
-
-        start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
-        random = getIntent().getBooleanExtra("RANDOM", false);
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        preferences = getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         listener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 createRecyclerView();
-                invalidateOptionsMenu();
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);
-
-        createRecyclerView();
-
-
-        if (random) {
-            randomCheckBox.setChecked(true);
-            randomSelected();
-        } else if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            setStarter(listAdapter.getSelected_position());
-        }
-        if (playersList.size() > 1) {
-            startButton.setEnabled(true);
-        }
 
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -128,90 +105,43 @@ public class MainActivity extends CommonOptions {
                 }
             }
         });
-
         startButton.setOnClickListener(view -> startGame());
-
-        // Do this only when activity runs the first time.
-
-        if (savedInstanceState == null && getIntent().getExtras() == null) {
-
-            // Create FBHandler singleton.
-
-            FirebaseManager firebaseManager = FirebaseManager.getInstance(this);
-
-            if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-                firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
-                    @Override
-                    public void onResponseReceived(JSONObject response) {
-                        try {
-                            boolean conn = response.getBoolean("connected");
-                            if (conn) Toast.makeText(MainActivity.this, getResources().getString(R.string.database_connected), Toast.LENGTH_SHORT).show();
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    @Override
-                    public void onErrorReceived(VolleyError error) {
-                        if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                            firebaseManager.refreshToken();
-                        } else {
-                            Toast.makeText(MainActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onSignIn() {
-                        firebaseManager.refreshToken();
-                    }
-
-                    @Override
-                    public void onTokenRefreshed() {
-                        firebaseManager.initializeDatabase();
-                    }
-
-                    @Override
-                    public void onSignInFailed() {
-                        Toast.makeText(MainActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-            if (firebaseManager.getUser() == null) {
-                firebaseManager.signIn();
-            }
-        }
-
-
     }
+
     @Override
-    protected void onStart () {
-        super.onStart();
+    protected void onNewIntent (Intent intent) {
+        super.onNewIntent(intent);
+        if (intent.getStringExtra("PLAYERS") != null) {
+            playersList = new ArrayList<>();
+            String json = intent.getStringExtra("PLAYERS");
+            PlayerInfo[] players = new Gson().fromJson(json, PlayerInfo[].class);
+            Collections.addAll(playersList, players);
+        }
+    }
+
+    @Override
+    protected void onResume () {
+        super.onResume();
+        start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
+        random = getIntent().getBooleanExtra("RANDOM", false);
+        createRecyclerView();
+
+        if (random) {
+            randomCheckBox.setChecked(true);
+            randomSelected();
+        } else if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
+            setStarter(listAdapter.getSelected_position());
+        }
+        if (playersList.size() > 1) {
+            startButton.setEnabled(true);
+        }
     }
 
     public void createRecyclerView () {
-        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.ADD_PLAYER_VIEW);
+        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.ADD_PLAYER_VIEW, this);
         listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
-
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                setStarter(position);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-                deletePlayer(position);
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-                imageHandler.takePicture(position);
-            }
-        });
-
     }
 
     protected void onActivityResult(int position, int resultCode, Intent data) {
@@ -240,7 +170,7 @@ public class MainActivity extends CommonOptions {
             String json = new Gson().toJson(playersList);
             intent.putExtra("SELECTED_PLAYERS", json);
         }
-        if (LocalDatabaseManager.getInstance(getApplicationContext()).getPlayerCount() > 0) {
+        if (LocalDatabaseManager.getInstance(this).getPlayerCount() > 0) {
             startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
@@ -343,4 +273,29 @@ public class MainActivity extends CommonOptions {
         menu.findItem(R.id.new_game).setVisible(false);
         return true;
     }
+    @Override
+    public void onSelectClicked(int position) {
+        setStarter(position);
+    }
+
+    @Override
+    public void onDeleteClicked(int position) {
+        deletePlayer(position);
+    }
+
+    @Override
+    public void onImageClicked(int position) {
+        imageHandler.takePicture(position);
+    }
+
+    @Override
+    public void onBackPressed () {
+        moveTaskToBack(true);
+    }
+
+
+
+
+
+
 }

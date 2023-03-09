@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class GameActivity extends CommonOptions {
+public class GameActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
 
     private Game game;
@@ -47,13 +47,32 @@ public class GameActivity extends CommonOptions {
     private ViewGroup congratsView;
     private Button okButton;
     private ImageButton chartButton;
-    private RecyclerView verticalRecyclerView;
+    private RecyclerView recyclerView;
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
     private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+
+    private final FirebaseManagerListener firebaseListener = new FirebaseManagerListener() {
+        @Override
+        public void onResponseReceived(JSONObject response) {
+            Toast.makeText(GameActivity.this, getResources().getString(R.string.database_game_added), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onErrorReceived(VolleyError error) {
+            Toast.makeText(GameActivity.this, getResources().getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
+
+        }
+
+        @Override
+        public void onSignInFailed(Exception e) {
+            Toast.makeText(GameActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+        }
+    };
+
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -68,26 +87,25 @@ public class GameActivity extends CommonOptions {
         congratsView = findViewById(R.id.congratsView);
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
-        verticalRecyclerView = findViewById(R.id.verticalRecyclerView);
+        recyclerView = findViewById(R.id.verticalRecyclerView);
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        listener = (sharedPreferences, key) -> {
+        preferenceChangeListener = (sharedPreferences, key) -> {
             if (key.equals("SHOW_IMAGES")) {
                 showImages = sharedPreferences.getBoolean(key, false);
                 setImage();
-                invalidateOptionsMenu();
             }
         };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
+        preferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
         // Saved game
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            game = new Game(gameId, LocalDatabaseManager.getInstance(getApplicationContext()).getPlayers(gameId));
+            game = new Game(gameId, LocalDatabaseManager.getInstance(this).getPlayers(gameId));
             gameEnded = true;
             savedGame = true;
             chartButton.setVisibility(View.VISIBLE);
@@ -121,12 +139,10 @@ public class GameActivity extends CommonOptions {
             endGame();
             pointsToWinTV.setText(getString(R.string.points_to_win, game.getPlayer(0).getToss(game.getPlayer(0).getTossesSize() - 1)));
         } else {
-            ListAdapter listAdapter = new ListAdapter(game.getPlayers(), false, true);
-            verticalRecyclerView.setAdapter(listAdapter);
-            verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            createRecyclerView(game.getPlayers());
         }
 
-        verticalRecyclerView.setOnTouchListener((view, motionEvent) -> {
+        recyclerView.setOnTouchListener((view, motionEvent) -> {
             findViewById(R.id.pointsTV).getParent().requestDisallowInterceptTouchEvent(false);
             return false;
         });
@@ -160,7 +176,7 @@ public class GameActivity extends CommonOptions {
         okButton.setOnClickListener(view -> {
             if (!pointsTextView.getText().equals("-") || savedGame) {
                 if (!gameEnded) {
-                    Objects.requireNonNull(verticalRecyclerView.getLayoutManager()).scrollToPosition(0);
+                    Objects.requireNonNull(recyclerView.getLayoutManager()).scrollToPosition(0);
                     int points = Integer.parseInt(pointsTextView.getText().toString());
                     game.getPlayer(0).addToss(points);
                     if (!game.getPlayer(0).getUndoStack().empty())
@@ -232,6 +248,17 @@ public class GameActivity extends CommonOptions {
             playerImage.setVisibility(View.GONE);
     }
 
+    public void createRecyclerView (ArrayList<Player> players) {
+        ListAdapter listAdapter;
+        if (gameEnded) {
+            listAdapter = new ListAdapter(players, true, false, this);
+        } else {
+            listAdapter = new ListAdapter(players, false, true, null);
+        }
+        recyclerView.setAdapter(listAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
     public void updateUI(boolean undo) {
 
         nameTextView.setText(game.getPlayer(0).getName());
@@ -247,11 +274,11 @@ public class GameActivity extends CommonOptions {
             topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
 
         if (undo) {
-            Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(game.getPlayers().size() - 1);
-            verticalRecyclerView.getAdapter().notifyItemInserted(0);
+            Objects.requireNonNull(recyclerView.getAdapter()).notifyItemRemoved(game.getPlayers().size() - 1);
+            recyclerView.getAdapter().notifyItemInserted(0);
         } else {
-            Objects.requireNonNull(verticalRecyclerView.getAdapter()).notifyItemRemoved(0);
-            verticalRecyclerView.getAdapter().notifyItemInserted(game.getPlayers().size() - 1);
+            Objects.requireNonNull(recyclerView.getAdapter()).notifyItemRemoved(0);
+            recyclerView.getAdapter().notifyItemInserted(game.getPlayers().size() - 1);
             if (!gameEnded)
                 resetSeekBar();
         }
@@ -288,25 +315,7 @@ public class GameActivity extends CommonOptions {
         Collections.sort(sortedPlayers);
         okButton.setText(getString(R.string.start_new_game));
         okButton.setEnabled(true);
-        ListAdapter listAdapter = new ListAdapter(sortedPlayers, true, false);
-        verticalRecyclerView.setAdapter(listAdapter);
-        verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                openScorecard(position);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-
-            }
-        });
+        createRecyclerView(sortedPlayers);
     }
 
     public void resumeGame() {
@@ -339,9 +348,7 @@ public class GameActivity extends CommonOptions {
         topContainer.setBackgroundResource(selectBackground(game.getPlayer(0), false));
         congratsView.setVisibility(View.INVISIBLE);
         okButton.setText(getString(R.string.ok));
-        ListAdapter verticalAdapter = new ListAdapter(game.getPlayers(), false, true);
-        verticalRecyclerView.setAdapter(verticalAdapter);
-        verticalRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        createRecyclerView(game.getPlayers());
 
     }
 
@@ -366,7 +373,7 @@ public class GameActivity extends CommonOptions {
 
     public void startNewGame() {
         Intent intent = new Intent(this, MainActivity.class);
-
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         ArrayList<Player> reversed = new ArrayList<>(game.getPlayers());
         Collections.sort(reversed);
         Collections.reverse(reversed);
@@ -378,48 +385,11 @@ public class GameActivity extends CommonOptions {
     }
 
     public void saveGame() {
-        new Thread(() -> LocalDatabaseManager.getInstance(getApplicationContext()).saveGameToDatabase(game)).start();
-        FirebaseManager firebaseManager = FirebaseManager.getInstance(getApplicationContext());
-        String db = preferences.getString("DATABASE", firebaseManager.getShortId());
+        new Thread(() -> LocalDatabaseManager.getInstance(this).saveGameToDatabase(game)).start();
+        String db = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
         if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-            firebaseManager.setOnResponseListener(new FirebaseManager.onResponseListener() {
-                @Override
-                public void onResponseReceived(JSONObject response) {
-                    Toast.makeText(GameActivity.this, R.string.database_game_added, Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onErrorReceived(VolleyError error) {
-                    if (error.networkResponse != null && error.networkResponse.statusCode == 401) {
-                        firebaseManager.refreshToken();
-                    } else {
-                        Toast.makeText(GameActivity.this, R.string.database_read_error, Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onSignIn() {
-                    firebaseManager.refreshToken();
-                }
-
-                @Override
-                public void onTokenRefreshed() {
-                    firebaseManager.testDatabase(preferences.getString("DATABASE", firebaseManager.getShortId()), true);
-                    firebaseManager.addGameToFireBase(preferences.getString("DATABASE", firebaseManager.getShortId()), game);
-                }
-
-                @Override
-                public void onSignInFailed() {
-                    Toast.makeText(GameActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-
-                }
-            });
-            if (firebaseManager.getUser() != null) {
-                firebaseManager.refreshToken();
-            } else {
-                firebaseManager.signIn();
-            }
-
+            FirebaseManager.getInstance(GameActivity.this).addListener(firebaseListener);
+            FirebaseManager.getInstance(GameActivity.this).addGameToFireBase(db, game);
         }
     }
 
@@ -481,4 +451,35 @@ public class GameActivity extends CommonOptions {
         return BEIGE;
     }
 
+    @Override
+    public void onSelectClicked(int position) {
+        openScorecard(position);
+    }
+
+    @Override
+    public void onDeleteClicked(int position) {
+
+    }
+
+    @Override
+    public void onImageClicked(int position) {
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        FirebaseManager.getInstance(this).removeListener(firebaseListener);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseManager.getInstance(this).removeListener(firebaseListener);
+    }
 }
