@@ -50,7 +50,7 @@
     <string name="instructuons">Voit käyttää ystäviesi kanssa samaa tietokantaa asettamalla yhteisen tunnuksen.</string>
     <string name="too_short_id">Virheellinen tunnus</string>
     <string name="post_to_database_failed">Pelin lisääminen pilvitietokantaan epäonnistui.</string>
-    <string name="database_read_error">Ei yhteyttä tietokantaan. Tarkista internet-yhteys.</string>
+    <string name="database_connection_failed">Yhdistäminen tietokantaan epäonnistui. Tarkista internet-yhteys.</string>
     <string name="database_not_found">Tietokantaa ei löytynyt.</string>
     <string name="database_changed">Tietokanta vaihdettu.</string>
     <string name="database_game_added">Peli lisätty tietokantaan</string>

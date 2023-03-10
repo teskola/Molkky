@@ -6,8 +6,12 @@ import androidx.appcompat.widget.SwitchCompat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -31,7 +35,6 @@ public class SettingsActivity extends BaseActivity {
     private boolean useCloud;
     private SharedPreferences preferences;
     private String current;
-    private String input;
     private FirebaseAuth.AuthStateListener authStateListener;
     private final FirebaseManagerListener validationListener = new FirebaseManagerListener() {
         @Override
@@ -41,8 +44,8 @@ public class SettingsActivity extends BaseActivity {
                 if (created.equals("null")) {
                     Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
                     editTV.setText(current);
-                }
-                else {
+                } else {
+                    String input = editTV.getText().toString();
                     current = input;
                     Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
                 }
@@ -53,17 +56,23 @@ public class SettingsActivity extends BaseActivity {
 
         @Override
         public void onErrorReceived(VolleyError error) {
-            Toast.makeText(SettingsActivity.this, getResources().getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
+            if (error.networkResponse != null) {
+                Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
+                editTV.setText(current);
+            } else {
+                Toast.makeText(SettingsActivity.this, getResources().getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
+            }
+
         }
 
         @Override
         public void onSignInFailed(Exception e) {
+            editTV.setText(current);
             Toast.makeText(SettingsActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
 
         }
-    };;
-
-
+    };
+    ;
 
 
     @Override
@@ -102,7 +111,7 @@ public class SettingsActivity extends BaseActivity {
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                input = textView.getText().toString();
+                String input = textView.getText().toString();
                 if (input.length() < FirebaseManager.ID_LENGTH) {
                     discardChanges();
                 } else if (!input.equals(current)) {
@@ -112,20 +121,46 @@ public class SettingsActivity extends BaseActivity {
             return false;
         });
 
-        confirmBtn.setOnClickListener(view -> {
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean("SHOW_IMAGES", showImages);
-            editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
+        editTV.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            String editText = editTV.getText().toString();
-            String database = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
-            if (editText.length() == FirebaseManager.ID_LENGTH && !editText.equals(database) && useCloud) {
-                FirebaseManager.getInstance(this).disconnect(database);
-                FirebaseManager.getInstance(this).addUser(editText);
-                editor.putString("DATABASE", editText);
             }
-            editor.apply();
-            finish();
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() == FirebaseManager.ID_LENGTH) {
+                    FirebaseManager.getInstance(SettingsActivity.this).testDatabase(s.toString(), false);
+                }
+            }
+        });
+
+
+        confirmBtn.setOnClickListener(view -> {
+            String editText = editTV.getText().toString();
+            if (editText.length() < FirebaseManager.ID_LENGTH) {
+                discardChanges();
+            } else {
+
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("SHOW_IMAGES", showImages);
+                editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
+
+
+                String database = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
+                if (editText.length() == FirebaseManager.ID_LENGTH && !editText.equals(database) && useCloud) {
+                    FirebaseManager.getInstance(this).disconnect(database);
+                    FirebaseManager.getInstance(this).addUser(editText);
+                    editor.putString("DATABASE", editText);
+                }
+                editor.apply();
+                finish();
+            }
         });
 
     }
@@ -142,20 +177,20 @@ public class SettingsActivity extends BaseActivity {
         }
     }
 
-    @Override
+  /*  @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
             String input = editTV.getText().toString();
             if (input.length() < FirebaseManager.ID_LENGTH) {
                 discardChanges();
-            } else if (!input.equals(current)) {
+            } else if (!input.equals(current) && input.length() == FirebaseManager.ID_LENGTH) {
                 FirebaseManager.getInstance(SettingsActivity.this).testDatabase(input, false);
             }
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
         }
         return super.dispatchTouchEvent(ev);
-    }
+    }*/
 
     public void discardChanges() {
 
@@ -164,9 +199,10 @@ public class SettingsActivity extends BaseActivity {
 
     }
 
+
     protected void onStart() {
         super.onStart();
-        if (preferences.getBoolean("USE_CLOUD_DATABASE", true) && FirebaseManager.getInstance(this).getUser() == null ) {
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", true) && FirebaseManager.getInstance(this).getUser() == null) {
             authStateListener = new FirebaseAuth.AuthStateListener() {
                 @Override
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -179,7 +215,13 @@ public class SettingsActivity extends BaseActivity {
             };
             FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
         }
+
+        if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
+            FirebaseManager.getInstance(this).addListener(validationListener);
+        }
+
     }
+
     @Override
     protected void onStop() {
         super.onStop();

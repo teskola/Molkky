@@ -8,11 +8,15 @@ import androidx.annotation.NonNull;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -28,7 +32,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
     private final Context context;
     private FirebaseUser user;
     private String token;
-    private final ArrayList<FirebaseManagerListener> listeners = new ArrayList<>();
+    private final ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
+    private final ArrayList<ResponseListener> responseListeners = new ArrayList<>();
     private final RequestQueue mRequestQueue;
 
     private static final String FB_URL = "https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/";
@@ -46,25 +51,59 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             FirebaseAuth.getInstance().signInAnonymously();
+            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    user = firebaseAuth.getCurrentUser();
+                    if (user != null) {
+                        for (UserStatusListener userStatusListener : userStatusListeners) {
+                            userStatusListener.onSuccessfulSignIn(firebaseAuth);
+                        }
+                        FirebaseAuth.getInstance().removeAuthStateListener(this);
+                        user.getIdToken(false).addOnSuccessListener(getTokenResult -> token = getTokenResult.getToken());
+                    }
+                }
+            });
         }
     }
 
+    public interface UserStatusListener  {
+        void onSuccessfulSignIn(FirebaseAuth firebaseAuth);
+        void onFailedSignIn(Exception e);
+    }
+
+    public interface ResponseListener {
+        void onResponseReceived(JSONObject jsonObject);
+        void onErrorReceived(Exception e);
+    }
+
     public FirebaseUser getUser() {
+        if (user == null) {
+            signIn();
+        }
         return user;
     }
 
-    public void addListener (FirebaseManagerListener listener) {
-        listeners.add(listener);
+    public void addUserStatusListener (UserStatusListener listener) {
+        userStatusListeners.add(listener);
     }
 
-    public void removeListener (FirebaseManagerListener listener) {
-        listeners.remove(listener);
+    public void removeUserStatusListener (UserStatusListener listener) {
+        userStatusListeners.remove(listener);
+    }
+
+    public void addResponseListener (ResponseListener responseListener) {
+        responseListeners.add(responseListener);
+    }
+
+    public void removeResponseListener (ResponseListener responseListener) {
+        responseListeners.remove(responseListener);
     }
 
     public void signIn() {
         FirebaseAuth.getInstance().signInAnonymously().addOnFailureListener(e -> {
-            for (FirebaseManagerListener listener : listeners)
-                listener.onSignInFailed(e);
+            for (UserStatusListener userStatusListener : userStatusListeners)
+                userStatusListener.onFailedSignIn(e);
         });
     }
 
@@ -139,7 +178,7 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
                     addUser(database);
                 },
                 error -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onErrorReceived(error);
                     }
                 });
@@ -172,13 +211,13 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
                 response -> {
-                    for (FirebaseManagerListener listener : listeners) {
-                        listener.onResponseReceived(response);
+                    for (ResponseListener responseListener : responseListeners) {
+                        responseListener.onResponseReceived(response);
                     }
                 },
                 error -> {
-                    for (FirebaseManagerListener listener : listeners) {
-                        listener.onErrorReceived(error);
+                    for (ResponseListener responseListener : responseListeners) {
+                        responseListener.onErrorReceived(error);
                     }
                 });
         mRequestQueue.add(request);
@@ -209,12 +248,12 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PATCH, url, jsonObject,
                 response -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onResponseReceived(response);
                     }
                 },
                 error -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onErrorReceived(error);
                     }
                 });
@@ -236,12 +275,12 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
         String url = FB_URL + "databases/" + database + "/games/" + game.getId() + ".json?auth=" + token;
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
                 response -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onResponseReceived(response);
                     }
                 },
                 error -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onErrorReceived(error);
                     }
                 });
@@ -269,7 +308,7 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        for (FirebaseManagerListener listener : listeners) {
+                        for (ResponseListener listener : responseListeners) {
                             listener.onResponseReceived(res);
                         }
                     } else if (response.equals("null")) {
@@ -277,7 +316,7 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
                     }
                 },
                 error -> {
-                    for (FirebaseManagerListener listener : listeners) {
+                    for (ResponseListener listener : responseListeners) {
                         listener.onErrorReceived(error);
                     }
                 });
@@ -314,12 +353,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
 
     @Override
     public void onIdTokenChanged(@NonNull FirebaseAuth firebaseAuth) {
-        if (user == null) {
-            user = firebaseAuth.getCurrentUser();
-        }
         user.getIdToken(false).addOnSuccessListener(getTokenResult -> {
             token = getTokenResult.getToken();
-            testDatabase(getShortId(), true);
         });
 
     }
