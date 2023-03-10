@@ -20,7 +20,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 
-public class SavedGamesActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
+public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private ArrayList<GameInfo> games = new ArrayList<>();
     private TextView titleTV;

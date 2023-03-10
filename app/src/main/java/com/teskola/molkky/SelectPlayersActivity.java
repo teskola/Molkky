@@ -1,8 +1,6 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -11,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,7 +18,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class SelectPlayersActivity extends BaseActivity implements ListAdapter.OnItemClickListener {
+public class SelectPlayersActivity extends FirebaseListenerActivity implements ListAdapter.OnItemClickListener {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;

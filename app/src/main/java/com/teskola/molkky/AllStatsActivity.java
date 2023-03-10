@@ -11,7 +11,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -20,7 +19,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class AllStatsActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
+public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
     private int statID;

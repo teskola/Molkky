@@ -24,7 +24,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 
-public class PlayerStatsActivity extends CommonOptions {
+public class PlayerStatsActivity extends OptionsActivity {
     private String[] playerIds;
     private int position;
     private PlayerStats playerStats;

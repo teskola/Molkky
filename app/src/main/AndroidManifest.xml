@@ -18,7 +18,7 @@
         android:theme="@style/Theme.Molkky"
         tools:targetApi="31">
         <activity
-            android:name=".BaseActivity"
+            android:name=".FirebaseListenerActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

@@ -23,16 +23,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.VolleyError;
+
 import com.google.gson.Gson;
-
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class GameActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
+public class GameActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
 
     private Game game;
@@ -54,24 +51,6 @@ public class GameActivity extends CommonOptions implements ListAdapter.OnItemCli
     private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
-
-    private final FirebaseManagerListener firebaseListener = new FirebaseManagerListener() {
-        @Override
-        public void onResponseReceived(JSONObject response) {
-            Toast.makeText(GameActivity.this, getResources().getString(R.string.database_game_added), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onErrorReceived(VolleyError error) {
-            Toast.makeText(GameActivity.this, getResources().getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
-
-        }
-
-        @Override
-        public void onSignInFailed(Exception e) {
-            Toast.makeText(GameActivity.this, getResources().getString(R.string.database_read_error), Toast.LENGTH_SHORT).show();
-        }
-    };
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -386,10 +365,8 @@ public class GameActivity extends CommonOptions implements ListAdapter.OnItemCli
 
     public void saveGame() {
         new Thread(() -> LocalDatabaseManager.getInstance(this).saveGameToDatabase(game)).start();
-        String db = preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId());
         if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-            FirebaseManager.getInstance(GameActivity.this).addListener(firebaseListener);
-            FirebaseManager.getInstance(GameActivity.this).addGameToFireBase(db, game);
+            FirebaseManager.getInstance(GameActivity.this).addGameToFireBase(preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId()), game);
         }
     }
 
@@ -464,22 +441,5 @@ public class GameActivity extends CommonOptions implements ListAdapter.OnItemCli
     @Override
     public void onImageClicked(int position) {
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        FirebaseManager.getInstance(this).removeListener(firebaseListener);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        FirebaseManager.getInstance(this).removeListener(firebaseListener);
     }
 }

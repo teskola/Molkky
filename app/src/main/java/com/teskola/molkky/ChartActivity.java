@@ -2,7 +2,6 @@ package com.teskola.molkky;
 
 import static java.lang.Math.min;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
@@ -13,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -22,7 +20,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChartActivity extends BaseActivity {
+public class ChartActivity extends FirebaseListenerActivity {
     private Game game;
     private ViewGroup switchContainer;
     private LineChart chart;

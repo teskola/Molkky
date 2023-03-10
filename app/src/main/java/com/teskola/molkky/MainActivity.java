@@ -21,17 +21,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.VolleyError;
 import com.google.gson.Gson;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-public class MainActivity extends CommonOptions implements ListAdapter.OnItemClickListener {
+public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private ArrayList<PlayerInfo> playersList = new ArrayList<>();
     private boolean random = false;
@@ -292,10 +288,5 @@ public class MainActivity extends CommonOptions implements ListAdapter.OnItemCli
     public void onBackPressed () {
         moveTaskToBack(true);
     }
-
-
-
-
-
 
 }

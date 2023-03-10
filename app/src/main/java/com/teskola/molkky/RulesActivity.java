@@ -1,13 +1,11 @@
 package com.teskola.molkky;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class RulesActivity extends BaseActivity {
+public class RulesActivity extends FirebaseListenerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

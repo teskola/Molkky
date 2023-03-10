@@ -48,12 +48,14 @@
     <string name="use_cloud_database">Käytä pilvitietokantaa</string>
     <string name="database_id">Tietokannan tunnus</string>
     <string name="instructuons">Voit käyttää ystäviesi kanssa samaa tietokantaa asettamalla yhteisen tunnuksen.</string>
-    <string name="too_short_id">Virheellinen tunnus</string>
+    <string name="too_short_id">Liian lyhyt tunnus</string>
     <string name="post_to_database_failed">Pelin lisääminen pilvitietokantaan epäonnistui.</string>
     <string name="database_connection_failed">Yhdistäminen tietokantaan epäonnistui. Tarkista internet-yhteys.</string>
     <string name="database_not_found">Tietokantaa ei löytynyt.</string>
+    <string name="database_found">Tietokanta haettu onnistuneesti.</string>
     <string name="database_changed">Tietokanta vaihdettu.</string>
     <string name="database_game_added">Peli lisätty tietokantaan</string>
+    <string name="database_game_added_failed">Pelin lisääminen tietokantaan epäonnistui.</string>
     <string name="database_connected">Yhdistetty tietokantaan.</string>
     <string name="something_went_wrong">Jokin meni vikaan.</string>
 

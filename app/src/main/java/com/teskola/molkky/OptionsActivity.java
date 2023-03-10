@@ -1,13 +1,10 @@
 package com.teskola.molkky;
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public abstract class CommonOptions extends BaseActivity {
+public abstract class OptionsActivity extends FirebaseListenerActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -15,6 +12,7 @@ public abstract class CommonOptions extends BaseActivity {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = null;
         switch (item.getItemId()) {

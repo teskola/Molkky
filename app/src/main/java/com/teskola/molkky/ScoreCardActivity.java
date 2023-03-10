@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class ScoreCardActivity extends CommonOptions {
+public class ScoreCardActivity extends OptionsActivity {
     private Game game;
     private int position;
     private TextView titleTV, tossesTV, statsTV;
