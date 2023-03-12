@@ -6,10 +6,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-
-import org.json.JSONObject;
-
 public abstract class FirebaseListenerActivity extends AppCompatActivity implements FirebaseListener {
     @Override
     protected void onStart() {
@@ -50,11 +46,8 @@ public abstract class FirebaseListenerActivity extends AppCompatActivity impleme
                 Toast.makeText(FirebaseListenerActivity.this, getResources().getString(R.string.database_found), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_NOT_FOUND:
-                break;
             case DATABASE_CHANGED:
-                break;
             case DATABASE_CREATED:
-                break;
             case DATABASE_CONNECTED:
                 break;
             case DATABASE_DISCONNECTED:

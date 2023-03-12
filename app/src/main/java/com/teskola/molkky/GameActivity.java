@@ -149,7 +149,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         pointsTextView.setOnClickListener(view -> {
             if (!gameEnded)
-                Toast.makeText(this, getString(R.string.instruction), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.seekbar_instruction), Toast.LENGTH_SHORT).show();
         });
 
         okButton.setOnClickListener(view -> {
@@ -335,7 +335,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         Intent intent = new Intent(this, ChartActivity.class);
         String json = new Gson().toJson(game);
         intent.putExtra("json", json);
-        savedGame = true;
         startActivity(intent);
     }
 
@@ -346,7 +345,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         String json = new Gson().toJson(game);
         intent.putExtra("GAME", json);
         intent.putExtra("POSITION", position);
-        savedGame = true;
         startActivity(intent);
     }
 
@@ -359,7 +357,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         String json = new Gson().toJson(reversed);
         intent.putExtra("PLAYERS", json);
-        savedGame = true;
         startActivity(intent);
     }
 
@@ -373,14 +370,13 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.findItem(R.id.new_game).setVisible(gameEnded);
+        menu.findItem(R.id.new_game).setVisible(savedGame);
         menu.findItem(R.id.stats).setVisible(gameEnded);
         menu.findItem(R.id.saved_games).setVisible(gameEnded);
         return true;
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-        savedGame = true;
         super.onOptionsItemSelected(item);
         return false;
     }

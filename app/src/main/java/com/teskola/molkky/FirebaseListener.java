@@ -1,8 +1,5 @@
 package com.teskola.molkky;
 
-import com.google.firebase.auth.FirebaseAuth;
-
-
 public interface FirebaseListener {
 
     void onSignInCompleted();

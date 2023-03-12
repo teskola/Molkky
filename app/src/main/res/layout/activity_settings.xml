@@ -20,13 +20,156 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
         app:layout_constraintBottom_toTopOf="@+id/confirmButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <TableLayout
+            android:id="@+id/databaseStatsView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editDBID">
+
+
+            <TableRow
+                android:id="@+id/gamesTableRow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/users"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_usersTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:fontFamily="@font/josefin_sans"
+                    android:textSize="20sp" />
+
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/games"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_gamesTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+
+                    android:fontFamily="@font/josefin_sans"
+                    android:textSize="20sp" />
+            </TableRow>
+
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/players"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_playersTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:fontFamily="@font/josefin_sans"
+
+                    android:textSize="20sp" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/tosses"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_tossesTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text=""
+                    android:textSize="20sp" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/created"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_createdTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:fontFamily="@font/josefin_sans"
+                    android:textSize="20sp" />
+            </TableRow>
+
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text="@string/updated"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/settings_updatedTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:fontFamily="@font/josefin_sans"
+                    android:text=""
+                    android:textSize="20sp" />
+            </TableRow>
+
+
+        </TableLayout>
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/imageSwitch"
@@ -64,16 +207,20 @@
             app:layout_constraintStart_toStartOf="@+id/cloudSwitch"
             app:layout_constraintTop_toBottomOf="@+id/cloudSwitch" />
 
-        <TextView
-            android:id="@+id/instructionsTV"
+        <ImageButton
+            android:id="@+id/infoButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/instructuons"
-            android:textColor="@color/light_gray"
-            app:layout_constraintEnd_toEndOf="@+id/editDBID"
-            app:layout_constraintStart_toStartOf="@+id/editDBID"
-            app:layout_constraintTop_toBottomOf="@+id/editDBID" />
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="@+id/editDBID"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/editDBID"
+            app:layout_constraintTop_toBottomOf="@+id/cloudSwitch"
+            app:srcCompat="@drawable/info_button" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

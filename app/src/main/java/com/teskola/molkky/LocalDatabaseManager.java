@@ -48,7 +48,7 @@ public class LocalDatabaseManager extends SQLiteOpenHelper {
                 + "	'toss'	INTEGER , "
                 + "	'playerId'	TEXT NOT NULL, "
                 + "	FOREIGN KEY('playerId') REFERENCES 'players'('id'), "
-                + "	FOREIGN KEY('gameId') REFERENCES 'game'('id'));";
+                + "	FOREIGN KEY('gameId') REFERENCES 'games'('id') ON DELETE CASCADE);";
 
 
         sqLiteDatabase.execSQL(games);
@@ -64,6 +64,11 @@ public class LocalDatabaseManager extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS 'tosses'");
         onCreate(sqLiteDatabase);
 
+    }
+    @Override
+    public void onOpen(SQLiteDatabase sqLiteDatabase) {
+        super.onOpen(sqLiteDatabase);
+        sqLiteDatabase.execSQL("PRAGMA foreign_keys=ON;");
     }
 
     public String getPlayerId(String name) {
@@ -245,6 +250,15 @@ public class LocalDatabaseManager extends SQLiteOpenHelper {
         return players;
     }
 
+    public int getTossesCount(String playerId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT (*) FROM tosses WHERE playerId='" + playerId + "'", null);
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count;
+    }
+
     public ArrayList<Integer> getTosses(String gameId, String playerId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT toss FROM tosses WHERE playerId='" + playerId + "'" + " AND gameId= '" + gameId + "'", null);
@@ -258,6 +272,16 @@ public class LocalDatabaseManager extends SQLiteOpenHelper {
         return tosses;
     }
 
+    public int getGamesCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM games", null);
+        cursor.moveToFirst();
+        int size = cursor.getInt(0);
+        cursor.close();
+        return size;
+
+    }
+
     public int getPlayerCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM players", null);
@@ -268,12 +292,16 @@ public class LocalDatabaseManager extends SQLiteOpenHelper {
 
     }
 
+    /*
+    *
+    *  Removes game from database and players who are not in any game.
+    *
+    * */
+
     public void removeGameFromDatabase(String gameId) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String games = "DELETE FROM games WHERE id = '" + gameId + "';";
-        String tosses = "DELETE FROM tosses WHERE gameId = '" + gameId + "';";
-        db.execSQL(games);
-        db.execSQL(tosses);
+        db.execSQL("DELETE FROM games WHERE id = '" + gameId + "';"); // cascade deletes also tosses
+        db.execSQL("DELETE FROM players WHERE id IN (SELECT id FROM players EXCEPT SELECT playerId FROM tosses)");
     }
 
     /*

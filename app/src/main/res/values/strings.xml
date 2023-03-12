@@ -7,6 +7,7 @@
     <string name="choose_player">Valitse pelaajat:</string>
     <string name="first">%1$s heittää ensimmäisenä.</string>
     <string name="no_saved_players">Ei tallennettuja pelaajia.</string>
+    <string name="no_saved_games">Ei tallennettuja pelejä.</string>
     <string name="already_added">%1$s on jo lisätty.</string>
     <string name="ok">OK</string>
     <string name="dash">-</string>
@@ -38,7 +39,7 @@
     <string name="show_all_time_stats">Näytä kaikkien aikojen tilastot</string>
     <string name="show_games">Näytä pelit</string>
     <string name="chart">kuvaaja</string>
-    <string name="instruction">Valitse pisteet liu\'uttamalla kapulaa</string>
+    <string name="seekbar_instruction">Valitse pisteet liu\'uttamalla kapulaa</string>
     <string name="rules">Säännöt</string>
     <string name="show_images">Näytä kuvat</string>
     <string name="hide_images">Piilota kuvat</string>
@@ -47,16 +48,19 @@
     <string name="confirm_changes">Vahvista muutokset</string>
     <string name="use_cloud_database">Käytä pilvitietokantaa</string>
     <string name="database_id">Tietokannan tunnus</string>
-    <string name="instructuons">Voit käyttää ystäviesi kanssa samaa tietokantaa asettamalla yhteisen tunnuksen.</string>
+    <string name="database_instruction">Voit käyttää ystäviesi kanssa samaa tietokantaa asettamalla yhteisen tunnuksen.</string>
     <string name="too_short_id">Liian lyhyt tunnus</string>
-    <string name="post_to_database_failed">Pelin lisääminen pilvitietokantaan epäonnistui.</string>
     <string name="database_connection_failed">Yhdistäminen tietokantaan epäonnistui. Tarkista internet-yhteys.</string>
     <string name="database_not_found">Tietokantaa ei löytynyt.</string>
     <string name="database_found">Tietokanta haettu onnistuneesti.</string>
     <string name="database_changed">Tietokanta vaihdettu.</string>
     <string name="database_game_added">Peli lisätty tietokantaan</string>
-    <string name="database_game_added_failed">Pelin lisääminen tietokantaan epäonnistui.</string>
+    <string name="database_game_added_failed">Pelin lisääminen pilvitietokantaan epäonnistui.</string>
     <string name="database_connected">Yhdistetty tietokantaan.</string>
     <string name="something_went_wrong">Jokin meni vikaan.</string>
+    <string name="users">käyttäjät</string>
+    <string name="players">pelaajat</string>
+    <string name="created">luotu</string>
+    <string name="updated">päivitetty</string>
 
 </resources>

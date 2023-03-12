@@ -3,6 +3,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public abstract class OptionsActivity extends FirebaseListenerActivity {
 
@@ -21,9 +22,17 @@ public abstract class OptionsActivity extends FirebaseListenerActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 break;
             case R.id.stats:
+                if (LocalDatabaseManager.getInstance(this).getPlayerCount() == 0) {
+                    Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
+                    return true;
+                }
                 intent = new Intent(this, AllStatsActivity.class);
                 break;
             case R.id.saved_games:
+                if (LocalDatabaseManager.getInstance(this).getGamesCount() == 0) {
+                    Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
+                    return true;
+                }
                 intent = new Intent(this, SavedGamesActivity.class);
                 break;
             case R.id.settings:
