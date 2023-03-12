@@ -134,7 +134,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void createRecyclerView () {
-        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.ADD_PLAYER_VIEW, this);
+        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), this);
         listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));

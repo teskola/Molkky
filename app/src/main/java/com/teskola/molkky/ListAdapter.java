@@ -19,8 +19,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> {
+public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
@@ -28,13 +29,12 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     public static final int STATS_ACTIVITY = 3;
     public static final int GAME_ACTIVITY = 4;
 
-    private ArrayList<PlayerInfo> playerInfos;
-    private ArrayList<Player> players = null;
-    private ArrayList<GameInfo> games = null;
-    private ArrayList<PlayerStats> playerStats = null;
-
     private Context context;
-    private final int viewId;
+    private int viewId;
+
+    private List<? extends PlayerInfo> players;
+    private List<GameInfo> games;
+
     private int statID = 0;
     private boolean showImages;
 
@@ -56,81 +56,90 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         this.statID = statID;
     }
 
-
     @NonNull
     @Override
-    public ListAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View view = viewId == GAME_ACTIVITY ? inflater.inflate(R.layout.vertical_player_view, parent, false)
-                : inflater.inflate(R.layout.player_card, parent, false);
-
-        return new MyViewHolder(view);
+        View view;
+        if (viewId == GAME_ACTIVITY) {
+            view = inflater.inflate(R.layout.vertical_player_view, parent, false);
+            return new GameViewHolder(view);
+        }
+        view = inflater.inflate(R.layout.player_card, parent, false);
+        return new DefaultViewHolder(view);
     }
 
     @SuppressLint("DefaultLocale")
     @Override
-    public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+
+        DefaultViewHolder defaultViewHolder = null;
+        if (viewId != GAME_ACTIVITY)
+            defaultViewHolder = (DefaultViewHolder) holder;
 
         switch (viewId) {
             case ADD_PLAYER_VIEW:
-                holder.nameTV.setText(playerInfos.get(position).getName());
-                holder.playerView.setSelected(selected_position == position);
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
+                defaultViewHolder.playerView.setSelected(selected_position == position);
                 break;
             case SELECT_PLAYER_VIEW:
-                holder.nameTV.setText(playerInfos.get(position).getName());
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
                 if (selected.get(position))
-                    holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
+                    defaultViewHolder.playerView.setBackgroundResource(R.drawable.beige_white_background);
                 else
-                    holder.playerView.setBackgroundResource(R.drawable.gray_background);
+                    defaultViewHolder.playerView.setBackgroundResource(R.drawable.gray_background);
                 break;
             case SAVED_GAMES_ACTIVITY:
-                holder.nameTV.setText(games.get(position).getData());
+                defaultViewHolder.nameTV.setText(games.get(position).getData());
                 break;
             case STATS_ACTIVITY:
-                holder.nameTV.setText(playerStats.get(position).getName());
-                holder.valueTV.setVisibility(View.VISIBLE);
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
+                defaultViewHolder.valueTV.setVisibility(View.VISIBLE);
+                PlayerStats playerStats = (PlayerStats) players.get(position);
                 switch (statID) {
                     case R.string.games:
-                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getGamesCount()));
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getGamesCount()));
                         break;
                     case R.string.wins:
-                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getWins()));
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWins()));
                         break;
                     case R.string.points:
-                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getPoints()));
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getPoints()));
                         break;
                     case R.string.tosses:
-                        holder.valueTV.setText(String.valueOf(playerStats.get(position).getTossesCount()));
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getTossesCount()));
                         break;
                     case R.string.points_per_toss:
-                        holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
+                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
                         break;
                     case R.string.hits_percentage:
-                        int hitsPct = Math.round(100 * playerStats.get(position).getHitsPct());
-                        holder.valueTV.setText(String.valueOf(hitsPct));
+                        int hitsPct = Math.round(100 * playerStats.getHitsPct());
+                        defaultViewHolder.valueTV.setText(String.valueOf(hitsPct));
                         break;
                     case R.string.elimination_percentage:
-                        int elimPct = Math.round(100 * playerStats.get(position).getEliminationsPct());
-                        holder.valueTV.setText(String.valueOf(elimPct));
+                        int elimPct = Math.round(100 * playerStats.getEliminationsPct());
+                        defaultViewHolder.valueTV.setText(String.valueOf(elimPct));
                         break;
                     case R.string.excesses_per_game:
-                        holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
+                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getExcessesPerGame()));
                         break;
                 }
                 break;
             case GAME_ACTIVITY:
 
-                Player player = players.get(position);
+                GameViewHolder gameViewHolder = (GameViewHolder) holder;
+
+                Player player = (Player) players.get(position);
                 int total = player.countAll();
-                holder.playerNameTextView.setText(player.getName());
-                holder.totalPointsTextView.setText(String.valueOf(total));
+                gameViewHolder.playerNameTextView.setText(player.getName());
+                gameViewHolder.totalPointsTextView.setText(String.valueOf(total));
                 if (showTosses) {
-                    holder.pointsTV.setVisibility(View.VISIBLE);
-                    holder.pointsTV.setText(buildTossesString(position));
+                    gameViewHolder.pointsTV.setVisibility(View.VISIBLE);
+                    gameViewHolder.pointsTV.setText(buildTossesString(position));
                 }
                 else
-                    holder.pointsTV.setVisibility(View.GONE);
-                holder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
+                    gameViewHolder.pointsTV.setVisibility(View.GONE);
+                gameViewHolder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
                 break;
         }
 
@@ -139,27 +148,24 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
             ImageHandler imageHandler = new ImageHandler(context);
             String path = "";
-            if (playerInfos != null)
-                path = imageHandler.getImagePath(playerInfos.get(position).getId());
-            else if (playerStats != null)
-                path = imageHandler.getImagePath(playerStats.get(position).getId());
+            path = imageHandler.getImagePath(players.get(position).getId());
             if (path != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
-                holder.playerImageView.setImageBitmap(bitmap);
-                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                defaultViewHolder.playerImageView.setImageBitmap(bitmap);
+                defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
-                holder.playerImageView.setImageResource(R.drawable.camera);
-                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+                defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
+                defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
             }
         }
     }
 
     @Override
     public int getItemCount() {
-        if (playerInfos != null) return playerInfos.size();
-        if (games != null) return games.size();
-        if (players != null) return players.size();
-        return playerStats.size();
+        if (viewId == SAVED_GAMES_ACTIVITY)
+            return games.size();
+        else
+            return players.size();
     }
 
     public interface OnItemClickListener {
@@ -170,28 +176,44 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         void onImageClicked(int position);
     }
 
-    public ListAdapter(Context context, ArrayList<?> data, boolean showImages, int viewId, OnItemClickListener listener) {
+    public ListAdapter(Context context, List<?> data, boolean showImages, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.context = context;
-        this.viewId = viewId;
         this.showImages = showImages;
-
-        this.playerInfos = (ArrayList<PlayerInfo>) data;
-        this.playerStats = (ArrayList<PlayerStats>) data;
-        this.games = (ArrayList<GameInfo>) data;
-
+        switch (context.getClass().getName()) {
+            case ("com.teskola.molkky.MainActivity"):
+                viewId = ADD_PLAYER_VIEW;
+                this.players = (List<PlayerInfo>) data;
+                break;
+            case ("com.teskola.molkky.SelectPlayersActivity"):
+                viewId = SELECT_PLAYER_VIEW;
+                this.players = (List<PlayerInfo>) data;
+                break;
+            case ("com.teskola.molkky.SavedGamesActivity"):
+                viewId = SAVED_GAMES_ACTIVITY;
+                this.games = (List<GameInfo>) data;
+                break;
+            case ("com.teskola.molkky.AllStatsActivity"):
+                viewId = STATS_ACTIVITY;
+                this.players = (List<PlayerStats>) data;
+                break;
+            case ("com.teskola.molkky.GameActivity"):
+                viewId = GAME_ACTIVITY;
+                this.players = (List<Player>) data;
+                break;
+        }
     }
 
-    public ListAdapter(Context context, ArrayList<PlayerInfo> playerInfos, ArrayList<Boolean> selected, boolean showImages, OnItemClickListener listener) {
+    public ListAdapter(Context context, List<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.viewId = SELECT_PLAYER_VIEW;
-        this.playerInfos = playerInfos;
+        this.players = players;
         this.selected = selected;
         this.showImages = showImages;
         this.context = context;
     }
 
-    public ListAdapter(ArrayList<Player> playersList, boolean onlyGray, boolean showTosses, OnItemClickListener listener) {
+    public ListAdapter(List<Player> playersList, boolean onlyGray, boolean showTosses, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.viewId = GAME_ACTIVITY;
         this.showTosses = showTosses;
@@ -199,45 +221,46 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
         this.players = playersList;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
-
-        private  TextView nameTV;
-        private  TextView valueTV;
-        private  View playerView;
-        private  ShapeableImageView playerImageView;
-
+    public class GameViewHolder extends RecyclerView.ViewHolder {
         private  TextView playerNameTextView;
         private  TextView totalPointsTextView;
         private  TextView pointsTV;
         private  View playerCardView;
 
         @SuppressLint("ClickableViewAccessibility")
-        public MyViewHolder(View itemView) {
+        public GameViewHolder(@NonNull View itemView) {
             super(itemView);
+            playerCardView = itemView.findViewById(R.id.playerCardView);
+            playerNameTextView = itemView.findViewById(R.id.playerNameTextView);
+            totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
+            pointsTV = itemView.findViewById(R.id.pointsTV);
 
-            if (viewId == GAME_ACTIVITY) {
+            // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
 
-                playerCardView = itemView.findViewById(R.id.playerCardView);
-                playerNameTextView = itemView.findViewById(R.id.playerNameTextView);
-                totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
-                pointsTV = itemView.findViewById(R.id.pointsTV);
+            pointsTV.setOnTouchListener((view, motionEvent) -> {
+                view.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            });
+            pointsTV.setMovementMethod(new ScrollingMovementMethod());
+            playerCardView.setOnClickListener(view -> {
+                int position = getAbsoluteAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && onItemClickListener != null) {
+                    onItemClickListener.onSelectClicked(position);
+                }
+            });
+        }
+    }
 
-                // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
+    public class DefaultViewHolder extends RecyclerView.ViewHolder {
 
-                pointsTV.setOnTouchListener((view, motionEvent) -> {
-                    view.getParent().requestDisallowInterceptTouchEvent(true);
-                    return false;
-                });
-                pointsTV.setMovementMethod(new ScrollingMovementMethod());
-                playerCardView.setOnClickListener(view -> {
-                    int position = getAbsoluteAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && onItemClickListener != null) {
-                        onItemClickListener.onSelectClicked(position);
-                    }
-                });
-                return;
-            }
+        private  TextView nameTV;
+        private  TextView valueTV;
+        private  View playerView;
+        private  ShapeableImageView playerImageView;
 
+        @SuppressLint("ClickableViewAccessibility")
+        public DefaultViewHolder(View itemView) {
+            super(itemView);
             nameTV = itemView.findViewById(R.id.nameTV);
             valueTV = itemView.findViewById(R.id.valueTV);
             playerView = itemView.findViewById(R.id.listItemView);
@@ -309,7 +332,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder> 
     }
 
     public String buildTossesString(int position) {
-        ArrayList<Integer> tosses = players.get(position).getTosses();
+        Player player = (Player) players.get(position);
+        ArrayList<Integer> tosses =  player.getTosses();
         StringBuilder sb = new StringBuilder();
         for (Integer toss : tosses) {
             if (toss < 10)

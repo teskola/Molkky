@@ -71,7 +71,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         showAllBtn.setOnClickListener(view -> showAllGames());
 
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.SAVED_GAMES_ACTIVITY, this);
+        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         playerImageView.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
