@@ -5,7 +5,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public abstract class OptionsActivity extends FirebaseListenerActivity {
+public abstract class OptionsActivity extends DatabaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

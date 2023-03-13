@@ -155,7 +155,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         okButton.setOnClickListener(view -> {
             if (!pointsTextView.getText().equals("-") || savedGame) {
                 if (!gameEnded) {
-                    Objects.requireNonNull(recyclerView.getLayoutManager()).scrollToPosition(0);
+                    recyclerView.getLayoutManager().scrollToPosition(0);
                     int points = Integer.parseInt(pointsTextView.getText().toString());
                     game.getPlayer(0).addToss(points);
                     if (!game.getPlayer(0).getUndoStack().empty())
@@ -361,11 +361,9 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void saveGame() {
-        new Thread(() -> LocalDatabaseManager.getInstance(this).saveGameToDatabase(game)).start();
-        if (preferences.getBoolean("USE_CLOUD_DATABASE", true)) {
-            FirebaseManager.getInstance(GameActivity.this).addGameToFireBase(preferences.getString("DATABASE", FirebaseManager.getInstance(this).getShortId()), game);
+        DatabaseHandler.getInstance(this).saveGame(this, game);
         }
-    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

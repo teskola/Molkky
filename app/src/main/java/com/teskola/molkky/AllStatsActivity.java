@@ -30,6 +30,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private final ImageHandler imageHandler = new ImageHandler(this);
 
+    public enum stats {
+
+    }
+
     public static final int[] stats = {
             R.string.games,
             R.string.wins,
@@ -108,7 +112,6 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         }
     }
 
-    @SuppressLint({"NotifyDataSetChanged", "NonConstantResourceId"})
     public void updateUI() {
         statTv.setText(getString(stats[statID]));
 

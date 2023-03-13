@@ -41,7 +41,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
     private boolean showTosses, onlyGray;
-    private OnItemClickListener onItemClickListener;
+    private final OnItemClickListener onItemClickListener;
 
 
     public void setSelected_position(int selected_position) {
@@ -176,6 +176,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onImageClicked(int position);
     }
 
+    @SuppressWarnings("unchecked")
     public ListAdapter(Context context, List<?> data, boolean showImages, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.context = context;
@@ -222,10 +223,10 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public class GameViewHolder extends RecyclerView.ViewHolder {
-        private  TextView playerNameTextView;
-        private  TextView totalPointsTextView;
-        private  TextView pointsTV;
-        private  View playerCardView;
+        private final TextView playerNameTextView;
+        private final TextView totalPointsTextView;
+        private final TextView pointsTV;
+        private final View playerCardView;
 
         @SuppressLint("ClickableViewAccessibility")
         public GameViewHolder(@NonNull View itemView) {
@@ -253,10 +254,10 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public class DefaultViewHolder extends RecyclerView.ViewHolder {
 
-        private  TextView nameTV;
-        private  TextView valueTV;
-        private  View playerView;
-        private  ShapeableImageView playerImageView;
+        private final TextView nameTV;
+        private final TextView valueTV;
+        private final View playerView;
+        private final ShapeableImageView playerImageView;
 
         @SuppressLint("ClickableViewAccessibility")
         public DefaultViewHolder(View itemView) {

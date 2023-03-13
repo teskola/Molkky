@@ -64,9 +64,12 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         }
 
         preferences = getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                createRecyclerView();
+        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                if (key.equals("SHOW_IMAGES")) {
+                    MainActivity.this.createRecyclerView();
+                }
             }
         };
         preferences.registerOnSharedPreferenceChangeListener(listener);

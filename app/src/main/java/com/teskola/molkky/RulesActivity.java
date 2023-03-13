@@ -5,7 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class RulesActivity extends FirebaseListenerActivity {
+public class RulesActivity extends DatabaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
@@ -23,122 +24,44 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 
-public class FirebaseManager implements FirebaseAuth.IdTokenListener {
+public class FirebaseManager {
 
-    private static FirebaseManager instance;
-    private FirebaseUser user;
     private String token;
-    private final ArrayList<FirebaseListener> listeners = new ArrayList<>();
+    private OnSuccessListener onSuccessListener;
+    private OnFailureListener onFailureListener;
     private final RequestQueue mRequestQueue;
 
+    public static final int NETWORK_ERROR = 600;
     private static final String FB_URL = "https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/";
-    public static final int ID_LENGTH = 6; // only even numbers allowed;
 
-    public static FirebaseManager getInstance(Context context) {
-        if (instance == null)
-            instance = new FirebaseManager(context.getApplicationContext());
-        return instance;
-    }
-
-    private FirebaseManager(Context context) {
+    public FirebaseManager(Context context) {
         mRequestQueue = Volley.newRequestQueue(context);
-        user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) {
-            signIn();
-            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-                @Override
-                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    user = firebaseAuth.getCurrentUser();
-                    if (user != null) {
-                        FirebaseAuth.getInstance().removeAuthStateListener(this);
-                        user.getIdToken(false).addOnSuccessListener(getTokenResult -> {
-                            token = getTokenResult.getToken();
-                            initializeDatabase();
-                        });
-                    }
-                }
-            });
-        } else {
-            user.getIdToken(false).addOnSuccessListener(getTokenResult -> {
-                token = getTokenResult.getToken();
-            });
-        }
     }
 
-    public enum Response {
-        DATABASE_FOUND,
-        DATABASE_NOT_FOUND,
-        DATABASE_CHANGED,
-        DATABASE_CREATED,
-        DATABASE_CONNECTED,
-        DATABASE_DISCONNECTED,
-        GAME_ADDED
+    public interface OnSuccessListener {
+        void onSuccess(String response);
     }
 
-    public enum Error {
-        NETWORK_ERROR,
-        UNKNOWN_ERROR,
-        ADD_GAME_FAILED
+    public interface OnFailureListener {
+        void onFailure(int errorCode);
     }
 
-
-    public void addListener(FirebaseListener listener) {
-        listeners.add(listener);
+    public FirebaseManager addOnSuccessListener (OnSuccessListener listener) {
+        onSuccessListener = listener;
+        return this;
     }
 
-    public void removeListener(FirebaseListener listener) {
-        listeners.remove(listener);
+    public FirebaseManager addOnFailureListener (OnFailureListener listener) {
+        onFailureListener = listener;
+        return this;
     }
 
-    public void signIn() {
-        FirebaseAuth.getInstance().signInAnonymously().addOnFailureListener(e -> {
-            for (FirebaseListener listener : listeners) listener.onSignInFailed();
-        });
+    public void close() {
+        mRequestQueue.stop();
     }
 
-    /*
-     *
-     * Returns shorter, 6 character, lowercase, version of userId. If user is not authenticated, returns "".
-     *
-     * */
-
-    public String getShortId() {
-        if (user == null) {
-            signIn();
-            return "";
-        }
-        String userId = user.getUid();
-        return ((userId.substring(0, ID_LENGTH / 2) + userId.substring(userId.length() - (ID_LENGTH / 2))).toLowerCase());
-    }
-
-    /*
-     *
-     * Converts game object to json. Returns json.
-     *
-     * */
-
-
-    private JSONObject gameToJson(Game game) {
-        String json = new Gson().toJson(game);
-        JSONObject jsonObject = null;
-        JSONObject timestamp;
-        try {
-            jsonObject = new JSONObject(json);
-            jsonObject.remove("id");
-
-            timestamp = new JSONObject();
-            timestamp.put(".sv", "timestamp");
-            jsonObject.put("timestamp", timestamp);
-
-            JSONArray players = jsonObject.getJSONArray("players");
-            for (int i = 0; i < players.length(); i++) {
-                JSONObject player = players.getJSONObject(i);
-                player.remove("undoStack");
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jsonObject;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     /*
@@ -147,12 +70,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
      *
      * */
 
-    public void initializeDatabase() {
-        if (user == null) {
-            signIn();
-            return;
-        }
-        String database = getShortId();
+    public FirebaseManager initializeDatabase(String database) {
+
         String url = FB_URL + "databases/" + database + ".json?auth=" + token;
         JSONObject jsonObject = new JSONObject();
         JSONObject timestamp = new JSONObject();
@@ -164,14 +83,11 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
         }
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
                 response -> {
-                    for (FirebaseListener listener : listeners)
-                        listener.onResponseReceived(Response.DATABASE_CONNECTED, null);
-                    addUser(database);
-                    for (FirebaseListener listener : listeners)
-                        listener.onSignInCompleted();
-                },
-                this::errorResponse);
+                    if (onSuccessListener != null)
+                        onSuccessListener.onSuccess(response.toString());
+                }, this::errorResponse);
         mRequestQueue.add(request);
+        return this;
     }
 
     /*
@@ -180,12 +96,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
      *
      * */
 
-    public void addUser(String database) {
-        if (user == null) {
-            signIn();
-            return;
-        }
-        String url = FB_URL + "databases/" + database + "/users/" + user.getUid() + ".json?auth=" + token;
+    public void addUser(String database, String uid) {
+        String url = FB_URL + "databases/" + database + "/users/" + uid + ".json?auth=" + token;
         JSONObject jsonObject = new JSONObject();
         JSONObject timestamp = new JSONObject();
         try {
@@ -200,8 +112,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
                 response -> {
-                    for (FirebaseListener listener : listeners)
-                        listener.onResponseReceived(Response.DATABASE_CREATED, null);
+                    if (onSuccessListener != null)
+                        onSuccessListener.onSuccess(response.toString());
                 }, this::errorResponse
         );
         mRequestQueue.add(request);
@@ -213,12 +125,8 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
      *
      * */
 
-    public void disconnect(String database) {
-        if (user == null) {
-            signIn();
-            return;
-        }
-        String url = FB_URL + "databases/" + database + "/users/" + user.getUid() + ".json?auth=" + token;
+    public void disconnect(String database, String user) {
+        String url = FB_URL + "databases/" + database + "/users/" + user + ".json?auth=" + token;
         JSONObject jsonObject = new JSONObject();
         JSONObject timestamp = new JSONObject();
         try {
@@ -232,11 +140,9 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PATCH, url, jsonObject,
                 response -> {
-                    for (FirebaseListener listener : listeners)
-                        listener.onResponseReceived(Response.DATABASE_DISCONNECTED, null);
-                }, this::errorResponse
-
-        );
+                    if (onSuccessListener != null)
+                        onSuccessListener.onSuccess(response.toString());
+                }, this::errorResponse);
         mRequestQueue.add(request);
     }
 
@@ -246,75 +152,77 @@ public class FirebaseManager implements FirebaseAuth.IdTokenListener {
      *
      * */
 
-    public void addGameToFireBase(String database, Game game) {
-        if (user == null) {
-            signIn();
-            return;
-        }
-        JSONObject jsonObject = gameToJson(game);
+    public void addGameToFireBase(String database, Game game, String user) {
+        JSONObject jsonObject = gameToJson(game, user);
         String url = FB_URL + "databases/" + database + "/games/" + game.getId() + ".json?auth=" + token;
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
                 response -> {
-
-                    for (FirebaseListener listener : listeners)
-                        listener.onResponseReceived(Response.GAME_ADDED, null);
-                }, error -> {
-            if (error.networkResponse == null) {
-                for (FirebaseListener listener : listeners)
-                    listener.onErrorReceived(Error.NETWORK_ERROR);
-            } else
-                for (FirebaseListener listener : listeners)
-                    listener.onErrorReceived(Error.ADD_GAME_FAILED);
-        }
-
-        );
+                    if (onSuccessListener != null)
+                        onSuccessListener.onSuccess(response.toString());
+                }, this::errorResponse);
         mRequestQueue.add(request);
     }
 
     /*
      *
-     * Fetches games from firebase and adds them to local database.
+     * Fetches database.
      *
      * */
 
-    public void fetchDatabase(String id) {
-        if (user == null) {
-            signIn();
-            return;
-        }
-        String url = FB_URL + "databases/" + id + ".json?auth=" + token;
+    public FirebaseManager fetchDatabase(String database) {
+
+        String url = FB_URL + "databases/" + database + ".json?auth=" + token;
         StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {
-                    if (Objects.equals(response, "null")) {
-                        for (FirebaseListener listener : listeners)
-                            listener.onResponseReceived(Response.DATABASE_NOT_FOUND, id);
-                    }
-
+                    if (onSuccessListener != null)
+                        onSuccessListener.onSuccess(response);
                 }, this::errorResponse);
         mRequestQueue.add(request);
+        return this;
     }
 
-    @Override
-    public void onIdTokenChanged(@NonNull FirebaseAuth firebaseAuth) {
-        user.getIdToken(false).addOnSuccessListener(getTokenResult -> {
-            token = getTokenResult.getToken();
-        });
-
-    }
-
-    private void errorResponse(VolleyError error) {
-        {
-            {
-                {
-                    if (error.networkResponse == null) {
-                        for (FirebaseListener listener : listeners)
-                            listener.onErrorReceived(Error.NETWORK_ERROR);
-                    } else
-                        for (FirebaseListener listener : listeners)
-                            listener.onErrorReceived(Error.UNKNOWN_ERROR);
-                }
-            }
+    private void errorResponse(VolleyError error)
+    {
+        if (onFailureListener != null) {
+            if (error.networkResponse == null)
+                onFailureListener.onFailure(NETWORK_ERROR);
+            else
+                onFailureListener.onFailure(error.networkResponse.statusCode);
         }
+    }
+
+
+    /*
+     *
+     * Converts game object to json. Returns json.
+     *
+     * */
+
+
+    private JSONObject gameToJson(Game game, String user) {
+        String json = new Gson().toJson(game);
+        JSONObject jsonObject = null;
+        JSONObject timestamp, addedBy;
+        try {
+            jsonObject = new JSONObject(json);
+            jsonObject.remove("id");
+
+            timestamp = new JSONObject();
+            timestamp.put(".sv", "timestamp");
+            jsonObject.put("timestamp", timestamp);
+
+            addedBy = new JSONObject();
+            addedBy.put("addedBy", user);
+
+            JSONArray players = jsonObject.getJSONArray("players");
+            for (int i = 0; i < players.length(); i++) {
+                JSONObject player = players.getJSONObject(i);
+                player.remove("undoStack");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
     }
 }
 

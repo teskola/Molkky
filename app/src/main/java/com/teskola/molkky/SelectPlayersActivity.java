@@ -18,7 +18,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class SelectPlayersActivity extends FirebaseListenerActivity implements ListAdapter.OnItemClickListener {
+public class SelectPlayersActivity extends DatabaseActivity implements ListAdapter.OnItemClickListener {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;
