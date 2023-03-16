@@ -63,7 +63,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         pointsTextView = findViewById(R.id.pointsTextView);
         nameTextView = findViewById(R.id.nextPlayerTextView);
         pointsToWinTV = findViewById(R.id.pointsToWinTV);
-        congratsView = findViewById(R.id.congratsView);
+        congratsView = findViewById(R.id.throwingPinContainer);
         okButton = findViewById(R.id.okButton);
         chartButton = findViewById(R.id.chartButton);
         recyclerView = findViewById(R.id.verticalRecyclerView);
@@ -116,7 +116,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         if (gameEnded) {
             endGame();
-            pointsToWinTV.setText(getString(R.string.points_to_win, game.getPlayer(0).getToss(game.getPlayer(0).getTossesSize() - 1)));
+            pointsToWinTV.setText(getString(R.string.points_to_win, game.getPlayer(0).getToss(game.getPlayer(0).getTosses().size() - 1)));
         } else {
             createRecyclerView(game.getPlayers());
         }
@@ -186,7 +186,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     @Override
     public void onBackPressed() {
-        if (savedGame || game.getPlayer(game.getPlayers().size() - 1).getTossesSize() == 0) {
+        if (savedGame || game.getPlayer(game.getPlayers().size() - 1).getTosses().size() == 0) {
             super.onBackPressed();
         } else if (gameEnded) {
             resumeGame();
@@ -194,7 +194,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             for (int i = 1; i < game.getPlayers().size(); i++) {
                 Player previous = game.getPlayer(game.getPlayers().size() - i);
                 Player current = game.getPlayer(0);
-                if ((previous.getTossesSize() > current.getTossesSize()) || !previous.isEliminated()) {
+                if ((previous.getTosses().size() > current.getTosses().size()) || !previous.isEliminated()) {
                     game.getPlayer(game.getPlayers().size() - i).getUndoStack().push(game.getPlayer(game.getPlayers().size() - i).removeToss());
                     game.setTurn(game.getPlayers().size() - i);
                     updateUI(true);
@@ -305,7 +305,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             pointsToWinTV.setVisibility(View.VISIBLE);
         } else {
             int position = 1;
-            while (game.getPlayer(0).getTossesSize() > game.getPlayer(game.getPlayers().size() - position).getTossesSize()) {
+            while (game.getPlayer(0).getTosses().size() > game.getPlayer(game.getPlayers().size() - position).getTosses().size()) {
                 position++;
             }
             game.setTurn(game.getPlayers().size() - position);
@@ -395,7 +395,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (player.countAll() == 50)
             return GOLD;
 
-        int size = player.getTossesSize();
+        int size = player.getTosses().size();
         if (!onlyGray) {
             int misses = 0;
             if (size > 1 && player.getToss(size - 1) == 0 && player.getToss(size - 2) == 0)
