@@ -147,9 +147,9 @@ public class ScoreCardActivity extends OptionsActivity {
         for (int i : game.getPlayer(position).getTosses()) {
             if (i != 0) hits++;
         }
-        int percentage = Math.round(100 * (float) hits / (float) game.getPlayer(position).getTossesSize());
+        int percentage = Math.round(100 * (float) hits / (float) game.getPlayer(position).getTosses().size());
         StringBuilder hitsSB = new StringBuilder();
-        hitsSB.append(getString(R.string.hits)).append(": ").append(hits).append("/").append(game.getPlayer(position).getTossesSize())
+        hitsSB.append(getString(R.string.hits)).append(": ").append(hits).append("/").append(game.getPlayer(position).getTosses().size())
                 .append(" (").append(percentage).append("%)");
         int length = hitsSB.length();
 

@@ -139,7 +139,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
                 else
                     gameViewHolder.pointsTV.setVisibility(View.GONE);
-                gameViewHolder.playerCardView.setBackgroundResource(GameActivity.selectBackground(player, onlyGray));
+                gameViewHolder.playerCardView.setBackgroundResource(Colors.selectBackground(player, onlyGray));
                 break;
         }
 

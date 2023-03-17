@@ -1,45 +1,48 @@
 package com.teskola.molkky;
 
+import static com.teskola.molkky.FirebaseManager.addTimestamp;
+
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+
 
 import androidx.annotation.NonNull;
-
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 
-public class DatabaseHandler implements FirebaseAuth.AuthStateListener, FirebaseAuth.IdTokenListener {
+public class DatabaseHandler {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
+    public static final int RETRY_CONNECTION =  10000;
 
     private final ArrayList<DatabaseListener> listeners = new ArrayList<>();
     private static DatabaseHandler instance;
     private FirebaseManager firebaseManager;
     private boolean useCloud;
-    private ArrayList<String> databases; // TODO
-    private Database database;
-    private Context context;
+    private String databaseId;
+    private final SharedPreferences preferences;
+    private final Handler handler = new Handler();
+    private boolean retrySigningRunning = false;
+    private final Runnable retrySignIn = new Runnable() {
+        @Override
+        public void run() {
+            retrySigningRunning = true;
+            signIn();
+            handler.postDelayed(this, RETRY_CONNECTION);
+        }
+    };
 
-    @Override
-    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-        firebaseAuth.removeAuthStateListener(this);
-        onIdTokenChanged(firebaseAuth);
-        for (DatabaseListener listener : listeners) listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
-    }
-
-    @Override
-    public void onIdTokenChanged(@NonNull FirebaseAuth firebaseAuth) {
-        if (firebaseAuth.getCurrentUser() != null)
-            firebaseAuth.getCurrentUser().getIdToken(false).addOnSuccessListener(getTokenResult -> {
-                if (firebaseManager != null)
-                    firebaseManager.setToken(getTokenResult.getToken());
-            });
+    public String getDatabaseId() {
+        return databaseId;
     }
 
     public interface DatabaseListener {
@@ -63,15 +66,21 @@ public class DatabaseHandler implements FirebaseAuth.AuthStateListener, Firebase
         ADD_GAME_FAILED
     }
 
+    public String getShortId() {
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid == null) {
+            signIn();
+            return "";
+        }
+        return ((uid.substring(0, ID_LENGTH / 2) + uid.substring(uid.length() - (ID_LENGTH / 2))).toLowerCase());
+    }
+
     public void addListener(DatabaseListener listener) {
         listeners.add(listener);
     }
-
     public void removeListener(DatabaseListener listener) {
         listeners.remove(listener);
     }
-
-
 
     public static DatabaseHandler getInstance(Context context) {
         if (instance == null)
@@ -80,45 +89,46 @@ public class DatabaseHandler implements FirebaseAuth.AuthStateListener, Firebase
     }
 
     private DatabaseHandler(Context context) {
-        this.context = context;
-        useCloud = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE).getBoolean("USE_CLOUD_DATABASE", false);
-        database = new Database(context.getSharedPreferences("DATABASES", Context.MODE_PRIVATE).getString("CURRENT", generateDatabaseId()));
+        preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        useCloud = preferences.getBoolean("USE_CLOUD_DATABASE", false);
+        databaseId = preferences.getString("DATABASE", generateDatabaseId());
         if (!useCloud)
             return;
-        firebaseManager = new FirebaseManager(context);
+        initializeFirebaseManager();
+    }
+
+    private void initializeFirebaseManager () {
+        firebaseManager = new FirebaseManager();
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             signIn();
-            return;
         }
-        fetchDatabase(database.getId());
     }
 
-    public void fetchDatabase (String id) {
-        FirebaseAuth.getInstance().getCurrentUser().getIdToken(false).addOnSuccessListener(getTokenResult -> {
-            firebaseManager.setToken(getTokenResult.getToken());
-            firebaseManager.fetchDatabase(id)
-                    .addOnSuccessListener(response -> {
-                                if (!response.equals("null")) {
-                                    firebaseManager.disconnect(database.getId(), FirebaseAuth.getInstance().getUid());
-                                    database = new Gson().fromJson(response, Database.class);
-                                    firebaseManager.addUser(id, FirebaseAuth.getInstance().getUid());
-                                    for (DatabaseListener listener : listeners) listener.onDatabaseEvent(Event.DATABASE_CHANGED);
-                                    context.getSharedPreferences("DATABASES", Context.MODE_PRIVATE).edit().putString("CURRENT", id).apply();
+    public void changeDatabase (String newDatabaseId) {
 
-                                }
-                                else {
-                                    for (DatabaseListener listener : listeners) listener.onDatabaseEvent(Event.DATABASE_NOT_FOUND);
-                                }
-                            }
-                    ).addOnFailureListener(this::errorResponse);
+        firebaseManager.searchDatabase(newDatabaseId, response -> {
+            if (response.equals("null")) {
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.DATABASE_NOT_FOUND);
+                return;
+            }
+            for (DatabaseListener listener : listeners)
+                listener.onDatabaseEvent(Event.DATABASE_FOUND);
+            firebaseManager.removeUser(databaseId, FirebaseAuth.getInstance().getUid(),
+                    unused1 -> firebaseManager.addUser(newDatabaseId, FirebaseAuth.getInstance().getUid(), unused11 -> {
+                        for (DatabaseListener listener : listeners)
+                            listener.onDatabaseEvent(Event.DATABASE_CHANGED);
+                    }, e -> {
+                        for (DatabaseListener listener : listeners)
+                            listener.onError(Error.UNKNOWN_ERROR);
+                    }), e -> {
+                        for (DatabaseListener listener : listeners)
+                            listener.onError(Error.UNKNOWN_ERROR);
+                    });
+        }, e -> {
+            for (DatabaseListener listener : listeners)
+                listener.onDatabaseEvent(Event.DATABASE_NOT_FOUND);
         });
-    }
-
-    private void errorResponse (int errorCode) {
-        if (errorCode == FirebaseManager.NETWORK_ERROR)
-            for (DatabaseListener listener : listeners) listener.onError(Error.NETWORK_ERROR);
-        else
-            for (DatabaseListener listener : listeners) listener.onError(Error.UNKNOWN_ERROR);
     }
 
     public boolean getUseCloud() {
@@ -129,35 +139,34 @@ public class DatabaseHandler implements FirebaseAuth.AuthStateListener, Firebase
 
             FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
                     (authResult -> {
-                        FirebaseAuth.getInstance().getCurrentUser().getIdToken(false)
-                                .addOnSuccessListener(getTokenResult -> {
-                                    firebaseManager.setToken(getTokenResult.getToken());
-                                    database.setId(generateDatabaseId());
-                                    firebaseManager.initializeDatabase(database.getId())
-                                            .addOnSuccessListener(response -> {
-                                                for (DatabaseListener listener : listeners)
-                                                    listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
-
-                                            }).addUser(generateDatabaseId(), FirebaseAuth.getInstance().getUid());
-                                });
-
-                    }).addOnFailureListener(e -> {
-                for (DatabaseListener listener : listeners)
-                    listener.onError(Error.NETWORK_ERROR);
+                        firebaseManager.initializeDatabase(getShortId(), response -> {
+                            databaseId = getShortId();
+                            for (DatabaseListener listener : listeners)
+                                listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
+                            firebaseManager.addUser(getShortId(), FirebaseAuth.getInstance().getUid(), unused -> {
+                                for (DatabaseListener listener : listeners)
+                                    listener.onDatabaseEvent(Event.DATABASE_CREATED);
+                            }, error -> {
+                                for (DatabaseListener listener : listeners)
+                                    listener.onError(Error.UNKNOWN_ERROR);
+                            });
+                        }, error -> {
+                            for (DatabaseListener listener : listeners)
+                                listener.onError(Error.NETWORK_ERROR);
+                        });
             });
-
-
     }
 
     public void setUseCloud(boolean useCloud) {
         this.useCloud = useCloud;
         if (useCloud)
-            firebaseManager = new FirebaseManager(context.getApplicationContext());
+            initializeFirebaseManager();
         else {
-            firebaseManager.close();
             firebaseManager = null;
+            handler.removeCallbacks(retrySignIn);
+            retrySigningRunning = false;
         }
-        SharedPreferences.Editor editor = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE).edit();
+        SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
         editor.apply();
     }
@@ -175,14 +184,40 @@ public class DatabaseHandler implements FirebaseAuth.AuthStateListener, Firebase
         return ((uid.substring(0, ID_LENGTH / 2) + uid.substring(uid.length() - (ID_LENGTH / 2))).toLowerCase());
     }
 
-    public Database getDatabase() {
-        return database;
-    }
-
     public void saveGame(Context context, Game game) {
         LocalDatabaseManager.getInstance(context).saveGameToDatabase(game);
         if (useCloud)
-            firebaseManager.addGameToFireBase(database.getId(), game, FirebaseAuth.getInstance().getUid());
+
+            firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
+                @Override
+                public void onSuccess(String s) {
+                    game.setId(s);
+                    for (DatabaseListener listener : listeners)
+                        listener.onDatabaseEvent(Event.GAME_ADDED);
+                }
+            }, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    for (DatabaseListener listener : listeners)
+                        listener.onError(Error.ADD_GAME_FAILED);
+                }
+            });
+    }
+
+    private JSONObject gameToJson(Game game) {
+        String json = new Gson().toJson(game);
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = new JSONObject(json);
+            JSONArray players = jsonObject.getJSONArray("players");
+            for (int i = 0; i < players.length(); i++) {
+                JSONObject player = players.getJSONObject(i);
+                player.remove("undoStack");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
     }
 
 }

@@ -44,7 +44,7 @@ public class SettingsActivity extends DatabaseActivity {
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
 
-        editTV.setText(DatabaseHandler.getInstance(this).getDatabase().getId());
+        editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
         editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
         imageSwitch.setChecked(showImages);
         cloudSwitch.setChecked(DatabaseHandler.getInstance(this).getUseCloud());
@@ -55,7 +55,6 @@ public class SettingsActivity extends DatabaseActivity {
         cloudSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             DatabaseHandler.getInstance(this).setUseCloud(isChecked);
             setDBOptionsColors();
-
         });
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -73,10 +72,8 @@ public class SettingsActivity extends DatabaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() == DatabaseHandler.ID_LENGTH)
-                    Log.d("Fetch", "fetch database");
-
-                    // FirebaseManager.getInstance(SettingsActivity.this).fetchDatabase(s.toString(), false);
+                if (s.length() == DatabaseHandler.ID_LENGTH && !s.toString().equals(DatabaseHandler.getInstance(SettingsActivity.this).getDatabaseId()))
+                    DatabaseHandler.getInstance(SettingsActivity.this).changeDatabase(s.toString());
             }
 
             @Override
@@ -97,7 +94,7 @@ public class SettingsActivity extends DatabaseActivity {
         if (input.length() < DatabaseHandler.ID_LENGTH) {
             Toast.makeText(this, getString(R.string.too_short_id), Toast.LENGTH_SHORT).show();
         }
-        editTV.setText(DatabaseHandler.getInstance(this).getDatabase().getId());
+        editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
     }
 
     // https://stackoverflow.com/questions/20121938/how-to-set-tint-for-an-image-view-programmatically-in-android
@@ -119,7 +116,7 @@ public class SettingsActivity extends DatabaseActivity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
+        if (!DatabaseHandler.getInstance(this).getDatabaseId().equals("") && getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
             checkTextLength();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
@@ -132,8 +129,8 @@ public class SettingsActivity extends DatabaseActivity {
     @Override
     public void onDatabaseEvent(DatabaseHandler.Event event) {
         super.onDatabaseEvent(event);
-        if (event != DatabaseHandler.Event.DATABASE_NOT_FOUND)
-            editTV.setText(DatabaseHandler.getInstance(this).getDatabase().getId());
+        if (event == DatabaseHandler.Event.DATABASE_NOT_FOUND || event == DatabaseHandler.Event.DATABASE_CREATED)
+            editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
     }
 
 

@@ -1,12 +1,16 @@
 package com.teskola.molkky;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
 public class Game {
-    private final ArrayList<Player> players;
+    private ArrayList<Player> players;
+    @Exclude
     private String id;
+    private long timestamp;
 
     public Game(String gameId, ArrayList<Player> players) {
         this.players = players;
@@ -14,7 +18,6 @@ public class Game {
     }
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
-        this.id = UUID.randomUUID().toString().substring(0,8);
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -29,6 +32,19 @@ public class Game {
             this.players = players;
             setTurn(turn);
         }
+    }
+
+
+    public void setId (String id) {
+        this.id = id;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public ArrayList<Player> getPlayers() {

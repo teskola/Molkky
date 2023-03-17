@@ -4,13 +4,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Database {
     private String id = "";
     private long created;
     private String addedBy;
-    private JSONObject games;
-    private JSONObject users;
+    private Map<String, Game> games;
+    private ArrayList<DatabaseUser> users;
 
     public Database(String id) {
         this.id = id;
@@ -24,11 +26,12 @@ public class Database {
         return id;
     }
 
-    public Database(long created, String addedBy, JSONObject games, JSONObject users) {
+    public Database(String id, long created, String addedBy, Map<String, Game> games, List<DatabaseUser> users) {
+        this.id = id;
         this.created = created;
         this.addedBy = addedBy;
         this.games = games;
-        this.users = users;
+        this.users = (ArrayList<DatabaseUser>) users;
     }
 
     public long getCreated() {

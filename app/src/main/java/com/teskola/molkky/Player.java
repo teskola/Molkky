@@ -1,5 +1,7 @@
 package com.teskola.molkky;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Stack;
@@ -7,6 +9,7 @@ import java.util.Stack;
 public class Player extends PlayerInfo implements Comparable<Player> {
 
     private ArrayList<Integer> tosses;
+    @Exclude
     private Stack<Integer> undoStack;
 
     public Player(String id, String name, ArrayList<Integer> tosses) {
@@ -21,6 +24,11 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     }
 
+    public Player() {
+        this.tosses = new ArrayList<>();
+    }
+
+    @Exclude
     public boolean isEliminated() {
         return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
                 && getToss(tosses.size() - 2) == 0
@@ -31,7 +39,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     /*
     * Initializes undoStack if not initialized and returns undoStack.
     * */
-
+    @Exclude
     public Stack<Integer> getUndoStack() {
         if (undoStack == null) {
             undoStack = new Stack<>();
@@ -42,8 +50,6 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     public ArrayList<Integer> getTosses() {
         return tosses;
     }
-
-    public int getTossesSize() { return tosses.size();}
 
     public int getToss(int position) { return tosses.get(position);}
 
@@ -58,6 +64,8 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         tosses.remove(tosses.size() - 1);
         return  removed_toss_points;
     }
+
+
 
     public int count(int round) {
         int sum = 0;
@@ -92,6 +100,11 @@ public class Player extends PlayerInfo implements Comparable<Player> {
             return 0;
         else
             return 50 - total;
+    }
+
+    public boolean winningChance(int round) {
+        int total = count(round);
+        return (total > 37);
     }
 
     @Override

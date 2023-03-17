@@ -71,7 +71,7 @@ public class ChartActivity extends DatabaseActivity {
         for (int i=0; i < checkedList.length; i++) {
             if (checkedList[i]) {
                 List<Entry> entries = new ArrayList<>();
-                for (int j=0; j < game.getPlayer(i).getTossesSize(); j++) {
+                for (int j=0; j < game.getPlayer(i).getTosses().size(); j++) {
                     entries.add(new Entry(j+1, game.getPlayer(i).count(j)));
                 }
                 LineDataSet dataSet = new LineDataSet(entries, game.getPlayer(i).getName());

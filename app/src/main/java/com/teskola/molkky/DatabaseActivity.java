@@ -52,6 +52,8 @@ public class DatabaseActivity extends AppCompatActivity implements DatabaseHandl
                 Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_CREATED:
+                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_created), Toast.LENGTH_SHORT).show();
+                break;
             case DATABASE_DISCONNECTED:
                 break;
             case DATABASE_CONNECTED:

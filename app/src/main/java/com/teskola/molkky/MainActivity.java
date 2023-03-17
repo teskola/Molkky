@@ -55,6 +55,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
+
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
@@ -64,6 +65,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         }
 
         preferences = getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        String saved_game = preferences.getString("SAVED_GAME", "");
+        if (saved_game.length() > 0)
+        {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("SAVED_GAME", saved_game);
+            startActivity(intent);
+        }
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -157,9 +165,9 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         Intent intent = new Intent(this, GameActivity.class);
         String json = new Gson().toJson(playersList);
-        intent.putExtra("json", json);
-        intent.putExtra("first", start_position);
-        intent.putExtra("random", random);
+        intent.putExtra("PLAYERS", json);
+        intent.putExtra("FIRST", start_position);
+        intent.putExtra("RANDOM", random);
         startActivity(intent);
     }
 
