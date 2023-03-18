@@ -1,7 +1,5 @@
 package com.teskola.molkky;
 
-import android.view.View;
-
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -25,7 +23,7 @@ public class GameHandler {
 
     public int getColor () { return Colors.selectBackground(game.getPlayer(0), false);}
 
-    public boolean hasEnded () {
+    public boolean gameEnded() {
         return (game.getPlayer(0).countAll() == 50 || game.allDropped());
     }
 

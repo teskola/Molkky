@@ -1,9 +1,10 @@
 package com.teskola.molkky;
 
-import java.util.UUID;
+import com.google.firebase.database.Exclude;
+
 
 public class PlayerInfo {
-
+    @Exclude
     private String id;
     private String name;
 
@@ -14,7 +15,6 @@ public class PlayerInfo {
 
     public PlayerInfo(String name) {
         this.name = name;
-        this.id = UUID.randomUUID().toString().substring(0,8);
     }
 
     public PlayerInfo() {}

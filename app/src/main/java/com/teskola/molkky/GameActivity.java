@@ -35,6 +35,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     private boolean savedGame = false;
     private boolean spectateMode = false;
+    private boolean savedFromPref = false;
     private boolean showImages;
 
     private SeekBar seekBar;
@@ -92,7 +93,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             SharedPreferences.Editor editor = preferences.edit();
             editor.remove("SAVED_GAME");
             editor.apply();
-
+            if (handler.gameEnded())
+                savedFromPref = true;
         }
 
         // Saved Instance
@@ -152,12 +154,12 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         chartButton.setOnClickListener(view -> openChart());
         pointsTextView.setOnClickListener(view -> {
-            if (!handler.hasEnded() && !spectateMode)
+            if (!handler.gameEnded() && !spectateMode)
                 Toast.makeText(this, getString(R.string.seekbar_instruction), Toast.LENGTH_SHORT).show();
         });
 
         okButton.setOnClickListener(view -> {
-            if (!handler.hasEnded()) {
+            if (!handler.gameEnded()) {
                 if (!pointsTextView.getText().equals("-")) {
                     int points = Integer.parseInt(pointsTextView.getText().toString());
                     handler.addToss(points);
@@ -177,7 +179,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     @Override
     public void onBackPressed() {
-        if (savedGame || spectateMode || handler.noTosses()) {
+        if (savedGame || savedFromPref || spectateMode || handler.noTosses()) {
             super.onBackPressed();
         }
         else
@@ -205,7 +207,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //              RecyclerView
 
         ListAdapter listAdapter;
-        if (handler.hasEnded()) {
+        if (handler.gameEnded()) {
             listAdapter = new ListAdapter(handler.getPlayers(true), true, false, this);
         }
         else {
@@ -217,22 +219,22 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //              OK-Button
 
         okButton.setVisibility((savedGame || spectateMode) ? View.INVISIBLE : View.VISIBLE);
-        okButton.setText(handler.hasEnded() ? getString(R.string.new_game) : getString(R.string.ok));
-        okButton.setEnabled(handler.hasEnded() || !handler.undoStackIsEmpty());
+        okButton.setText(handler.gameEnded() ? getString(R.string.new_game) : getString(R.string.ok));
+        okButton.setEnabled(handler.gameEnded() || !handler.undoStackIsEmpty());
 
         //              Chart Button
 
-        chartButton.setVisibility((!handler.hasEnded() && !spectateMode) ? View.GONE : View.VISIBLE);
+        chartButton.setVisibility((!handler.gameEnded() && !spectateMode) ? View.GONE : View.VISIBLE);
 
         //              Seekbar
 
-        seekBar.setVisibility((handler.hasEnded() || spectateMode) ? View.INVISIBLE : View.VISIBLE);
+        seekBar.setVisibility((handler.gameEnded() || spectateMode) ? View.INVISIBLE : View.VISIBLE);
         seekBar.setProgress(handler.getSeekbarPosition());
 
         //              Points View
 
         pointsTextView.setVisibility(spectateMode ? View.INVISIBLE : View.VISIBLE);
-        if (handler.hasEnded())
+        if (handler.gameEnded())
             pointsTextView.setText(String.valueOf(handler.getLastToss()));
         else
             pointsTextView.setText(handler.undoStackIsEmpty() ? "-" : String.valueOf(handler.getUndoStackValue()));
@@ -240,11 +242,11 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //             Top Container
 
         nameTextView.setText(handler.getPlayerName());
-        topContainer.setBackgroundResource(handler.hasEnded() ? R.drawable.gold_background : handler.getColor());
+        topContainer.setBackgroundResource(handler.gameEnded() ? R.drawable.gold_background : handler.getColor());
 
         //              Points to win
 
-        if (!handler.hasEnded() && handler.getPointsToWin() > 0) {
+        if (!handler.gameEnded() && handler.getPointsToWin() > 0) {
             pointsToWinTV.setVisibility(View.VISIBLE);
             pointsToWinTV.setText(getString(R.string.points_to_win, (handler.getPointsToWin())));
         } else
@@ -252,7 +254,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         //              Throwing pin view
 
-        throwingPinView.setVisibility(handler.hasEnded() ? View.VISIBLE : View.INVISIBLE);
+        throwingPinView.setVisibility(handler.gameEnded() ? View.VISIBLE : View.INVISIBLE);
     }
 
     @Override
@@ -295,8 +297,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         menu.findItem(R.id.new_game).setVisible(savedGame || spectateMode);
-        menu.findItem(R.id.stats).setVisible(handler.hasEnded());
-        menu.findItem(R.id.saved_games).setVisible(handler.hasEnded());
+        menu.findItem(R.id.stats).setVisible(handler.gameEnded());
+        menu.findItem(R.id.saved_games).setVisible(handler.gameEnded());
         return true;
     }
 

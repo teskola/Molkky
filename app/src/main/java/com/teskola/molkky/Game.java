@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
-public class Game {
+public class Game implements Comparable<Game> {
     private ArrayList<Player> players;
     @Exclude
     private String id;
@@ -16,6 +16,8 @@ public class Game {
         this.players = players;
         this.id = gameId;
     }
+
+    public Game() {}
 
     public Game(ArrayList<Player> players, int turn, boolean random) {
         if (random) {
@@ -74,8 +76,13 @@ public class Game {
         }
         return true;
     }
+    @Exclude
     public String getId() {
         return id;
     }
 
+    @Override
+    public int compareTo(Game game) {
+        return Long.compare(this.timestamp, game.timestamp);
+    }
 }

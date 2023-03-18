@@ -1,6 +1,5 @@
 package com.teskola.molkky;
 
-import static com.teskola.molkky.FirebaseManager.addTimestamp;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -12,11 +11,6 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class DatabaseHandler {
@@ -98,10 +92,11 @@ public class DatabaseHandler {
     }
 
     private void initializeFirebaseManager () {
-        firebaseManager = new FirebaseManager();
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             signIn();
         }
+        else
+            firebaseManager = new FirebaseManager(databaseId);
     }
 
     public void changeDatabase (String newDatabaseId) {
@@ -139,6 +134,7 @@ public class DatabaseHandler {
 
             FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
                     (authResult -> {
+                        firebaseManager = new FirebaseManager();
                         firebaseManager.initializeDatabase(getShortId(), response -> {
                             databaseId = getShortId();
                             for (DatabaseListener listener : listeners)
@@ -204,20 +200,28 @@ public class DatabaseHandler {
             });
     }
 
-    private JSONObject gameToJson(Game game) {
-        String json = new Gson().toJson(game);
-        JSONObject jsonObject = null;
-        try {
-            jsonObject = new JSONObject(json);
-            JSONArray players = jsonObject.getJSONArray("players");
-            for (int i = 0; i < players.length(); i++) {
-                JSONObject player = players.getJSONObject(i);
-                player.remove("undoStack");
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
+    public void addPlayer(PlayerInfo player) {
+        String playerId = firebaseManager.getPlayerId(player.getName());
+        if (playerId != null) {
+            player.setId(playerId);
+            // TODO ilmoitus käyttäjälle, pelaaja lisättiin tietokannasta
+            return;
         }
-        return jsonObject;
+        firebaseManager.addPlayerToDatabase(player, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
+            @Override
+            public void onSuccess(String id) {
+                player.setId(id);
+            }
+        }, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // TODO
+            }
+        });
+    }
+
+    public void removePlayer (PlayerInfo player) {
+        firebaseManager.removePlayerFromDatabase(player, FirebaseAuth.getInstance().getUid());
     }
 
 }

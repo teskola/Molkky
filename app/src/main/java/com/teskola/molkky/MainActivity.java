@@ -217,14 +217,17 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // Check if name is already in database. If not, give player unique id.
 
-        String playerId = LocalDatabaseManager.getInstance(this).getPlayerId(newPlayer.getName());
+      /*  String playerId = LocalDatabaseManager.getInstance(this).getPlayerId(newPlayer.getName());
         if (playerId != null)
-            newPlayer.setId(playerId);
+            newPlayer.setId(playerId);*/
+
+        DatabaseHandler.getInstance(this).addPlayer(newPlayer);
 
         playersList.add(0, newPlayer);
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
+
         editPlayerName.setText("");
         listAdapter.notifyItemInserted(0);
         if (!random && listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
@@ -235,6 +238,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void deletePlayer (int position) {
+        DatabaseHandler.getInstance(this).removePlayer(playersList.get(position));
         playersList.remove(position);
         if (playersList.size() < 2) {
             startButton.setEnabled(false);
@@ -297,6 +301,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     @Override
     public void onBackPressed () {
+        // TODO tallenna state ja normaali back
         moveTaskToBack(true);
     }
 
