@@ -11,17 +11,21 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 public class DatabaseHandler {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
-    public static final int RETRY_CONNECTION =  10000;
-
+    public static final int RETRY_CONNECTION = 10000;
+    private final Database database;
     private final ArrayList<DatabaseListener> listeners = new ArrayList<>();
     private static DatabaseHandler instance;
     private FirebaseManager firebaseManager;
-    private boolean useCloud;
     private String databaseId;
     private final SharedPreferences preferences;
     private final Handler handler = new Handler();
@@ -41,6 +45,7 @@ public class DatabaseHandler {
 
     public interface DatabaseListener {
         void onError(Error error);
+
         void onDatabaseEvent(Event event);
     }
 
@@ -51,7 +56,8 @@ public class DatabaseHandler {
         DATABASE_CREATED,
         DATABASE_CONNECTED,
         DATABASE_DISCONNECTED,
-        GAME_ADDED
+        GAME_ADDED,
+        CREATED_TIMESTAMP_ADDED,
     }
 
     public enum Error {
@@ -59,6 +65,12 @@ public class DatabaseHandler {
         UNKNOWN_ERROR,
         ADD_GAME_FAILED
     }
+
+    /*
+     *
+     * Returns 6 character, lowercase, version of userId used as database id.
+     *
+     * */
 
     public String getShortId() {
         String uid = FirebaseAuth.getInstance().getUid();
@@ -72,6 +84,7 @@ public class DatabaseHandler {
     public void addListener(DatabaseListener listener) {
         listeners.add(listener);
     }
+
     public void removeListener(DatabaseListener listener) {
         listeners.remove(listener);
     }
@@ -83,23 +96,26 @@ public class DatabaseHandler {
     }
 
     private DatabaseHandler(Context context) {
+        database = new Database();
         preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        useCloud = preferences.getBoolean("USE_CLOUD_DATABASE", false);
-        databaseId = preferences.getString("DATABASE", generateDatabaseId());
-        if (!useCloud)
-            return;
-        initializeFirebaseManager();
+        databaseId = preferences.getString("DATABASE", getShortId());
+        connectToFirebase();
     }
 
-    private void initializeFirebaseManager () {
+    public void connectToFirebase() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             signIn();
+            return;
         }
-        else
-            firebaseManager = new FirebaseManager(databaseId);
+        if (firebaseManager == null)
+            firebaseManager = new FirebaseManager(databaseId, database);
     }
 
-    public void changeDatabase (String newDatabaseId) {
+    public void disconnectFromFirebase() {
+        firebaseManager = null;
+    }
+
+    public void changeDatabase(String newDatabaseId) {
 
         firebaseManager.searchDatabase(newDatabaseId, response -> {
             if (response.equals("null")) {
@@ -109,10 +125,16 @@ public class DatabaseHandler {
             }
             for (DatabaseListener listener : listeners)
                 listener.onDatabaseEvent(Event.DATABASE_FOUND);
+
             firebaseManager.removeUser(databaseId, FirebaseAuth.getInstance().getUid(),
                     unused1 -> firebaseManager.addUser(newDatabaseId, FirebaseAuth.getInstance().getUid(), unused11 -> {
                         for (DatabaseListener listener : listeners)
                             listener.onDatabaseEvent(Event.DATABASE_CHANGED);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("DATABASE", newDatabaseId);
+                        databaseId = newDatabaseId;
+                        editor.apply();
+                        database.setCreated(Long.parseLong(response));
                     }, e -> {
                         for (DatabaseListener listener : listeners)
                             listener.onError(Error.UNKNOWN_ERROR);
@@ -126,102 +148,139 @@ public class DatabaseHandler {
         });
     }
 
-    public boolean getUseCloud() {
-        return useCloud;
-    }
-
     public void signIn() {
 
-            FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
-                    (authResult -> {
-                        firebaseManager = new FirebaseManager();
-                        firebaseManager.initializeDatabase(getShortId(), response -> {
-                            databaseId = getShortId();
+        FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
+                (authResult -> {
+                    firebaseManager = new FirebaseManager(database);
+                    firebaseManager.initializeDatabase(getShortId(), response -> {
+                        databaseId = getShortId();
+                        for (DatabaseListener listener : listeners)
+                            listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
+                        firebaseManager.addUser(getShortId(), FirebaseAuth.getInstance().getUid(), unused -> {
                             for (DatabaseListener listener : listeners)
-                                listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
-                            firebaseManager.addUser(getShortId(), FirebaseAuth.getInstance().getUid(), unused -> {
-                                for (DatabaseListener listener : listeners)
-                                    listener.onDatabaseEvent(Event.DATABASE_CREATED);
-                            }, error -> {
-                                for (DatabaseListener listener : listeners)
-                                    listener.onError(Error.UNKNOWN_ERROR);
-                            });
+                                listener.onDatabaseEvent(Event.DATABASE_CREATED);
                         }, error -> {
                             for (DatabaseListener listener : listeners)
-                                listener.onError(Error.NETWORK_ERROR);
+                                listener.onError(Error.UNKNOWN_ERROR);
                         });
-            });
-    }
-
-    public void setUseCloud(boolean useCloud) {
-        this.useCloud = useCloud;
-        if (useCloud)
-            initializeFirebaseManager();
-        else {
-            firebaseManager = null;
-            handler.removeCallbacks(retrySignIn);
-            retrySigningRunning = false;
-        }
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("USE_CLOUD_DATABASE", useCloud);
-        editor.apply();
-    }
-
-    /*
-     *
-     * Returns 6 character, lowercase, version of userId used as database id.
-     *
-     * */
-
-    private String generateDatabaseId() {
-        if (!useCloud || FirebaseAuth.getInstance().getUid() == null)
-            return "";
-        String uid = FirebaseAuth.getInstance().getUid();
-        return ((uid.substring(0, ID_LENGTH / 2) + uid.substring(uid.length() - (ID_LENGTH / 2))).toLowerCase());
+                    }, error -> {
+                        for (DatabaseListener listener : listeners)
+                            listener.onError(Error.NETWORK_ERROR);
+                    });
+                });
     }
 
     public void saveGame(Context context, Game game) {
-        LocalDatabaseManager.getInstance(context).saveGameToDatabase(game);
-        if (useCloud)
+        // LocalDatabaseManager.getInstance(context).saveGameToDatabase(game);
 
-            firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
-                @Override
-                public void onSuccess(String s) {
-                    game.setId(s);
-                    for (DatabaseListener listener : listeners)
-                        listener.onDatabaseEvent(Event.GAME_ADDED);
-                }
-            }, new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    for (DatabaseListener listener : listeners)
-                        listener.onError(Error.ADD_GAME_FAILED);
-                }
-            });
-    }
 
-    public void addPlayer(PlayerInfo player) {
-        String playerId = firebaseManager.getPlayerId(player.getName());
-        if (playerId != null) {
-            player.setId(playerId);
-            // TODO ilmoitus käyttäjälle, pelaaja lisättiin tietokannasta
-            return;
-        }
-        firebaseManager.addPlayerToDatabase(player, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
+        firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
             @Override
-            public void onSuccess(String id) {
-                player.setId(id);
+            public void onSuccess(String s) {
+                game.setId(s);
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.GAME_ADDED);
             }
         }, new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                // TODO
+                for (DatabaseListener listener : listeners)
+                    listener.onError(Error.ADD_GAME_FAILED);
             }
         });
     }
 
-    public void removePlayer (PlayerInfo player) {
-        firebaseManager.removePlayerFromDatabase(player, FirebaseAuth.getInstance().getUid());
+    public void addPlayer(PlayerInfo player) {
+        String playerId = database.getPlayerId(player.getName());
+        if (playerId != null) {
+            player.setId(playerId);
+            // TODO ilmoitus käyttäjälle, pelaaja lisättiin tietokannasta
+        } else {
+            player.setId(UUID.randomUUID().toString().substring(0, 8));
+        }
+    }
+
+    public ArrayList<GameInfo> getGames() {
+        List<Game> games = database.getGames();
+        ArrayList<GameInfo> result = new ArrayList<>();
+        for (Game game : games) {
+            String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(game.getTimestamp());
+            GameInfo gameInfo = new GameInfo(game.getId(), timestamp, game.getPlayers().get(0).getName());
+            result.add(gameInfo);
+        }
+        return result;
+    }
+
+    public ArrayList<GameInfo> getGames(String playerId) {
+        List<Game> games = database.getGames();
+        ArrayList<GameInfo> result = new ArrayList<>();
+        for (Game game : games) {
+            for (Player player : game.getPlayers()) {
+                if (player.getId().equals(playerId)) {
+                    String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(game.getTimestamp());
+                    GameInfo gameInfo = new GameInfo(game.getId(), timestamp, game.getPlayers().get(0).getName());
+                    result.add(gameInfo);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<PlayerInfo> getPlayers() {
+        return database.getPlayers();
+    }
+
+    public String getPlayerName(String playerId) {
+        return database.getPlayerName(playerId);
+    }
+
+    public List<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
+        return database.getPlayers(excludedPlayers);
+    }
+
+    public Game getGame(String id) {
+        return database.getGame(id);
+    }
+
+    public boolean noPlayers () {
+        return database.noPlayers();
+    }
+
+    public PlayerStats getPlayerStats(PlayerInfo playerInfo) {
+        return database.getStats(playerInfo);
+    }
+
+    public int getGamesCount () {
+        return database.getGamesCount();
+    }
+
+    public int getPlayersCount() {
+        return database.getPlayersCount();
+    }
+
+    public int getTossesCount () {
+        return database.getTossesCount();
+    }
+
+    public String getCreated () {
+        if (database.getCreated() == 0) {
+            firebaseManager.searchDatabase(databaseId, new OnSuccessListener<String>() {
+                @Override
+                public void onSuccess(String s) {
+                    database.setCreated(Long.parseLong(s));
+                    for (DatabaseListener listener : listeners)
+                        listener.onDatabaseEvent(Event.CREATED_TIMESTAMP_ADDED);
+                }
+            }, null);
+            return null;
+        }
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.getCreated());
+    }
+
+    public String getUpdated () {
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.lastUpdated());
     }
 
 }

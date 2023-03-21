@@ -10,23 +10,24 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class SettingsActivity extends DatabaseActivity {
+    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
+
     private SwitchCompat imageSwitch;
-    private SwitchCompat cloudSwitch;
-    private TextView editTV;
+    private SwitchCompat allowSpectatorsSwitch;
+    private TextView editTV, gamesTV, playersTV, tossesTV, createdTV, updatedTV;
     private ImageButton infoButton;
     private ViewGroup databaseStats;
+
 
     private boolean showImages;
     private SharedPreferences preferences;
@@ -35,26 +36,31 @@ public class SettingsActivity extends DatabaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
         imageSwitch = findViewById(R.id.imageSwitch);
-        cloudSwitch = findViewById(R.id.cloudSwitch);
+        allowSpectatorsSwitch = findViewById(R.id.allowSpectatorsSwitch);
         editTV = findViewById(R.id.editDBID);
         infoButton = findViewById(R.id.infoButton);
         databaseStats = findViewById(R.id.databaseStatsView);
+
+        gamesTV = findViewById(R.id.settings_gamesTV);
+        playersTV = findViewById(R.id.settings_playersTV);
+        tossesTV = findViewById(R.id.settings_tossesTV);
+        createdTV = findViewById(R.id.settings_createdTV);
+        updatedTV = findViewById(R.id.settings_updatedTV);
+
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
 
         editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
         editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
+
+        updateDatabaseStats();
+
         imageSwitch.setChecked(showImages);
-        cloudSwitch.setChecked(DatabaseHandler.getInstance(this).getUseCloud());
-        setDBOptionsColors();
         imageSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             showImages = isChecked;
-        });
-        cloudSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            DatabaseHandler.getInstance(this).setUseCloud(isChecked);
-            setDBOptionsColors();
         });
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -82,9 +88,7 @@ public class SettingsActivity extends DatabaseActivity {
         });
 
         infoButton.setOnClickListener(view -> {
-            if (cloudSwitch.isChecked()) {
-                Toast.makeText(this, getResources().getString(R.string.database_instruction), Toast.LENGTH_LONG).show();
-            }
+          Toast.makeText(this, getResources().getString(R.string.database_instruction), Toast.LENGTH_LONG).show();
         });
 
     }
@@ -97,21 +101,18 @@ public class SettingsActivity extends DatabaseActivity {
         editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
     }
 
-    // https://stackoverflow.com/questions/20121938/how-to-set-tint-for-an-image-view-programmatically-in-android
-
-    public void setDBOptionsColors() {
-        if (cloudSwitch.isChecked()) {
-            editTV.setTextColor(getResources().getColor(R.color.black));
-            editTV.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-            infoButton.setColorFilter(ContextCompat.getColor(this, R.color.teal), PorterDuff.Mode.SRC_IN);
-
-        } else {
-            editTV.setTextColor(getResources().getColor(R.color.light_gray));
-            editTV.setInputType(InputType.TYPE_NULL);
-            infoButton.setColorFilter(ContextCompat.getColor(this, R.color.light_gray), PorterDuff.Mode.SRC_IN);
-            databaseStats.setVisibility(View.INVISIBLE);
-
-        }
+    public void updateDatabaseStats() {
+        int games = databaseHandler.getGamesCount();
+        int players = databaseHandler.getPlayersCount();
+        int tosses = databaseHandler.getTossesCount();
+        String created = databaseHandler.getCreated();
+        String updated = databaseHandler.getUpdated();
+        gamesTV.setText(String.valueOf(games));
+        playersTV.setText(String.valueOf(players));
+        tossesTV.setText(String.valueOf(tosses));
+        updatedTV.setText(updated);
+        if (databaseHandler.getCreated() != null)
+            createdTV.setText(created);
     }
 
     @Override
@@ -124,14 +125,16 @@ public class SettingsActivity extends DatabaseActivity {
         return super.dispatchTouchEvent(ev);
     }
 
-
-
     @Override
     public void onDatabaseEvent(DatabaseHandler.Event event) {
         super.onDatabaseEvent(event);
         if (event == DatabaseHandler.Event.DATABASE_NOT_FOUND || event == DatabaseHandler.Event.DATABASE_CREATED)
             editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
+        if (event == DatabaseHandler.Event.DATABASE_CHANGED)
+            updateDatabaseStats();
+        if (event == DatabaseHandler.Event.CREATED_TIMESTAMP_ADDED) {
+            String created = databaseHandler.getCreated();
+            createdTV.setText(created);
+        }
     }
-
-
 }

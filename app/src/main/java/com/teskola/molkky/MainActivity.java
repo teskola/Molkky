@@ -177,7 +177,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             String json = new Gson().toJson(playersList);
             intent.putExtra("SELECTED_PLAYERS", json);
         }
-        if (LocalDatabaseManager.getInstance(this).getPlayerCount() > 0) {
+        if (true /*LocalDatabaseManager.getInstance(this).getPlayerCount() > 0*/) {
             startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
@@ -238,7 +238,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void deletePlayer (int position) {
-        DatabaseHandler.getInstance(this).removePlayer(playersList.get(position));
         playersList.remove(position);
         if (playersList.size() < 2) {
             startButton.setEnabled(false);

@@ -83,6 +83,6 @@ public class Game implements Comparable<Game> {
 
     @Override
     public int compareTo(Game game) {
-        return Long.compare(this.timestamp, game.timestamp);
+        return Long.compare(game.timestamp, this.timestamp);
     }
 }

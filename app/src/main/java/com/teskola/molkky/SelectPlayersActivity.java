@@ -23,7 +23,7 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
-
+    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private RecyclerView recyclerView;
     private final ImageHandler imageHandler = new ImageHandler(this);
 
@@ -43,7 +43,8 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
         }
 
 
-        ArrayList<PlayerInfo> savedPlayers = LocalDatabaseManager.getInstance(this).getPlayers(allPlayers);
+        // ArrayList<PlayerInfo> savedPlayers = LocalDatabaseManager.getInstance(this).getPlayers(allPlayers);
+        ArrayList<PlayerInfo> savedPlayers = (ArrayList<PlayerInfo>) databaseHandler.getPlayers(allPlayers);
         for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);
             selected.add(false);

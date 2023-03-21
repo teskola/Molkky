@@ -24,6 +24,8 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     }
 
+
+
     public Player() {
         this.tosses = new ArrayList<>();
     }

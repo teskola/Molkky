@@ -1,16 +1,13 @@
 package com.teskola.molkky;
 
-
-
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Set;
 
 
 public class FirebaseManager {
@@ -29,33 +27,30 @@ public class FirebaseManager {
     private final DatabaseReference usersRef = firebase.getReference("users");
     private DatabaseReference myDatabaseRef;
     private HashMap<String, DatabaseReference> myGamesRef = new HashMap<>();
-    private HashMap<String, DatabaseReference> myPlayersRef = new HashMap<>();
-    private Database database = new Database();
-    // private HashMap<String, HashMap<String, Game>> games = new HashMap<>();
-    // private HashMap<String, PlayerInfo> playersMap = new HashMap<>();
+    private HashMap<DatabaseReference, ChildEventListener> databaseListeners = new HashMap<>();
+    private HashMap<String, ChildEventListener> gameListeners = new HashMap<>();
+    private final Database database;
 
+    public FirebaseManager(Database database) {
+        this.database = database;
+    }
+
+    public FirebaseManager(String databaseId, Database database) {
+        this.database = database;
+        myDatabaseRef = firebase.getReference("databases/" + databaseId + "/users/");
+        ChildEventListener childEventListener = databaseListener;
+        databaseListeners.put(myDatabaseRef, childEventListener);
+        myDatabaseRef.addChildEventListener(childEventListener);
+    }
 
     private final ChildEventListener databaseListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot ds, @Nullable String previousChildName) {
             DatabaseReference databaseReference = firebase.getReference("users/" + ds.getKey() + "/games");
             myGamesRef.put(ds.getKey(), databaseReference);
-            databaseReference.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        HashMap<String, Game> gamesMap = new HashMap<>();
-                        DataSnapshot snapshot1 = task.getResult();
-                        for (DataSnapshot game : snapshot1.getChildren()) {
-                            gamesMap.put(game.getKey(), game.getValue(Game.class));
-                        }
-                        // games.put(ds.getKey(), gamesMap);
-                        database.addGames(ds.getKey(), gamesMap);
-                    }
-                }
-            });
-            databaseReference.addChildEventListener(gamesListener(ds));
-
+            ChildEventListener childEventListener = gamesListener(ds.getKey());
+            gameListeners.put(ds.getKey(), childEventListener);
+            databaseReference.addChildEventListener(childEventListener);
         }
 
         @Override
@@ -65,10 +60,11 @@ public class FirebaseManager {
 
         @Override
         public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-            myGamesRef.get(snapshot.getKey()).removeEventListener(this);
-            myPlayersRef.get(snapshot.getKey()).removeEventListener(this);
-            // games.remove(snapshot.getKey());
+
+            myGamesRef.get(snapshot.getKey()).removeEventListener(gameListeners.get(snapshot.getKey()));
+            myGamesRef.remove(snapshot.getKey());
             database.removeDatabase(snapshot.getKey());
+
         }
 
         @Override
@@ -82,117 +78,23 @@ public class FirebaseManager {
         }
     };
 
-    public FirebaseManager() {
-    }
-
-    public FirebaseManager(String databaseId) {
-        myDatabaseRef = firebase.getReference("databases/" + databaseId + "/users/");
-        myDatabaseRef.addChildEventListener(databaseListener);
-        getDatabaseAndSetListeners();
-    }
-
-    private void getDatabaseAndSetListeners () {
-        myDatabaseRef.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DataSnapshot snapshot = task.getResult();
-                    for (DataSnapshot ds : snapshot.getChildren()) {
-                        DatabaseReference gamesRef = firebase.getReference("users/" + ds.getKey() + "/games");
-                        myGamesRef.put(ds.getKey(), gamesRef);
-                        gamesRef.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if (task.isSuccessful()) {
-                                    HashMap<String, Game> gamesMap = new HashMap<>();
-                                    DataSnapshot snapshot1 = task.getResult();
-                                    for (DataSnapshot game : snapshot1.getChildren()) {
-                                        gamesMap.put(game.getKey(), game.getValue(Game.class));
-                                    }
-                                    // games.put(ds.getKey(), gamesMap);
-                                    database.addGames(ds.getKey(), gamesMap);
-
-                                }
-                            }
-                        });
-                        gamesRef.addChildEventListener(gamesListener(ds));
-                        DatabaseReference playersRef = firebase.getReference("users/" + ds.getKey() + "/players");
-                        myPlayersRef.put(ds.getKey(), playersRef);
-                        playersRef.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                if (task.isSuccessful()) {
-                                    DataSnapshot snapshot1 = task.getResult();
-                                    if (snapshot1.exists()) {
-                                        for (DataSnapshot player : snapshot1.getChildren()) {
-                                           // playersMap.put(player.getKey(), player.getValue(PlayerInfo.class));
-                                            database.addPlayer(player.getKey(), player.getValue(PlayerInfo.class));
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        playersRef.addChildEventListener(new ChildEventListener() {
-                            @Override
-                            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                                database.addPlayer(snapshot.getKey(), snapshot.getValue(PlayerInfo.class));
-                            }
-
-                            @Override
-                            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                            }
-
-                            @Override
-                            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                                database.removePlayer(snapshot.getKey());
-                            }
-
-                            @Override
-                            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
-                    }
-                }
-            }
-        });
-    }
-
-    private ChildEventListener gamesListener(DataSnapshot ds) {
+    private ChildEventListener gamesListener(String databaseId) {
         return new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                database.addGame(ds.getKey(), snapshot.getKey(), snapshot.getValue(Game.class));
-  /*              if (games.containsKey(ds.getKey()))
-                    games.get(ds.getKey()).put(snapshot.getKey(), snapshot.getValue(Game.class));
-                else {
-                    HashMap<String, Game> newMap = new HashMap<>();
-                    newMap.put(snapshot.getKey(), snapshot.getValue(Game.class));
-                    games.put(ds.getKey(), newMap);
-                }*/
-
-                // TODO hae pelaajat, tarkista ovatko jo lisätty ja lisää
-
+                database.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Game.class));
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                database.addGame(ds.getKey(), snapshot.getKey(), snapshot.getValue(Game.class));
-                // games.get(ds.getKey()).put(snapshot.getKey(), snapshot.getValue(Game.class));
+                database.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Game.class));
+
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                database.removeGame(ds.getKey(), snapshot.getKey());
-                // games.get(ds.getKey()).remove(snapshot.getKey());
+                database.removeGame(databaseId, snapshot.getKey());
 
-                // TODO tarkista pelaajat ja poista tarvittaessa
             }
 
             @Override
@@ -236,7 +138,9 @@ public class FirebaseManager {
         databaseRef.child(database).child("users").child(uid).setValue(true).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 myDatabaseRef = firebase.getReference("databases/" + database + "/users/");
-                myDatabaseRef.addChildEventListener(databaseListener);
+                ChildEventListener childEventListener = databaseListener;
+                databaseListeners.put(myDatabaseRef, childEventListener);
+                myDatabaseRef.addChildEventListener(childEventListener);
                 response.onSuccess(null);
             }
             else
@@ -245,10 +149,18 @@ public class FirebaseManager {
         return this;
     }
 
-    public FirebaseManager removeUser(String database, String uid, OnSuccessListener<Void> response, OnFailureListener error) {
-        databaseRef.child(database).child("users").child(uid).setValue(null).addOnCompleteListener(task -> {
+    public FirebaseManager removeUser(String db, String uid, OnSuccessListener<Void> response, OnFailureListener error) {
+        myDatabaseRef.removeEventListener(databaseListeners.get(myDatabaseRef));
+        databaseListeners.remove(myDatabaseRef);
+        for (String key : myGamesRef.keySet()) {
+            myGamesRef.get(key).removeEventListener(gameListeners.get(key));
+            database.removeDatabase(key);
+        }
+        myGamesRef.clear();
+        databaseRef.child(db).child("users").child(uid).setValue(null).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                myDatabaseRef.removeEventListener(databaseListener);
+
+
                 response.onSuccess(null);
             }
             else
@@ -273,31 +185,5 @@ public class FirebaseManager {
         });
         return this;
     }
-
-    public FirebaseManager addPlayerToDatabase (PlayerInfo player, String user, OnSuccessListener<String> response, OnFailureListener error) {
-        String playerId;
-        if (player.getId() == null)
-            playerId = usersRef.child(user).child("players").push().getKey();
-        else
-            playerId = player.getId();
-        usersRef.child(user).child("/players/" + playerId).setValue(player).addOnCompleteListener(task -> {
-            if (task.isSuccessful())
-                response.onSuccess(playerId);
-            else
-                error.onFailure(Objects.requireNonNull(task.getException()));
-        });
-     return this;
-    }
-
-    public FirebaseManager removePlayerFromDatabase(PlayerInfo player, String user) {
-
-        usersRef.child(user).child("/players/" + player.getId()).setValue(null);
-        return this;
-    }
-
-    public String getPlayerId (String name) {
-        return database.getPlayerId(name);
-    }
-
 }
 

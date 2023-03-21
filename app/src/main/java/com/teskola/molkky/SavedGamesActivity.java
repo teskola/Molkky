@@ -19,16 +19,19 @@ import android.widget.TextView;
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    private ArrayList<GameInfo> games = new ArrayList<>();
+    // private ArrayList<GameInfo> games = new ArrayList<>();
+    private List<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
     private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +45,10 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
         if (getIntent().getExtras() != null) {
             String playerID = getIntent().getStringExtra("PLAYER_ID");
-            games = LocalDatabaseManager.getInstance(this).getGames(playerID);
-            String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerID);
+            games = databaseHandler.getGames(playerID);
+            String name = databaseHandler.getPlayerName(playerID);
+            // games = LocalDatabaseManager.getInstance(this).getGames(playerID);
+            // String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
             if (preferences.getBoolean("SHOW_IMAGES", false))
@@ -65,7 +70,8 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         } else {
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            games = LocalDatabaseManager.getInstance(this).getGames();
+            // games = LocalDatabaseManager.getInstance(this).getGames();
+            games = databaseHandler.getGames();
 
         }
         showAllBtn.setOnClickListener(view -> showAllGames());
@@ -104,7 +110,8 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
     @SuppressLint("NotifyDataSetChanged")
     public void showAllGames() {
-        ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(this).getGames();
+        ArrayList<GameInfo> allGames = databaseHandler.getGames();
+        // ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(this).getGames();
         while (!games.isEmpty()) {
             games.remove(0);
             recyclerView.getAdapter().notifyItemRemoved(0);

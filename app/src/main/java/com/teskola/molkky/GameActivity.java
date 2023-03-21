@@ -50,6 +50,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
+    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private GameHandler handler;
     private final ImageHandler imageHandler = new ImageHandler(this);
     private SharedPreferences preferences;
@@ -68,7 +69,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            handler = new GameHandler(new Game(gameId, LocalDatabaseManager.getInstance(this).getPlayers(gameId)), null);
+            // handler = new GameHandler(new Game(gameId, LocalDatabaseManager.getInstance(this).getPlayers(gameId)), null);
+            handler = new GameHandler(databaseHandler.getGame(gameId), null);
             savedGame = true;
         }
 

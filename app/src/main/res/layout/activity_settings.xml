@@ -19,11 +19,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:visibility="invisible"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editDBID"
-            tools:visibility="visible">
+            app:layout_constraintTop_toBottomOf="@+id/editDBID">
 
 
             <TableRow
@@ -141,17 +140,17 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:text="@string/show_images"
-            app:layout_constraintEnd_toEndOf="@+id/cloudSwitch"
-            app:layout_constraintStart_toStartOf="@+id/cloudSwitch"
+            app:layout_constraintEnd_toEndOf="@+id/allowSpectatorsSwitch"
+            app:layout_constraintStart_toStartOf="@+id/allowSpectatorsSwitch"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/cloudSwitch"
+            android:id="@+id/allowSpectatorsSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="16dp"
-            android:text="@string/use_cloud_database"
+            android:text="@string/allow_spectators"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageSwitch" />
@@ -163,13 +162,13 @@
             android:ems="6"
             android:gravity="center"
             android:imeOptions="actionDone"
-            android:inputType="none"
+            android:inputType="textVisiblePassword|textNoSuggestions"
             android:maxLength="6"
-            android:textColor="@color/light_gray"
+            android:textColor="@color/black"
             android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="@+id/cloudSwitch"
-            app:layout_constraintStart_toStartOf="@+id/cloudSwitch"
-            app:layout_constraintTop_toBottomOf="@+id/cloudSwitch" />
+            app:layout_constraintEnd_toEndOf="@+id/allowSpectatorsSwitch"
+            app:layout_constraintStart_toStartOf="@+id/allowSpectatorsSwitch"
+            app:layout_constraintTop_toBottomOf="@+id/allowSpectatorsSwitch" />
 
         <ImageButton
             android:id="@+id/infoButton"
@@ -182,7 +181,7 @@
             app:layout_constraintBottom_toBottomOf="@+id/editDBID"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/editDBID"
-            app:layout_constraintTop_toBottomOf="@+id/cloudSwitch"
+            app:layout_constraintTop_toBottomOf="@+id/allowSpectatorsSwitch"
             app:srcCompat="@drawable/info_button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

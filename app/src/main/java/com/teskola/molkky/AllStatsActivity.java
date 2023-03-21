@@ -60,9 +60,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         nextIB.setVisibility(View.VISIBLE);
         statID = getIntent().getIntExtra("STAT_ID", 0);
 
-        ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(this).getPlayers();
+        ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) DatabaseHandler.getInstance(this).getPlayers();
+        // ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(this).getPlayers();
         for (PlayerInfo player : players) {
-            playerStats.add(new PlayerStats(player, getApplicationContext()));
+            playerStats.add(DatabaseHandler.getInstance(this).getPlayerStats(player));
         }
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 

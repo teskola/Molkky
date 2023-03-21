@@ -166,9 +166,9 @@ public class PlayerStatsActivity extends OptionsActivity {
     }
 
     public void getPlayerData() {
-        String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerIds[position]);
+        String name = DatabaseHandler.getInstance(this).getPlayerName(playerIds[position]);
         PlayerInfo player = new PlayerInfo(playerIds[position], name);
-        playerStats = new PlayerStats(player, getApplicationContext());
+        playerStats = DatabaseHandler.getInstance(this).getPlayerStats(player);
     }
 
     public void updateImage () {
