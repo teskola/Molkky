@@ -130,7 +130,7 @@ public class SettingsActivity extends DatabaseActivity {
         super.onDatabaseEvent(event);
         if (event == DatabaseHandler.Event.DATABASE_NOT_FOUND || event == DatabaseHandler.Event.DATABASE_CREATED)
             editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
-        if (event == DatabaseHandler.Event.DATABASE_CHANGED)
+        if (event == DatabaseHandler.Event.GAME_ADDED)
             updateDatabaseStats();
         if (event == DatabaseHandler.Event.CREATED_TIMESTAMP_ADDED) {
             String created = databaseHandler.getCreated();

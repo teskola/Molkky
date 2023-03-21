@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class DatabaseHandler {
+public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
     public static final int RETRY_CONNECTION = 10000;
@@ -43,6 +43,28 @@ public class DatabaseHandler {
         return databaseId;
     }
 
+    @Override
+    public void onNewUser() {
+        for (DatabaseListener listener : listeners)
+            listener.onDatabaseEvent(Event.DATABASE_NEWUSER);
+    }
+
+    @Override
+    public void onUserRemoved() {
+
+    }
+
+    @Override
+    public void onGameAdded() {
+        for (DatabaseListener listener : listeners)
+            listener.onDatabaseEvent(Event.GAME_ADDED);
+    }
+
+    @Override
+    public void onGameRemoved() {
+
+    }
+
     public interface DatabaseListener {
         void onError(Error error);
 
@@ -56,6 +78,8 @@ public class DatabaseHandler {
         DATABASE_CREATED,
         DATABASE_CONNECTED,
         DATABASE_DISCONNECTED,
+        DATABASE_NEWUSER,
+        DATABASE_USER_REMOVED,
         GAME_ADDED,
         CREATED_TIMESTAMP_ADDED,
     }
@@ -108,7 +132,7 @@ public class DatabaseHandler {
             return;
         }
         if (firebaseManager == null)
-            firebaseManager = new FirebaseManager(databaseId, database);
+            firebaseManager = new FirebaseManager(databaseId, database, this);
     }
 
     public void disconnectFromFirebase() {
@@ -152,7 +176,7 @@ public class DatabaseHandler {
 
         FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
                 (authResult -> {
-                    firebaseManager = new FirebaseManager(database);
+                    firebaseManager = new FirebaseManager(database, this);
                     firebaseManager.initializeDatabase(getShortId(), response -> {
                         databaseId = getShortId();
                         for (DatabaseListener listener : listeners)

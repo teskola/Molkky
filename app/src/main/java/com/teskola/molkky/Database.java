@@ -166,11 +166,13 @@ public class Database {
             gamesMap = entry.getValue();
             for (String key : gameIds) {
                 Game game = gamesMap.get(key);
-                if (game.getPlayers().get(0).getId().equals(playerId))
+                if (game != null && game.getPlayers().get(0).getId().equals(playerId))
                     wins++;
-                for (Player player : game.getPlayers()) {
-                    if (player.getId().equals(playerId)) {
-                        tosses.put(key, player.getTosses());
+                if (game != null) {
+                    for (Player player : game.getPlayers()) {
+                        if (player.getId().equals(playerId)) {
+                            tosses.put(key, player.getTosses());
+                        }
                     }
                 }
 

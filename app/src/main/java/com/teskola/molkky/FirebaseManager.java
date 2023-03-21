@@ -30,12 +30,22 @@ public class FirebaseManager {
     private HashMap<DatabaseReference, ChildEventListener> databaseListeners = new HashMap<>();
     private HashMap<String, ChildEventListener> gameListeners = new HashMap<>();
     private final Database database;
+    private DatabaseListener listener;
 
-    public FirebaseManager(Database database) {
+    public interface DatabaseListener {
+        void onNewUser();
+        void onUserRemoved();
+        void onGameAdded();
+        void onGameRemoved();
+    }
+
+    public FirebaseManager(Database database, DatabaseListener listener) {
+        this.listener = listener;
         this.database = database;
     }
 
-    public FirebaseManager(String databaseId, Database database) {
+    public FirebaseManager(String databaseId, Database database, DatabaseListener listener) {
+        this.listener = listener;
         this.database = database;
         myDatabaseRef = firebase.getReference("databases/" + databaseId + "/users/");
         ChildEventListener childEventListener = databaseListener;
@@ -51,6 +61,7 @@ public class FirebaseManager {
             ChildEventListener childEventListener = gamesListener(ds.getKey());
             gameListeners.put(ds.getKey(), childEventListener);
             databaseReference.addChildEventListener(childEventListener);
+            listener.onNewUser();
         }
 
         @Override
@@ -64,6 +75,7 @@ public class FirebaseManager {
             myGamesRef.get(snapshot.getKey()).removeEventListener(gameListeners.get(snapshot.getKey()));
             myGamesRef.remove(snapshot.getKey());
             database.removeDatabase(snapshot.getKey());
+            listener.onUserRemoved();
 
         }
 
@@ -83,17 +95,20 @@ public class FirebaseManager {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 database.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Game.class));
+                listener.onGameAdded();
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 database.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Game.class));
+                listener.onGameAdded();
 
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
                 database.removeGame(databaseId, snapshot.getKey());
+                listener.onGameRemoved();
 
             }
 
