@@ -196,9 +196,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public void saveGame(Context context, Game game) {
-        // LocalDatabaseManager.getInstance(context).saveGameToDatabase(game);
-
-
         firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
             @Override
             public void onSuccess(String s) {

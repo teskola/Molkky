@@ -10,7 +10,9 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -24,18 +26,26 @@ import java.util.ArrayList;
 public class ScoreCardActivity extends OptionsActivity {
     private Game game;
     private int position;
-    private TextView titleTV, tossesTV, statsTV;
+    private TextView titleTV, hitsTV, hitsPctTV, avgTV, excessTV, winningChanceTV, eliminationTV;
     private ShapeableImageView playerImage;
     private SharedPreferences preferences;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
-
+    private ViewGroup tossesContainer;
     private final ImageHandler imageHandler = new ImageHandler(this);
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scorecard);
+
+        hitsTV = findViewById(R.id.scorecard_hitsTV);
+        hitsPctTV = findViewById(R.id.scorecard_hitsPctTV);
+        avgTV = findViewById(R.id.scorecard_avgTV);
+        excessTV = findViewById(R.id.scorecard_excessesTV);
+        winningChanceTV = findViewById(R.id.scorecard_winningChancesTV);
+        eliminationTV = findViewById(R.id.scorecard_eliminationTV);
 
         ConstraintLayout titleBar = findViewById(R.id.titleBar);
         ImageButton previousIB = findViewById(R.id.previousIB);
@@ -44,10 +54,12 @@ public class ScoreCardActivity extends OptionsActivity {
         nextIB.setVisibility(View.VISIBLE);
         playerImage = findViewById(R.id.titleBar_playerImageView);
         titleTV = findViewById(R.id.titleTV);
-        tossesTV = findViewById(R.id.allTossesTV);
-        statsTV = findViewById(R.id.otherStatsTV);
+/*        tossesTV = findViewById(R.id.allTossesTV);
+        statsTV = findViewById(R.id.otherStatsTV);*/
+        tossesContainer = findViewById(R.id.tossesContainer);
         Button allTimeButton = findViewById(R.id.allTimeButton);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));
+
 
         if (getIntent().getStringExtra("GAME") != null) {
             String json = getIntent().getStringExtra("GAME");
@@ -124,13 +136,37 @@ public class ScoreCardActivity extends OptionsActivity {
             playerImage.setVisibility(View.GONE);
     }
 
+    @SuppressLint({"SetTextI18n", "DefaultLocale"})
     public void updateUI() {
-
+        String hits = game.getPlayer(position).hits() + "/" + game.getPlayer(position).getTosses().size();
+        hitsTV.setText(hits);
+        String hitsPct = "(" + game.getPlayer(position).hitsPct() + "%)";
+        hitsPctTV.setText(hitsPct);
+        avgTV.setText(String.format("%.1f", game.getPlayer(position).mean()));
+        excessTV.setText(String.valueOf(game.getPlayer(position).countExcesses()));
+        eliminationTV.setText(game.getPlayer(position).isEliminated() ? getString(R.string.yes) : getString(R.string.no));
+        winningChanceTV.setText(String.valueOf(game.getPlayer(position).countWinningChances()));
+        tossesContainer.removeAllViews();
         titleTV.setText(game.getPlayer(position).getName());
-        String tosses = buildTossesString();
+        for (int i=0; i < game.getPlayer(position).getTosses().size(); i++) {
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.scorecard_tosses, tossesContainer, false);
+            TextView toss = view.findViewById(R.id.tossesNumberTV);
+            TextView value = view.findViewById(R.id.tossesValueTV);
+            TextView pointsTV = view.findViewById(R.id.tossesPointsTV);
+            int tossInt = game.getPlayer(position).getToss(i);
+            int points = game.getPlayer(position).count(i);
+            toss.setText(getString(R.string.scorecard_toss, i+1));
+            value.setText(String.valueOf(tossInt));
+            pointsTV.setText("(" + points + ")");
+            tossesContainer.addView(view);
+
+        }
+
+/*        String tosses = buildTossesString();
         String stats = buildStatsString();
         tossesTV.setText(tosses);
-        statsTV.setText(stats);
+        statsTV.setText(stats);*/
     }
 
     public StringBuilder fillWithSpaces(StringBuilder line, int length) {

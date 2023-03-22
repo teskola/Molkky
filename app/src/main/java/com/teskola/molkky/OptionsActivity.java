@@ -29,10 +29,10 @@ public abstract class OptionsActivity extends DatabaseActivity {
                 intent = new Intent(this, AllStatsActivity.class);
                 break;
             case R.id.saved_games:
-              /*  if (LocalDatabaseManager.getInstance(this).getGamesCount() == 0) {
+                if (DatabaseHandler.getInstance(this).getGamesCount() == 0) {
                     Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
                     return true;
-                }*/
+                }
                 intent = new Intent(this, SavedGamesActivity.class);
                 break;
             case R.id.settings:

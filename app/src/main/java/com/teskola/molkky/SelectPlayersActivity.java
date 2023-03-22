@@ -42,8 +42,6 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
             }
         }
 
-
-        // ArrayList<PlayerInfo> savedPlayers = LocalDatabaseManager.getInstance(this).getPlayers(allPlayers);
         ArrayList<PlayerInfo> savedPlayers = (ArrayList<PlayerInfo>) databaseHandler.getPlayers(allPlayers);
         for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);

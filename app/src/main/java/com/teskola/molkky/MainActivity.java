@@ -177,7 +177,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             String json = new Gson().toJson(playersList);
             intent.putExtra("SELECTED_PLAYERS", json);
         }
-        if (true /*LocalDatabaseManager.getInstance(this).getPlayerCount() > 0*/) {
+        if (!DatabaseHandler.getInstance(this).noPlayers()) {
             startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
@@ -217,9 +217,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // Check if name is already in database. If not, give player unique id.
 
-      /*  String playerId = LocalDatabaseManager.getInstance(this).getPlayerId(newPlayer.getName());
-        if (playerId != null)
-            newPlayer.setId(playerId);*/
 
         DatabaseHandler.getInstance(this).addPlayer(newPlayer);
 

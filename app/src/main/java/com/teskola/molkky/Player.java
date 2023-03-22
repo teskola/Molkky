@@ -53,7 +53,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         return tosses;
     }
 
-    public int getToss(int position) { return tosses.get(position);}
+    public int getToss(int round) { return tosses.get(round);}
 
     public void addToss(int points) {
         tosses.add(points);
@@ -120,6 +120,19 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 /*
 * ******************* Stats
 * */
+
+    public int hits() {
+        int count = 0;
+        for (int i : getTosses()) {
+            if (i != 0) count++;
+        }
+        return count;
+    }
+
+    public int hitsPct() {
+        return Math.round(100 * (float) hits() / (float) getTosses().size());
+    }
+
     public float mean() {
         int sum = 0;
         for (int i : tosses) {
@@ -128,16 +141,12 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         return (float) sum / (float) tosses.size();
     }
 
-
-    public int mode() {
-        int max_freq = 0;
-        int mode = 0;
-        for (int i = 0; i < 13; i++) {
-            int freq = Collections.frequency(tosses, i);
-            if (freq > max_freq)
-                mode = i;
+    public int countWinningChances () {
+        int count = 0;
+        for (int i = tosses.size()-2; i > 3; i--) {
+            if (winningChance(i)) count++;
         }
-        return mode;
+        return count;
     }
 
     public int countExcesses() {

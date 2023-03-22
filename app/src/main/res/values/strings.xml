@@ -16,6 +16,7 @@
     <string name="yes">kyllä</string>
     <string name="no">ei</string>
     <string name="points_to_win">Voitto heittämällä %1$d</string>
+    <string name="scorecard_toss">heitto %1$d:</string>
     <string name="new_game">Uusi peli</string>
     <string name="start_new_game">Aloita uusi peli</string>
     <string name="congratulations">%1$s on voittanut pelin. Onneksi olkoon!</string>
@@ -29,6 +30,7 @@
     <string name="wins">voitot</string>
     <string name="points">pisteet</string>
     <string name="tosses">heitot</string>
+    <string name="winning_chances">voitto mahdollisuudet</string>
     <string name="points_per_toss">pisteet/heitto</string>
     <string name="hits_percentage">osuma%</string>
     <string name="elimination_percentage">putoamis%</string>
@@ -36,7 +38,7 @@
     <string name="saved_games">Tallennetut pelit</string>
     <string name="stats">Tilastot</string>
     <string name="show_all_games">Näytä kaikki pelit</string>
-    <string name="show_all_time_stats">Näytä kaikkien aikojen tilastot</string>
+    <string name="show_all_time_stats">kaikkien aikojen tilastot</string>
     <string name="show_games">Näytä pelit</string>
     <string name="chart">kuvaaja</string>
     <string name="seekbar_instruction">Valitse pisteet liu\'uttamalla kapulaa</string>

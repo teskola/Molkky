@@ -61,7 +61,6 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         statID = getIntent().getIntExtra("STAT_ID", 0);
 
         ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) DatabaseHandler.getInstance(this).getPlayers();
-        // ArrayList<PlayerInfo> players = LocalDatabaseManager.getInstance(this).getPlayers();
         for (PlayerInfo player : players) {
             playerStats.add(DatabaseHandler.getInstance(this).getPlayerStats(player));
         }

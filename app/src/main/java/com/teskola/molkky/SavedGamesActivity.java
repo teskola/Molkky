@@ -47,8 +47,6 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             String playerID = getIntent().getStringExtra("PLAYER_ID");
             games = databaseHandler.getGames(playerID);
             String name = databaseHandler.getPlayerName(playerID);
-            // games = LocalDatabaseManager.getInstance(this).getGames(playerID);
-            // String name = LocalDatabaseManager.getInstance(this).getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
             if (preferences.getBoolean("SHOW_IMAGES", false))
@@ -111,7 +109,6 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     @SuppressLint("NotifyDataSetChanged")
     public void showAllGames() {
         ArrayList<GameInfo> allGames = databaseHandler.getGames();
-        // ArrayList<GameInfo> allGames = LocalDatabaseManager.getInstance(this).getGames();
         while (!games.isEmpty()) {
             games.remove(0);
             recyclerView.getAdapter().notifyItemRemoved(0);

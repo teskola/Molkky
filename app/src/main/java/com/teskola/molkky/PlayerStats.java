@@ -7,20 +7,12 @@ import java.util.HashMap;
 
 public class PlayerStats extends PlayerInfo {
 
-    // private LocalDatabaseManager db;
-    // private ArrayList<String> games;
     private final HashMap<String, ArrayList<Integer>> tosses;
     private final int wins;
     private int points = -1;
     private int tossesCount= -1;
     private int eliminations = -1;
     private int excesses = -1;
-
- /*   public PlayerStats(PlayerInfo player, Context context) {
-        super(player.getId(), player.getName());
-        db = LocalDatabaseManager.getInstance(context);
-        this.games = db.getGameIds(getId());
-    }*/
 
     public PlayerStats(PlayerInfo player, int wins, HashMap<String, ArrayList<Integer>> tosses) {
         super(player.getId(), player.getName());

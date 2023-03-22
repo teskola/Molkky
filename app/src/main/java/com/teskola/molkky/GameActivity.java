@@ -69,7 +69,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            // handler = new GameHandler(new Game(gameId, LocalDatabaseManager.getInstance(this).getPlayers(gameId)), null);
             handler = new GameHandler(databaseHandler.getGame(gameId), null);
             savedGame = true;
         }
