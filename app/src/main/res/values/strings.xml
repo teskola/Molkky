@@ -9,6 +9,7 @@
     <string name="no_saved_players">Ei tallennettuja pelaajia.</string>
     <string name="no_saved_games">Ei tallennettuja pelejä.</string>
     <string name="already_added">%1$s on jo lisätty.</string>
+    <string name="fetched_from_database">%1$s haettiin tietokannasta.</string>
     <string name="ok">OK</string>
     <string name="dash">-</string>
     <string name="add">Lisää</string>

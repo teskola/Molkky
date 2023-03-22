@@ -60,7 +60,9 @@ public class SettingsActivity extends DatabaseActivity {
 
         imageSwitch.setChecked(showImages);
         imageSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            showImages = isChecked;
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean("SHOW_IMAGES", isChecked);
+            editor.apply();
         });
 
         editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {

@@ -156,6 +156,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
             imageHandler.BitmapToJpg(photo, playersList.get(position).getId());
+            imageHandler.uploadToFirestore(playersList.get(position).getId());
             listAdapter.notifyItemChanged(position);
         }
     }
@@ -217,8 +218,8 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // Check if name is already in database. If not, give player unique id.
 
-
-        DatabaseHandler.getInstance(this).addPlayer(newPlayer);
+        if(DatabaseHandler.getInstance(this).addPlayer(newPlayer))
+            Toast.makeText(this, getString(R.string.fetched_from_database, newPlayer.getName()), Toast.LENGTH_SHORT).show();
 
         playersList.add(0, newPlayer);
         if (playersList.size() > 1) {

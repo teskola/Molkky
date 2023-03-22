@@ -82,6 +82,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         DATABASE_USER_REMOVED,
         GAME_ADDED,
         CREATED_TIMESTAMP_ADDED,
+        PLAYER_ADDED_FROM_DATABASE,
     }
 
     public enum Error {
@@ -212,13 +213,20 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void addPlayer(PlayerInfo player) {
+    /*
+    *
+    *  Returns true, if player name is already in database else returns false.
+    *
+    * */
+
+    public boolean addPlayer(PlayerInfo player) {
         String playerId = database.getPlayerId(player.getName());
         if (playerId != null) {
             player.setId(playerId);
-            // TODO ilmoitus käyttäjälle, pelaaja lisättiin tietokannasta
+            return true;
         } else {
             player.setId(UUID.randomUUID().toString().substring(0, 8));
+            return false;
         }
     }
 

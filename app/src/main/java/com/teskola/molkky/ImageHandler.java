@@ -11,11 +11,16 @@ import android.provider.MediaStore;
 
 import androidx.core.app.ActivityCompat;
 
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 import java.io.File;
 import java.io.FileOutputStream;
 
 public class ImageHandler {
     private final Context context;
+    private FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
     public static final int TITLE_BAR = 0;
 
     public ImageHandler(Context context) {
@@ -26,15 +31,23 @@ public class ImageHandler {
     * Saves image to jpg and adds to Gallery
     * */
 
-    public void BitmapToJpg (Bitmap photo, String name) {
+    public void BitmapToJpg (Bitmap photo, String id) {
         try {
-            FileOutputStream fileOutputStream = context.openFileOutput(name + ".jpg", Context.MODE_PRIVATE);
-            photo.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+            FileOutputStream fileOutputStream = context.openFileOutput(id + ".jpg", Context.MODE_PRIVATE);
+            photo.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
             fileOutputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    public void uploadToFirestore (String id) {
+        Uri file = Uri.fromFile(new File(context.getFilesDir(), id + ".jpg"));
+        StorageReference storageReference = firebaseStorage.getReference();
+        StorageReference imageRef = storageReference.child("images/" + file.getLastPathSegment());
+        imageRef.putFile(file);
+    }
+
 
     public String getImagePath (String id) {
         File file = new File(context.getFilesDir(), id + ".jpg");
