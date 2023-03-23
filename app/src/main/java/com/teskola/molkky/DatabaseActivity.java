@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.widget.Toast;
 
-public class DatabaseActivity extends AppCompatActivity implements DatabaseHandler.DatabaseListener {
+public abstract class DatabaseActivity extends AppCompatActivity implements DatabaseHandler.DatabaseListener {
     @Override
     protected void onStart() {
         super.onStart();
@@ -46,7 +46,7 @@ public class DatabaseActivity extends AppCompatActivity implements DatabaseHandl
                 Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_found), Toast.LENGTH_SHORT).show();
                 break;
             case GAME_ADDED:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_game_added), Toast.LENGTH_SHORT).show();
+                // Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_game_added), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_CHANGED:
                 Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();

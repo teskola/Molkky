@@ -5,7 +5,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public abstract class OptionsActivity extends DatabaseActivity {
+public abstract class OptionsActivity extends ImagesActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

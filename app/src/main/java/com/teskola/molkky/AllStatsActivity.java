@@ -26,13 +26,6 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
-    private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private final ImageHandler imageHandler = new ImageHandler(this);
-
-    public enum stats {
-
-    }
 
     public static final int[] stats = {
             R.string.games,
@@ -64,15 +57,6 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         for (PlayerInfo player : players) {
             playerStats.add(DatabaseHandler.getInstance(this).getPlayerStats(player));
         }
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-
-        listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                createRecyclerView();
-                updateUI();
-            }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
 
         createRecyclerView();
         updateUI();
@@ -98,19 +82,12 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(this, playerStats, preferences.getBoolean("SHOW_IMAGES", false), this);
+        listAdapter = new ListAdapter(this, playerStats, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playerStats.get(position).getId());
-            listAdapter.notifyItemChanged(position);
-        }
-    }
+
 
     public void updateUI() {
         statTv.setText(getString(stats[statID]));
@@ -165,12 +142,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     }
 
     @Override
-    public void onDeleteClicked(int position) {
-    }
-
-    @Override
-    public void onImageClicked(int position) {
-        imageHandler.takePicture(position);
-
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            createRecyclerView();
+            updateUI();
+        }
     }
 }

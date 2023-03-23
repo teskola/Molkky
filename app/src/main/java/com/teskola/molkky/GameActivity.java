@@ -32,11 +32,9 @@ import java.util.Collections;
 public class GameActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, GameHandler.GameListener {
     public static final int SEEKBAR_DEFAULT_POSITION = 6;
 
-
     private boolean savedGame = false;
     private boolean spectateMode = false;
     private boolean savedFromPref = false;
-    private boolean showImages;
 
     private SeekBar seekBar;
     private TextView pointsTextView;
@@ -52,10 +50,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private GameHandler handler;
-    private final ImageHandler imageHandler = new ImageHandler(this);
-    private SharedPreferences preferences;
 
-    private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -63,7 +58,12 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+    /*    listener = ((sharedPreferences, key) -> {
+            if (key.equals("SHOW_IMAGES")) {
+                setImage(playerImage, handler.current().getId());
+            }
+        });
+        preferences.registerOnSharedPreferenceChangeListener(listener);*/
 
         // Saved game
 
@@ -91,7 +91,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             String json = getIntent().getStringExtra("SAVED_GAME");
             Game savedGame = new Gson().fromJson(json, Game.class);
             handler = new GameHandler(savedGame, this);
-            SharedPreferences.Editor editor = preferences.edit();
+            SharedPreferences.Editor editor = getPreferences().edit();
             editor.remove("SAVED_GAME");
             editor.apply();
             if (handler.gameEnded())
@@ -122,17 +122,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         playerImage = findViewById(R.id.game_IW);
 
         updateUI();
-
-        showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        if (showImages)
-            setImage();
-        preferenceChangeListener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                showImages = sharedPreferences.getBoolean(key, false);
-                setImage();
-            }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
         // Listeners
 
@@ -187,21 +176,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             handler.removeToss();
     }
 
-    public void setImage() {
-        if (showImages) {
-            String path = imageHandler.getImagePath(handler.current().getId());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                playerImage.setImageBitmap(bitmap);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                playerImage.setVisibility(View.VISIBLE);
-            }
-            else
-                playerImage.setVisibility(View.GONE);
-        }
-        else
-            playerImage.setVisibility(View.GONE);
-    }
 
     public void updateUI() {
 
@@ -243,6 +217,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //             Top Container
 
         nameTextView.setText(handler.getPlayerName());
+        setImage(playerImage, handler.current().getId());
         topContainer.setBackgroundResource(handler.gameEnded() ? R.drawable.gold_background : handler.getColor());
 
         //              Points to win
@@ -313,15 +288,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         openScorecard(position);
     }
 
-    @Override
-    public void onDeleteClicked(int position) {
-
-    }
-
-    @Override
-    public void onImageClicked(int position) {
-
-    }
 
     @Override
     public void onTurnChanged(int points, int chanceToWin, boolean undo) {
@@ -331,7 +297,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         recyclerView.getAdapter().notifyItemMoved(!undo ? 0 : handler.last(),!undo ? handler.last() : 0);
 
         nameTextView.setText(handler.getPlayerName());
-        setImage();
+        setImage(playerImage, handler.current().getId());
         if (chanceToWin > 0) {
             pointsToWinTV.setText(getString(R.string.points_to_win, (chanceToWin)));
             pointsToWinTV.setVisibility(View.VISIBLE);
@@ -362,10 +328,16 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onPause () {
         super.onPause();
         if (!savedGame && !spectateMode) {
-            SharedPreferences.Editor editor = preferences.edit();
+            SharedPreferences.Editor editor = getPreferences().edit();
             String json = new Gson().toJson(handler.getGame());
             editor.putString("SAVED_GAME", json);
             editor.apply();
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES"))
+            setImage(playerImage, handler.current().getId());
     }
 }

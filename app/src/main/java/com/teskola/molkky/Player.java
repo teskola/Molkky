@@ -143,7 +143,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     public int countWinningChances () {
         int count = 0;
-        for (int i = tosses.size()-2; i > 3; i--) {
+        for (int i = tosses.size()-2; i > 2; i--) {
             if (winningChance(i)) count++;
         }
         return count;

@@ -1,37 +1,44 @@
 package com.teskola.molkky;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.provider.MediaStore;
+import android.graphics.BitmapFactory;
 
-import androidx.core.app.ActivityCompat;
+import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 
 public class ImageHandler {
-    private final Context context;
-    private FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
-    public static final int TITLE_BAR = 0;
+    private static ImageHandler instance;
+    private final FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
+    private final StorageReference storageReference = firebaseStorage.getReference();
+    private final File filesDir;
 
-    public ImageHandler(Context context) {
-        this.context = context;
+    public static ImageHandler getInstance(Context context) {
+        if (instance == null)
+            instance = new ImageHandler(context.getApplicationContext());
+        return instance;
     }
 
-    /*
-    * Saves image to jpg and adds to Gallery
-    * */
+    private ImageHandler(Context context) {
+        filesDir = context.getFilesDir();
+    }
 
-    public void BitmapToJpg (Bitmap photo, String id) {
+    public interface ImageListener {
+        void onSuccess (Bitmap bitmap);
+        void onFailure ();
+    }
+
+    public void save (Context context, Bitmap photo, String id) {
         try {
             FileOutputStream fileOutputStream = context.openFileOutput(id + ".jpg", Context.MODE_PRIVATE);
             photo.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
@@ -41,40 +48,51 @@ public class ImageHandler {
         }
     }
 
-    public void uploadToFirestore (String id) {
-        Uri file = Uri.fromFile(new File(context.getFilesDir(), id + ".jpg"));
-        StorageReference storageReference = firebaseStorage.getReference();
-        StorageReference imageRef = storageReference.child("images/" + file.getLastPathSegment());
-        imageRef.putFile(file);
+    public void upload (Bitmap photo, String id) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        photo.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+        byte[] data = baos.toByteArray();
+        StorageReference imageRef = storageReference.child("images/" + id + ".jpg");
+        StorageMetadata metadata = new StorageMetadata.Builder()
+                .setContentType("image/jpg")
+                .setCustomMetadata("uid", FirebaseAuth.getInstance().getUid())
+                .build();
+        imageRef.putBytes(data, metadata);
     }
 
-
-    public String getImagePath (String id) {
-        File file = new File(context.getFilesDir(), id + ".jpg");
+    public Bitmap getPhoto (String id) {
+        File file = new File(filesDir, id + ".jpg");
         if (file.exists()) {
-            return file.getAbsolutePath();
+            String path = file.getAbsolutePath();
+            return BitmapFactory.decodeFile(path);
         }
         return null;
     }
 
-    public void takePicture(int position) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.CAMERA}, 0);
-        }
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            ((Activity) context).startActivityForResult(intent, position);
-        }
-    }
+    /*
+    *
+    * Downloads player avatar from cloud storage and saves it to local storage.
+    *
+    * */
 
-    public void addPictureToGallery (String name) {
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            File f = new File(getImagePath(name));
-            Uri contentUri = Uri.fromFile(f);
-            mediaScanIntent.setData(contentUri);
-            context.sendBroadcast(mediaScanIntent);
-    }
+    public void downloadFromFirestorage (Context context, String id, ImageListener listener) {
+        StorageReference imageRef = storageReference.child("images/" + id + ".jpg");
+        final long MAX_SIZE = 512 * 512;
+        imageRef.getBytes(MAX_SIZE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                listener.onSuccess(bitmap);
+                save(context, bitmap, id);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                listener.onFailure();
+            }
+        });
 
+    }
 
 }
 

@@ -39,11 +39,6 @@ public class PlayerStatsActivity extends OptionsActivity {
     private TextView excessTV;
     private BarChart barChart;
     private ShapeableImageView playerImage;
-    private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-
-    private final ImageHandler imageHandler = new ImageHandler(this);
-
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -84,15 +79,12 @@ public class PlayerStatsActivity extends OptionsActivity {
             position = savedInstanceState.getInt("POSITION");
         }
 
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                updateUI();
+        playerImage.setOnClickListener(view -> onImageClicked(playerIds[position], 0, new OnImageAdded() {
+            @Override
+            public void onSuccess(Bitmap photo) {
+                playerImage.setImageBitmap(photo);
             }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
-
-        playerImage.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
+        }));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
@@ -120,14 +112,7 @@ public class PlayerStatsActivity extends OptionsActivity {
 
     }
 
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playerStats.getName());
-            updateImage();
-        }
-    }
+
 
     private void showBarChart(){
 
@@ -171,27 +156,9 @@ public class PlayerStatsActivity extends OptionsActivity {
         playerStats = DatabaseHandler.getInstance(this).getPlayerStats(player);
     }
 
-    public void updateImage () {
-        if (preferences.getBoolean("SHOW_IMAGES", false)) {
-            String path = imageHandler.getImagePath(playerStats.getId());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                playerImage.setImageBitmap(bitmap);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
-                playerImage.setImageResource(R.drawable.camera);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER);
-            }
-            playerImage.setVisibility(View.VISIBLE);
-        }
-        else
-            playerImage.setVisibility(View.GONE);
-    }
-
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-        updateImage();
+        setImage(playerImage, playerIds[position]);
         playerNameTV.setText(playerStats.getName());
         pointsTV.setText(String.valueOf(playerStats.getPoints()));
         gamesTV.setText(String.valueOf(playerStats.getGamesCount()));
@@ -211,5 +178,12 @@ public class PlayerStatsActivity extends OptionsActivity {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putStringArray("PLAYER_IDS", playerIds);
         savedInstanceState.putInt("POSITION", position);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            updateUI();
+        }
     }
 }

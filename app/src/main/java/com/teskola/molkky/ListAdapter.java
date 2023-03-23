@@ -38,6 +38,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int statID = 0;
     private boolean showImages;
 
+
     private ArrayList<Boolean> selected = null;
     private int selected_position = RecyclerView.NO_POSITION;
     private boolean showTosses, onlyGray;
@@ -51,10 +52,10 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getSelected_position() {
         return selected_position;
     }
-
     public void setStatID(int statID) {
         this.statID = statID;
     }
+
 
     @NonNull
     @Override
@@ -146,16 +147,27 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // Add images
 
         if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
-            ImageHandler imageHandler = new ImageHandler(context);
-            String path = "";
-            path = imageHandler.getImagePath(players.get(position).getId());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                defaultViewHolder.playerImageView.setImageBitmap(bitmap);
+            Bitmap photo = ImageHandler.getInstance(context).getPhoto(players.get(position).getId());
+            defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+            if (photo != null) {
+                defaultViewHolder.playerImageView.setImageBitmap(photo);
                 defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            } else {
-                defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
-                defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+            }
+            else {
+                DefaultViewHolder finalDefaultViewHolder = defaultViewHolder;
+                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position).getId(), new ImageHandler.ImageListener() {
+                    @Override
+                    public void onSuccess(Bitmap bitmap) {
+                        finalDefaultViewHolder.playerImageView.setImageBitmap(bitmap);
+                        finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    }
+
+                    @Override
+                    public void onFailure() {
+                        finalDefaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
+                        finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+                    }
+                });
             }
         }
     }
@@ -173,7 +185,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void onDeleteClicked(int position);
 
-        void onImageClicked(int position);
+        void onImageClicked(String id, int position, ImagesActivity.OnImageAdded listener);
     }
 
     @SuppressWarnings("unchecked")
@@ -275,9 +287,9 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (showImages && viewId != SAVED_GAMES_ACTIVITY) {
                 playerImageView.setVisibility(View.VISIBLE);
                 playerImageView.setOnClickListener(view -> {
-                    int position = getAbsoluteAdapterPosition();
+                    int position = DefaultViewHolder.this.getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        onItemClickListener.onImageClicked(position);
+                        onItemClickListener.onImageClicked(players.get(position).getId(), position, null);
                 });
             } else playerImageView.setVisibility(View.GONE);
 

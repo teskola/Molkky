@@ -18,14 +18,11 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
-public class SelectPlayersActivity extends DatabaseActivity implements ListAdapter.OnItemClickListener {
+public class SelectPlayersActivity extends ImagesActivity implements ListAdapter.OnItemClickListener {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
-    private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private RecyclerView recyclerView;
-    private final ImageHandler imageHandler = new ImageHandler(this);
 
 
     @Override
@@ -59,15 +56,6 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
         recyclerView = findViewById(R.id.selectPlayersRecyclerView);
         Button okButton = findViewById(R.id.selectPlayersOKButton);
 
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        createRecyclerView();
-        listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                createRecyclerView();
-            }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
-
         okButton.setOnClickListener(view -> {
             ArrayList<PlayerInfo> selectedPlayers = new ArrayList<>();
             for (int i = 0; i < selected.size(); i++)
@@ -86,17 +74,8 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
     }
 
     public void createRecyclerView() {
-        recyclerView.setAdapter(new ListAdapter(getApplicationContext(), allPlayers, selected, preferences.getBoolean("SHOW_IMAGES", false), this));
+        recyclerView.setAdapter(new ListAdapter(getApplicationContext(), allPlayers, selected, getPreferences().getBoolean("SHOW_IMAGES", false), this));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
-
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, allPlayers.get(position).getId());
-            recyclerView.getAdapter().notifyItemChanged(position);
-        }
     }
 
     @Override
@@ -115,12 +94,9 @@ public class SelectPlayersActivity extends DatabaseActivity implements ListAdapt
     }
 
     @Override
-    public void onDeleteClicked(int position) {
-
-    }
-
-    @Override
-    public void onImageClicked(int position) {
-        imageHandler.takePicture(position);
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            createRecyclerView();
+        }
     }
 }

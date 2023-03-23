@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -23,15 +24,13 @@ import java.util.List;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    // private ArrayList<GameInfo> games = new ArrayList<>();
     private List<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
-    private final ImageHandler imageHandler = new ImageHandler(this);
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
+    private String playerID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,69 +40,38 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         titleTV = findViewById(R.id.titleTV);
         showAllBtn = findViewById(R.id.showAllButton);
         playerImageView = findViewById(R.id.titleBar_playerImageView);
-        SharedPreferences preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
 
         if (getIntent().getExtras() != null) {
-            String playerID = getIntent().getStringExtra("PLAYER_ID");
+            playerID = getIntent().getStringExtra("PLAYER_ID");
             games = databaseHandler.getGames(playerID);
             String name = databaseHandler.getPlayerName(playerID);
             String title = getString(R.string.games) + ": " + name;
             titleTV.setText(title);
-            if (preferences.getBoolean("SHOW_IMAGES", false))
-                setImage(playerID);
+            if (getPreferences().getBoolean("SHOW_IMAGES", false))
+                setImage(playerImageView, playerID);
             else
                 playerImageView.setVisibility(View.GONE);
-            listener = (sharedPreferences, key) -> {
-                if (key.equals("SHOW_IMAGES")) {
-                    invalidateMenu();
-                    if (sharedPreferences.getBoolean(key, false)) {
-                        setImage(playerID);
-                    } else
-                        playerImageView.setVisibility(View.GONE);
-                }
-            };
-            preferences.registerOnSharedPreferenceChangeListener(listener);
+
             showAllBtn.setVisibility(View.VISIBLE);
 
         } else {
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            // games = LocalDatabaseManager.getInstance(this).getGames();
             games = databaseHandler.getGames();
 
         }
         showAllBtn.setOnClickListener(view -> showAllGames());
 
         recyclerView = findViewById(R.id.savedGamesRW);
-        ListAdapter listAdapter = new ListAdapter(this, games, preferences.getBoolean("SHOW_IMAGES", false), this);
+        ListAdapter listAdapter = new ListAdapter(this, games, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        playerImageView.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
-    }
-
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            String id = getIntent().getStringExtra("PLAYER_ID");
-            imageHandler.BitmapToJpg(photo, id);
-            setImage(id);
-        }
-    }
-
-    public void setImage(String name) {
-        playerImageView.setVisibility(View.VISIBLE);
-        ImageHandler imageHandler = new ImageHandler(this);
-        String path = imageHandler.getImagePath(name);
-        if (path != null) {
-            Bitmap bitmap = BitmapFactory.decodeFile(path);
-            playerImageView.setImageBitmap(bitmap);
-            playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        }
-        else {
-            playerImageView.setImageResource(R.drawable.camera);
-            playerImageView.setScaleType(ImageView.ScaleType.CENTER);
-        }
+        playerImageView.setOnClickListener(view -> onImageClicked(playerID, 0, new OnImageAdded() {
+            @Override
+            public void onSuccess(Bitmap photo) {
+                playerImageView.setImageBitmap(photo);
+            }
+        }));
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -139,12 +107,9 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     }
 
     @Override
-    public void onDeleteClicked(int position) {
-
-    }
-
-    @Override
-    public void onImageClicked(int position) {
-
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            setImage(playerImageView, playerID);
+        }
     }
 }

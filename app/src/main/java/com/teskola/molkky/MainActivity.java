@@ -1,14 +1,18 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,9 +37,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private boolean random = false;
     private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
-    private SharedPreferences preferences;
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private final ImageHandler imageHandler = new ImageHandler(this);
     private TextView firstTextView;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
@@ -64,23 +65,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             random = savedInstanceState.getBoolean("RANDOM");
         }
 
-        preferences = getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        String saved_game = preferences.getString("SAVED_GAME", "");
+        String saved_game = getPreferences().getString("SAVED_GAME", "");
         if (saved_game.length() > 0)
         {
             Intent intent = new Intent(this, GameActivity.class);
             intent.putExtra("SAVED_GAME", saved_game);
             startActivity(intent);
         }
-        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                if (key.equals("SHOW_IMAGES")) {
-                    MainActivity.this.createRecyclerView();
-                }
-            }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
 
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -145,22 +136,11 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void createRecyclerView () {
-        listAdapter = new ListAdapter(this, playersList, preferences.getBoolean("SHOW_IMAGES", false), this);
+        listAdapter = new ListAdapter(this, playersList, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
     }
-
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playersList.get(position).getId());
-            imageHandler.uploadToFirestore(playersList.get(position).getId());
-            listAdapter.notifyItemChanged(position);
-        }
-    }
-
 
     private void startGame() {
 
@@ -292,8 +272,9 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     @Override
-    public void onImageClicked(int position) {
-        imageHandler.takePicture(position);
+    public void onImageClicked(String id, int position, OnImageAdded listener) {
+        super.onImageClicked(id, position, null);
+        listAdapter.notifyItemChanged(position);
     }
 
     @Override
@@ -302,4 +283,10 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         moveTaskToBack(true);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            createRecyclerView();
+        }
+    }
 }
