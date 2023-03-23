@@ -21,7 +21,6 @@ import java.util.ArrayList;
 public class SelectPlayersActivity extends ImagesActivity implements ListAdapter.OnItemClickListener {
     private final ArrayList<Boolean> selected = new ArrayList<>();
     private final ArrayList<PlayerInfo> allPlayers = new ArrayList<>();
-    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private RecyclerView recyclerView;
 
 
@@ -39,7 +38,7 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
             }
         }
 
-        ArrayList<PlayerInfo> savedPlayers = (ArrayList<PlayerInfo>) databaseHandler.getPlayers(allPlayers);
+        ArrayList<PlayerInfo> savedPlayers = (ArrayList<PlayerInfo>) DatabaseHandler.getInstance(this).getPlayers(allPlayers);
         for (PlayerInfo player : savedPlayers) {
             allPlayers.add(player);
             selected.add(false);
@@ -55,7 +54,7 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
 
         recyclerView = findViewById(R.id.selectPlayersRecyclerView);
         Button okButton = findViewById(R.id.selectPlayersOKButton);
-
+        createRecyclerView();
         okButton.setOnClickListener(view -> {
             ArrayList<PlayerInfo> selectedPlayers = new ArrayList<>();
             for (int i = 0; i < selected.size(); i++)

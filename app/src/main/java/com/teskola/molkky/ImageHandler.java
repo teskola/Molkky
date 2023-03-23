@@ -1,10 +1,22 @@
 package com.teskola.molkky;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -15,13 +27,21 @@ import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Objects;
 
 public class ImageHandler {
     private static ImageHandler instance;
     private final FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
     private final StorageReference storageReference = firebaseStorage.getReference();
     private final File filesDir;
+    public static final String PATH = "/Molkky";
 
     public static ImageHandler getInstance(Context context) {
         if (instance == null)
@@ -38,7 +58,13 @@ public class ImageHandler {
         void onFailure ();
     }
 
-    public void save (Context context, Bitmap photo, String id) {
+    /*
+    *
+    *  Saves image to local storage
+    *
+    * */
+
+    public void save (Context context, Bitmap photo, String id, String name) throws IOException {
         try {
             FileOutputStream fileOutputStream = context.openFileOutput(id + ".jpg", Context.MODE_PRIVATE);
             photo.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
@@ -46,6 +72,7 @@ public class ImageHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        saveToExternal(context, photo, name);
     }
 
     public void upload (Bitmap photo, String id) {
@@ -75,7 +102,7 @@ public class ImageHandler {
     *
     * */
 
-    public void downloadFromFirestorage (Context context, String id, ImageListener listener) {
+    public void downloadFromFirestorage (Context context, String id, String name, ImageListener listener) {
         StorageReference imageRef = storageReference.child("images/" + id + ".jpg");
         final long MAX_SIZE = 512 * 512;
         imageRef.getBytes(MAX_SIZE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
@@ -83,7 +110,11 @@ public class ImageHandler {
             public void onSuccess(byte[] bytes) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 listener.onSuccess(bitmap);
-                save(context, bitmap, id);
+                try {
+                    save(context, bitmap, id, name);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -93,6 +124,50 @@ public class ImageHandler {
         });
 
     }
+
+    // https://stackoverflow.com/questions/63243403/android-picture-was-not-added-to-gallery-but-onscancompletedlistener-is-called
+
+   public void saveToExternal (Context context, Bitmap bitmap, String name) throws IOException {
+       String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+           try {
+               ContentResolver resolver = context.getContentResolver();
+               ContentValues contentValues = new ContentValues();
+               contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name + "_" + timeStamp);
+               contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
+               contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
+               Uri imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+
+               OutputStream outputStream = resolver.openOutputStream(Objects.requireNonNull(imageUri));
+               bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+               outputStream.flush();
+               outputStream.close();
+
+           }catch (Exception e){
+               e.printStackTrace();
+           }
+
+       }else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+
+           String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + PATH;
+           try {
+               File dir = new File(fullPath);
+               if (!dir.exists()) {
+                   dir.mkdirs();
+               }
+           }
+           catch(Exception e){
+               Log.w("creating file error", e.toString());
+           }
+           File imageFile = new File(fullPath, name + "_" + timeStamp + ".png");
+           FileOutputStream outputStream = new FileOutputStream(imageFile);
+           bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+           outputStream.flush();
+           outputStream.close();
+           context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageFile)));
+       }
+   }
 
 }
 

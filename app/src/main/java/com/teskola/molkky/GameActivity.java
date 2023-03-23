@@ -48,7 +48,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
-    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
     private GameHandler handler;
 
 
@@ -58,18 +57,12 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-    /*    listener = ((sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                setImage(playerImage, handler.current().getId());
-            }
-        });
-        preferences.registerOnSharedPreferenceChangeListener(listener);*/
 
         // Saved game
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            handler = new GameHandler(databaseHandler.getGame(gameId), null);
+            handler = new GameHandler(DatabaseHandler.getInstance(this).getGame(gameId), null);
             savedGame = true;
         }
 

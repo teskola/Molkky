@@ -18,12 +18,14 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.io.IOException;
+
 public abstract class ImagesActivity extends DatabaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private String playerId;
     private OnImageAdded listener;
     private SharedPreferences preferences;
     private ActivityResultLauncher<Intent> launcher;
+    private String playerId, playerName;
 
     @Override
     protected void onCreate(Bundle onSavedInstanceState) {
@@ -35,7 +37,11 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
             Intent data = result.getData();
             if (result.getResultCode() == AppCompatActivity.RESULT_OK) {
                 Bitmap photo = (Bitmap) data.getExtras().get("data");
-                ImageHandler.getInstance(ImagesActivity.this).save(ImagesActivity.this, photo, playerId);
+                try {
+                    ImageHandler.getInstance(ImagesActivity.this).save(ImagesActivity.this, photo, playerId, playerName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 ImageHandler.getInstance(ImagesActivity.this).upload(photo, playerId);
                 if (listener != null) listener.onSuccess(photo);
             }
@@ -84,8 +90,9 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
     }
 
     @Override
-    public void onImageClicked(String id, int position, OnImageAdded listener) {
+    public void onImageClicked(String id, String name, int position, OnImageAdded listener) {
         playerId = id;
+        playerName = name;
         this.listener = listener;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);

@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Menu;
@@ -56,7 +57,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
@@ -65,13 +65,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             random = savedInstanceState.getBoolean("RANDOM");
         }
 
-        String saved_game = getPreferences().getString("SAVED_GAME", "");
+     /*   String saved_game = getPreferences().getString("SAVED_GAME", "");
         if (saved_game.length() > 0)
         {
             Intent intent = new Intent(this, GameActivity.class);
             intent.putExtra("SAVED_GAME", saved_game);
             startActivity(intent);
-        }
+        }*/
 
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -120,6 +120,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     protected void onResume () {
         super.onResume();
+
+        if (Build.VERSION.SDK_INT < 29) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            }
+        }
+
         start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
         random = getIntent().getBooleanExtra("RANDOM", false);
         createRecyclerView();
@@ -272,8 +279,8 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     @Override
-    public void onImageClicked(String id, int position, OnImageAdded listener) {
-        super.onImageClicked(id, position, null);
+    public void onImageClicked(String id, String name, int position, OnImageAdded listener) {
+        super.onImageClicked(playersList.get(position).getId(), playersList.get(position).getName(), position, null);
         listAdapter.notifyItemChanged(position);
     }
 

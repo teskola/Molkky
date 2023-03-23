@@ -155,7 +155,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
             else {
                 DefaultViewHolder finalDefaultViewHolder = defaultViewHolder;
-                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position).getId(), new ImageHandler.ImageListener() {
+                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position).getId(), players.get(position).getName(), new ImageHandler.ImageListener() {
                     @Override
                     public void onSuccess(Bitmap bitmap) {
                         finalDefaultViewHolder.playerImageView.setImageBitmap(bitmap);
@@ -185,7 +185,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void onDeleteClicked(int position);
 
-        void onImageClicked(String id, int position, ImagesActivity.OnImageAdded listener);
+        void onImageClicked(String id, String name, int position, ImagesActivity.OnImageAdded listener);
     }
 
     @SuppressWarnings("unchecked")
@@ -289,7 +289,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 playerImageView.setOnClickListener(view -> {
                     int position = DefaultViewHolder.this.getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        onItemClickListener.onImageClicked(players.get(position).getId(), position, null);
+                        onItemClickListener.onImageClicked(players.get(position).getId(), players.get(position).getName(), position, null);
                 });
             } else playerImageView.setVisibility(View.GONE);
 

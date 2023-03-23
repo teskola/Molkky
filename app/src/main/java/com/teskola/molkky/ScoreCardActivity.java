@@ -94,7 +94,7 @@ public class ScoreCardActivity extends OptionsActivity {
 
         setImage(playerImage, game.getPlayer(position).getId());
         updateUI();
-        playerImage.setOnClickListener(view -> onImageClicked(game.getPlayer(position).getId(), 0, new OnImageAdded() {
+        playerImage.setOnClickListener(view -> onImageClicked(game.getPlayer(position).getId(), game.getPlayer(position).getName(), 0, new OnImageAdded() {
             @Override
             public void onSuccess(Bitmap photo) {
                 playerImage.setImageBitmap(photo);

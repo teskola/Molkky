@@ -79,7 +79,7 @@ public class PlayerStatsActivity extends OptionsActivity {
             position = savedInstanceState.getInt("POSITION");
         }
 
-        playerImage.setOnClickListener(view -> onImageClicked(playerIds[position], 0, new OnImageAdded() {
+        playerImage.setOnClickListener(view -> onImageClicked(playerStats.getId(), playerStats.getName(), 0, new OnImageAdded() {
             @Override
             public void onSuccess(Bitmap photo) {
                 playerImage.setImageBitmap(photo);

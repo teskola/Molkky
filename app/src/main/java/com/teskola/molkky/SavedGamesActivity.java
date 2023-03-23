@@ -30,7 +30,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
     private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
-    private String playerID;
+    private PlayerInfo playerInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,13 +42,14 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         playerImageView = findViewById(R.id.titleBar_playerImageView);
 
         if (getIntent().getExtras() != null) {
-            playerID = getIntent().getStringExtra("PLAYER_ID");
-            games = databaseHandler.getGames(playerID);
-            String name = databaseHandler.getPlayerName(playerID);
-            String title = getString(R.string.games) + ": " + name;
+            playerInfo = new PlayerInfo();
+            playerInfo.setId(getIntent().getStringExtra("PLAYER_ID"));
+            games = databaseHandler.getGames(playerInfo.getId());
+            playerInfo.setName(databaseHandler.getPlayerName(playerInfo.getId()));
+            String title = getString(R.string.games) + ": " + playerInfo.getName();
             titleTV.setText(title);
             if (getPreferences().getBoolean("SHOW_IMAGES", false))
-                setImage(playerImageView, playerID);
+                setImage(playerImageView, playerInfo.getId());
             else
                 playerImageView.setVisibility(View.GONE);
 
@@ -66,7 +67,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         ListAdapter listAdapter = new ListAdapter(this, games, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        playerImageView.setOnClickListener(view -> onImageClicked(playerID, 0, new OnImageAdded() {
+        playerImageView.setOnClickListener(view -> onImageClicked(playerInfo.getId(), playerInfo.getName(), 0, new OnImageAdded() {
             @Override
             public void onSuccess(Bitmap photo) {
                 playerImageView.setImageBitmap(photo);
@@ -109,7 +110,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES")) {
-            setImage(playerImageView, playerID);
+            setImage(playerImageView, playerInfo.getId());
         }
     }
 }
