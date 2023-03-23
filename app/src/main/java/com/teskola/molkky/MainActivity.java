@@ -43,6 +43,10 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private EditText editPlayerName;
     private Button startButton;
     private CheckBox randomCheckBox;
+    private SharedPreferences saved_state;
+    private SharedPreferences.Editor editor;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,26 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
+        saved_state = getSharedPreferences("SAVED_STATE", Context.MODE_PRIVATE);
+        if (saved_state.getString("SAVED_SELECTION", null) != null) {
+            playersList = new ArrayList<>();
+            PlayerInfo[] players = new Gson().fromJson(saved_state.getString("SAVED_SELECTION", null), PlayerInfo[].class);
+            Collections.addAll(playersList, players);
+            random = saved_state.getBoolean("RANDOM", false);
+            editor = saved_state.edit();
+            editor.remove("SAVED_SELECTION");
+            editor.apply();
+        }
+        if (saved_state.getString("SAVED_GAME", null) != null) {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("SAVED_GAME", saved_state.getString("SAVED_GAME", null));
+            startActivity(intent);
+            editor = saved_state.edit();
+            editor.remove("SAVED_GAME");
+            editor.apply();
+        }
+
+
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
@@ -64,14 +88,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             start_position = savedInstanceState.getInt("SELECTED_POSITION");
             random = savedInstanceState.getBoolean("RANDOM");
         }
-
-     /*   String saved_game = getPreferences().getString("SAVED_GAME", "");
-        if (saved_game.length() > 0)
-        {
-            Intent intent = new Intent(this, GameActivity.class);
-            intent.putExtra("SAVED_GAME", saved_game);
-            startActivity(intent);
-        }*/
 
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -121,12 +137,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onResume () {
         super.onResume();
 
-        if (Build.VERSION.SDK_INT < 29) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-            }
-        }
-
         start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
         random = getIntent().getBooleanExtra("RANDOM", false);
         createRecyclerView();
@@ -139,6 +149,16 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         }
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (Build.VERSION.SDK_INT < 29) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            }
         }
     }
 
@@ -286,8 +306,15 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     @Override
     public void onBackPressed () {
-        // TODO tallenna state ja normaali back
-        moveTaskToBack(true);
+        if (!playersList.isEmpty()) {
+            String json = new Gson().toJson(playersList);
+            editor = saved_state.edit();
+            editor.putString("SAVED_SELECTION", json);
+            editor.putBoolean("RANDOM", random);
+            editor.apply();
+        }
+        super.onBackPressed();
+        finish();
     }
 
     @Override

@@ -34,8 +34,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     private boolean savedGame = false;
     private boolean spectateMode = false;
-    private boolean savedFromPref = false;
-
     private SeekBar seekBar;
     private TextView pointsTextView;
     private TextView nameTextView;
@@ -49,6 +47,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private ImageView playerImage;
 
     private GameHandler handler;
+    private SharedPreferences saved_state;
+    private SharedPreferences.Editor editor;
 
 
 
@@ -80,15 +80,13 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // Saved Preferences
 
+        saved_state = getSharedPreferences("SAVED_STATE", MODE_PRIVATE);
+
         if (getIntent().getStringExtra("SAVED_GAME") != null) {
             String json = getIntent().getStringExtra("SAVED_GAME");
             Game savedGame = new Gson().fromJson(json, Game.class);
             handler = new GameHandler(savedGame, this);
-            SharedPreferences.Editor editor = getPreferences().edit();
-            editor.remove("SAVED_GAME");
-            editor.apply();
-            if (handler.gameEnded())
-                savedFromPref = true;
+            clearSavedState();
         }
 
         // Saved Instance
@@ -160,9 +158,15 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         });
     }
 
+    public void clearSavedState () {
+        editor = saved_state.edit();
+        editor.remove("SAVED_GAME");
+        editor.apply();
+    }
+
     @Override
     public void onBackPressed() {
-        if (savedGame || savedFromPref || spectateMode || handler.noTosses()) {
+        if (savedGame || spectateMode || handler.noTosses()) {
             super.onBackPressed();
         }
         else
@@ -313,19 +317,26 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         invalidateOptionsMenu();
         updateUI();
         if (gameEnded) {
-            DatabaseHandler.getInstance(this).saveGame(this, handler.getGame());
+            DatabaseHandler.getInstance(this).saveGame(handler.getGame());
+            clearSavedState();
         }
     }
 
     @Override
     protected void onPause () {
         super.onPause();
-        if (!savedGame && !spectateMode) {
-            SharedPreferences.Editor editor = getPreferences().edit();
+        if (!savedGame && !spectateMode && !handler.gameEnded()) {
+            SharedPreferences.Editor editor = saved_state.edit();
             String json = new Gson().toJson(handler.getGame());
             editor.putString("SAVED_GAME", json);
             editor.apply();
         }
+    }
+
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+        clearSavedState();
     }
 
     @Override

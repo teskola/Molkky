@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.text.SimpleDateFormat;
@@ -21,23 +22,12 @@ import java.util.UUID;
 public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
-    public static final int RETRY_CONNECTION = 10000;
     private final Database database;
     private final ArrayList<DatabaseListener> listeners = new ArrayList<>();
     private static DatabaseHandler instance;
     private FirebaseManager firebaseManager;
     private String databaseId;
     private final SharedPreferences preferences;
-    private final Handler handler = new Handler();
-    private boolean retrySigningRunning = false;
-    private final Runnable retrySignIn = new Runnable() {
-        @Override
-        public void run() {
-            retrySigningRunning = true;
-            signIn();
-            handler.postDelayed(this, RETRY_CONNECTION);
-        }
-    };
 
     public String getDatabaseId() {
         return databaseId;
@@ -91,6 +81,10 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         ADD_GAME_FAILED
     }
 
+    public boolean isConnected () {
+        return firebaseManager != null;
+    }
+
     /*
      *
      * Returns 6 character, lowercase, version of userId used as database id.
@@ -136,12 +130,11 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             firebaseManager = new FirebaseManager(databaseId, database, this);
     }
 
-    public void disconnectFromFirebase() {
-        firebaseManager = null;
-    }
-
     public void changeDatabase(String newDatabaseId) {
-
+        if (firebaseManager == null) {
+            signIn();
+            return;
+        }
         firebaseManager.searchDatabase(newDatabaseId, response -> {
             if (response.equals("null")) {
                 for (DatabaseListener listener : listeners)
@@ -152,7 +145,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
                 listener.onDatabaseEvent(Event.DATABASE_FOUND);
 
             firebaseManager.removeUser(databaseId, FirebaseAuth.getInstance().getUid(),
-                    unused1 -> firebaseManager.addUser(newDatabaseId, FirebaseAuth.getInstance().getUid(), unused11 -> {
+                    res1 -> firebaseManager.addUser(newDatabaseId, FirebaseAuth.getInstance().getUid(), res2 -> {
                         for (DatabaseListener listener : listeners)
                             listener.onDatabaseEvent(Event.DATABASE_CHANGED);
                         SharedPreferences.Editor editor = preferences.edit();
@@ -175,7 +168,27 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public void signIn() {
 
-        FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
+        FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener(authResult -> {
+            firebaseManager = new FirebaseManager(database, this);
+            firebaseManager.initializeDatabase(getShortId(), response -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
+            }, e -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onError(Error.UNKNOWN_ERROR);
+            }).addUser(getShortId(), FirebaseAuth.getInstance().getUid(), response -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.DATABASE_CREATED);
+            }, e -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onError(Error.UNKNOWN_ERROR);
+            });
+        }).addOnFailureListener(e -> {
+            for (DatabaseListener listener : listeners)
+                listener.onError(Error.NETWORK_ERROR);
+        });
+
+        /*FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener
                 (authResult -> {
                     firebaseManager = new FirebaseManager(database, this);
                     firebaseManager.initializeDatabase(getShortId(), response -> {
@@ -193,23 +206,21 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
                         for (DatabaseListener listener : listeners)
                             listener.onError(Error.NETWORK_ERROR);
                     });
-                });
+                });*/
     }
 
-    public void saveGame(Context context, Game game) {
-        firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), new OnSuccessListener<String>() {
-            @Override
-            public void onSuccess(String s) {
-                game.setId(s);
-                for (DatabaseListener listener : listeners)
-                    listener.onDatabaseEvent(Event.GAME_ADDED);
-            }
-        }, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                for (DatabaseListener listener : listeners)
-                    listener.onError(Error.ADD_GAME_FAILED);
-            }
+    public void saveGame(Game game) {
+        if (firebaseManager == null) {
+            signIn();
+            return;
+        }
+        firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), response -> {
+            game.setId(response);
+            for (DatabaseListener listener : listeners)
+                listener.onDatabaseEvent(Event.GAME_ADDED);
+        }, e -> {
+            for (DatabaseListener listener : listeners)
+                listener.onError(Error.ADD_GAME_FAILED);
         });
     }
 
@@ -294,21 +305,27 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public String getCreated () {
+        if (firebaseManager == null) {
+            signIn();
+            return null;
+        }
         if (database.getCreated() == 0) {
-            firebaseManager.searchDatabase(databaseId, new OnSuccessListener<String>() {
-                @Override
-                public void onSuccess(String s) {
-                    database.setCreated(Long.parseLong(s));
-                    for (DatabaseListener listener : listeners)
-                        listener.onDatabaseEvent(Event.CREATED_TIMESTAMP_ADDED);
-                }
-            }, null);
+            firebaseManager.searchDatabase(databaseId, response -> {
+                database.setCreated(Long.parseLong(response));
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.CREATED_TIMESTAMP_ADDED);
+            }, e -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onError(Error.UNKNOWN_ERROR);
+            });
             return null;
         }
         return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.getCreated());
     }
 
     public String getUpdated () {
+        if (database.lastUpdated() == 0)
+            return null;
         return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.lastUpdated());
     }
 

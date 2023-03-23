@@ -28,6 +28,8 @@ public class SettingsActivity extends DatabaseActivity {
     private ImageButton infoButton;
     private ViewGroup databaseStats;
 
+    private String created, updated;
+
 
     private boolean showImages;
     private SharedPreferences preferences;
@@ -48,6 +50,7 @@ public class SettingsActivity extends DatabaseActivity {
         tossesTV = findViewById(R.id.settings_tossesTV);
         createdTV = findViewById(R.id.settings_createdTV);
         updatedTV = findViewById(R.id.settings_updatedTV);
+
 
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
@@ -104,15 +107,21 @@ public class SettingsActivity extends DatabaseActivity {
     }
 
     public void updateDatabaseStats() {
+        if (!DatabaseHandler.getInstance(this).isConnected()) {
+            databaseStats.setVisibility(View.INVISIBLE);
+            return;
+        }
+        databaseStats.setVisibility(View.VISIBLE);
         int games = databaseHandler.getGamesCount();
         int players = databaseHandler.getPlayersCount();
         int tosses = databaseHandler.getTossesCount();
-        String created = databaseHandler.getCreated();
-        String updated = databaseHandler.getUpdated();
+        created = databaseHandler.getCreated();
+        updated = databaseHandler.getUpdated();
         gamesTV.setText(String.valueOf(games));
         playersTV.setText(String.valueOf(players));
         tossesTV.setText(String.valueOf(tosses));
-        updatedTV.setText(updated);
+        if (databaseHandler.getUpdated() != null)
+            updatedTV.setText(updated);
         if (databaseHandler.getCreated() != null)
             createdTV.setText(created);
     }
@@ -135,7 +144,10 @@ public class SettingsActivity extends DatabaseActivity {
         if (event == DatabaseHandler.Event.GAME_ADDED)
             updateDatabaseStats();
         if (event == DatabaseHandler.Event.CREATED_TIMESTAMP_ADDED) {
-            String created = databaseHandler.getCreated();
+            if (updated == null)
+                updated = databaseHandler.getUpdated();
+            updatedTV.setText(updated);
+            created = databaseHandler.getCreated();
             createdTV.setText(created);
         }
     }

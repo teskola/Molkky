@@ -137,7 +137,7 @@ public class Database {
     }
 
     public long lastUpdated () {
-        long timestamp = 0;
+        long timestamp = created;
         for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
