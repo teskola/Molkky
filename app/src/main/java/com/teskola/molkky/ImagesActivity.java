@@ -1,5 +1,10 @@
 package com.teskola.molkky;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
@@ -15,16 +20,26 @@ import android.widget.ImageView;
 
 public abstract class ImagesActivity extends DatabaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
-    public static final int REQUEST_CODE = 200;
     private String playerId;
     private OnImageAdded listener;
     private SharedPreferences preferences;
+    private ActivityResultLauncher<Intent> launcher;
 
     @Override
     protected void onCreate(Bundle onSavedInstanceState) {
         super.onCreate(onSavedInstanceState);
         preferences = getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         preferences.registerOnSharedPreferenceChangeListener(this);
+
+        launcher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            Intent data = result.getData();
+            if (result.getResultCode() == AppCompatActivity.RESULT_OK) {
+                Bitmap photo = (Bitmap) data.getExtras().get("data");
+                ImageHandler.getInstance(ImagesActivity.this).save(ImagesActivity.this, photo, playerId);
+                ImageHandler.getInstance(ImagesActivity.this).upload(photo, playerId);
+                if (listener != null) listener.onSuccess(photo);
+            }
+        });
     }
 
     @Override
@@ -39,17 +54,6 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
 
     public SharedPreferences getPreferences () {
         return preferences;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            ImageHandler.getInstance(this).save(this, photo, playerId);
-            ImageHandler.getInstance(this).upload(photo, playerId);
-            if (listener != null) listener.onSuccess(photo);
-        }
     }
 
     public void setImage (ImageView view, String id) {
@@ -88,7 +92,8 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
         }
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(intent, REQUEST_CODE);
+            launcher.launch(intent);
         }
     }
+
 }
