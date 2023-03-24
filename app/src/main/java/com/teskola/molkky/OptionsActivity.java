@@ -5,6 +5,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.appcompat.view.menu.MenuBuilder;
+
 public abstract class OptionsActivity extends ImagesActivity {
 
     @Override
