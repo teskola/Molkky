@@ -22,6 +22,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -36,7 +37,6 @@ import java.util.Objects;
 public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private ArrayList<PlayerInfo> playersList = new ArrayList<>();
-    private boolean random = false;
     private ListAdapter listAdapter;
     private ItemTouchHelper itemTouchHelper;
     private RecyclerView recyclerview;
@@ -66,7 +66,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(saved_state.getString("SAVED_SELECTION", null), PlayerInfo[].class);
             Collections.addAll(playersList, players);
-            random = saved_state.getBoolean("RANDOM", false);
+            randomCheckBox.setChecked(saved_state.getBoolean("RANDOM", false));
             editor = saved_state.edit();
             editor.remove("SAVED_SELECTION");
             editor.apply();
@@ -85,7 +85,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
             Collections.addAll(playersList, players);
-            random = savedInstanceState.getBoolean("RANDOM");
+            randomCheckBox.setChecked(savedInstanceState.getBoolean("RANDOM"));
         }
 
         // https://www.youtube.com/watch?v=yua1exHtFB4&t=391s
@@ -131,13 +131,8 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             }
         });
 
+        createRecyclerView();
         selectButton.setOnClickListener(view -> selectPlayers());
-
-        randomCheckBox.setOnCheckedChangeListener((compoundButton, checked) -> {
-            if (checked) {
-                randomSelected();
-            }
-        });
         startButton.setOnClickListener(view -> startGame());
     }
 
@@ -150,20 +145,14 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             PlayerInfo[] players = new Gson().fromJson(json, PlayerInfo[].class);
             Collections.addAll(playersList, players);
         }
+        if (intent.getBooleanExtra("NEW_GAME", false))
+            randomCheckBox.setChecked(false);
+        createRecyclerView();
     }
 
     @Override
     protected void onResume () {
         super.onResume();
-
-        random = getIntent().getBooleanExtra("RANDOM", false);
-        createRecyclerView();
-
-        if (random) {
-            randomCheckBox.setChecked(true);
-            randomSelected();
-        }
-
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
@@ -172,6 +161,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     protected void onStart() {
         super.onStart();
+
         if (Build.VERSION.SDK_INT < 29) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
@@ -192,7 +182,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         Intent intent = new Intent(this, GameActivity.class);
         String json = new Gson().toJson(playersList);
         intent.putExtra("PLAYERS", json);
-        intent.putExtra("RANDOM", random);
+        intent.putExtra("RANDOM", randomCheckBox.isChecked());
         startActivity(intent);
     }
 
@@ -257,17 +247,12 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         listAdapter.notifyItemRemoved(position);
     }
 
-    public void randomSelected() {
-        random = true;
-    }
-
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-
         String json = new Gson().toJson(playersList);
         savedInstanceState.putString("PLAYERS", json);
-        savedInstanceState.putBoolean("RANDOM", random);
+        savedInstanceState.putBoolean("RANDOM", randomCheckBox.isChecked());
     }
 
     @Override
@@ -297,7 +282,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             String json = new Gson().toJson(playersList);
             editor = saved_state.edit();
             editor.putString("SAVED_SELECTION", json);
-            editor.putBoolean("RANDOM", random);
+            editor.putBoolean("RANDOM", randomCheckBox.isChecked());
             editor.apply();
         }
         super.onBackPressed();

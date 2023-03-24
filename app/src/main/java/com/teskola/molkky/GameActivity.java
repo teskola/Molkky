@@ -262,6 +262,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         String json = new Gson().toJson(reversed);
         intent.putExtra("PLAYERS", json);
+        intent.putExtra("NEW_GAME", true);
         startActivity(intent);
     }
 
