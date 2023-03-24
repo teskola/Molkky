@@ -112,6 +112,9 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     case R.string.excesses_per_game:
                         defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getExcessesPerGame()));
                         break;
+                    case R.string.winning_chances:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWinningChances()));
+                        break;
                 }
                 break;
             case GAME_ACTIVITY:

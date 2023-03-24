@@ -3,19 +3,14 @@ package com.teskola.molkky;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -37,6 +32,7 @@ public class PlayerStatsActivity extends OptionsActivity {
     private TextView hitsTV;
     private TextView eliminationsTV;
     private TextView excessTV;
+    private TextView winningChancesTV;
     private BarChart barChart;
     private ShapeableImageView playerImage;
 
@@ -64,6 +60,8 @@ public class PlayerStatsActivity extends OptionsActivity {
         hitsTV = findViewById(R.id.stats_hitsTV);
         eliminationsTV = findViewById(R.id.stats_elimTV);
         excessTV = findViewById(R.id.stats_excessesTV);
+        winningChancesTV = findViewById(R.id.stats_winningChancesTV);
+
         View showGamesView = findViewById(R.id.gamesTableRow);
         playerImage = findViewById(R.id.titleBar_playerImageView);
 
@@ -170,6 +168,7 @@ public class PlayerStatsActivity extends OptionsActivity {
         String eliminationsString = playerStats.getEliminations() + " (" + Math.round(100 * playerStats.getEliminationsPct()) + "%)";
         eliminationsTV.setText(eliminationsString);
         excessTV.setText(String.valueOf(playerStats.getExcesses()));
+        winningChancesTV.setText(String.valueOf(playerStats.getWinningChances()));
         showBarChart();
     }
 

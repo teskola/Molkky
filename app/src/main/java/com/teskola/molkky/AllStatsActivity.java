@@ -35,7 +35,8 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
             R.string.points_per_toss,
             R.string.hits_percentage,
             R.string.elimination_percentage,
-            R.string.excesses_per_game
+            R.string.excesses_per_game,
+            R.string.winning_chances
     };
 
     @Override
@@ -116,6 +117,9 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
                 break;
             case R.string.excesses_per_game:
                 Collections.sort(playerStats, (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
+                break;
+            case R.string.winning_chances:
+                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
                 break;
         }
         listAdapter.setStatID(stats[statID]);
