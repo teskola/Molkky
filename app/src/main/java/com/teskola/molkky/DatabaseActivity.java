@@ -9,6 +9,8 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
     protected void onStart() {
         super.onStart();
         DatabaseHandler.getInstance(DatabaseActivity.this).addListener(this);
+        if (!DatabaseHandler.getInstance(DatabaseActivity.this).isConnected())
+            DatabaseHandler.getInstance(DatabaseActivity.this).signIn();
     }
     @Override
     protected void onStop() {

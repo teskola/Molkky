@@ -36,22 +36,11 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<GameInfo> games;
 
     private int statID = 0;
-    private boolean showImages;
-
-
+    private boolean showImages, showTosses, onlyGray;
     private ArrayList<Boolean> selected = null;
-    private int selected_position = RecyclerView.NO_POSITION;
-    private boolean showTosses, onlyGray;
+
     private final OnItemClickListener onItemClickListener;
 
-
-    public void setSelected_position(int selected_position) {
-        this.selected_position = selected_position;
-    }
-
-    public int getSelected_position() {
-        return selected_position;
-    }
     public void setStatID(int statID) {
         this.statID = statID;
     }
@@ -81,7 +70,6 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         switch (viewId) {
             case ADD_PLAYER_VIEW:
                 defaultViewHolder.nameTV.setText(players.get(position).getName());
-                defaultViewHolder.playerView.setSelected(selected_position == position);
                 break;
             case SELECT_PLAYER_VIEW:
                 defaultViewHolder.nameTV.setText(players.get(position).getName());
@@ -297,12 +285,8 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
-                    if (viewId == ADD_PLAYER_VIEW) {
-                        notifyItemChanged(selected_position);
-                        selected_position = position;
-                        notifyItemChanged(selected_position);
-                    }
-                    onItemClickListener.onSelectClicked(position);
+                    if (viewId != ADD_PLAYER_VIEW)
+                        onItemClickListener.onSelectClicked(position);
                 }
             });
 
@@ -321,11 +305,6 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         case MotionEvent.ACTION_UP: {
                             if (onItemClickListener != null) {
                                 int position = getAbsoluteAdapterPosition();
-                                if (selected_position == position) {
-                                    selected_position = RecyclerView.NO_POSITION;
-                                } else if (selected_position > position) {
-                                    selected_position -= 1;
-                                }
                                 if (position != RecyclerView.NO_POSITION) {
                                     onItemClickListener.onDeleteClicked(position);
                                 }

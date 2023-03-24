@@ -74,8 +74,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             ArrayList<Player> playersList = new ArrayList<>();
             Collections.addAll(playersList, players);
             boolean random = getIntent().getBooleanExtra("RANDOM", false);
-            int first = getIntent().getIntExtra("FIRST", 0);
-            handler = new GameHandler(new Game(playersList, first, random), this);
+            handler = new GameHandler(new Game(playersList, random), this);
         }
 
         // Saved Preferences
@@ -190,7 +189,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         //              OK-Button
 
-        okButton.setVisibility((savedGame || spectateMode) ? View.INVISIBLE : View.VISIBLE);
+        okButton.setVisibility((spectateMode) ? View.INVISIBLE : View.VISIBLE);
         okButton.setText(handler.gameEnded() ? getString(R.string.new_game) : getString(R.string.ok));
         okButton.setEnabled(handler.gameEnded() || !handler.undoStackIsEmpty());
 

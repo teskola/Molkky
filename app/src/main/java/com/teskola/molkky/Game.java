@@ -19,7 +19,7 @@ public class Game implements Comparable<Game> {
 
     public Game() {}
 
-    public Game(ArrayList<Player> players, int turn, boolean random) {
+    public Game(ArrayList<Player> players, boolean random) {
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -32,7 +32,6 @@ public class Game implements Comparable<Game> {
         }
         else {
             this.players = players;
-            setTurn(turn);
         }
     }
 

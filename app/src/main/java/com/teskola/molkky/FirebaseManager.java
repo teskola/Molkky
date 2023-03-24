@@ -23,14 +23,14 @@ import java.util.Set;
 public class FirebaseManager {
 
     private final FirebaseDatabase firebase = FirebaseDatabase.getInstance("https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/");
-    private final DatabaseReference databaseRef = firebase.getReference("databases");
-    private final DatabaseReference usersRef = firebase.getReference("users");
+    private final DatabaseReference databaseRef;
+    private final DatabaseReference usersRef;
     private DatabaseReference myDatabaseRef;
-    private HashMap<String, DatabaseReference> myGamesRef = new HashMap<>();
-    private HashMap<DatabaseReference, ChildEventListener> databaseListeners = new HashMap<>();
-    private HashMap<String, ChildEventListener> gameListeners = new HashMap<>();
+    private final HashMap<String, DatabaseReference> myGamesRef = new HashMap<>();
+    private final HashMap<DatabaseReference, ChildEventListener> databaseListeners = new HashMap<>();
+    private final HashMap<String, ChildEventListener> gameListeners = new HashMap<>();
     private final Database database;
-    private DatabaseListener listener;
+    private final DatabaseListener listener;
 
     public interface DatabaseListener {
         void onNewUser();
@@ -42,11 +42,17 @@ public class FirebaseManager {
     public FirebaseManager(Database database, DatabaseListener listener) {
         this.listener = listener;
         this.database = database;
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        databaseRef = firebase.getReference("databases");
+        usersRef = firebase.getReference("users");
     }
 
     public FirebaseManager(String databaseId, Database database, DatabaseListener listener) {
         this.listener = listener;
         this.database = database;
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        databaseRef = firebase.getReference("databases");
+        usersRef = firebase.getReference("users");
         myDatabaseRef = firebase.getReference("databases/" + databaseId + "/users/");
         ChildEventListener childEventListener = databaseListener;
         databaseListeners.put(myDatabaseRef, childEventListener);

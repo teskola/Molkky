@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class DatabaseHandler implements FirebaseManager.DatabaseListener {
+public class DatabaseHandler implements FirebaseManager.DatabaseListener, FirebaseAuth.AuthStateListener {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
     private final Database database;
@@ -52,6 +52,11 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     @Override
     public void onGameRemoved() {
+
+    }
+
+    @Override
+    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
 
     }
 
@@ -177,6 +182,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
                 for (DatabaseListener listener : listeners)
                     listener.onError(Error.UNKNOWN_ERROR);
             }).addUser(getShortId(), FirebaseAuth.getInstance().getUid(), response -> {
+                databaseId = getShortId();
                 for (DatabaseListener listener : listeners)
                     listener.onDatabaseEvent(Event.DATABASE_CREATED);
             }, e -> {

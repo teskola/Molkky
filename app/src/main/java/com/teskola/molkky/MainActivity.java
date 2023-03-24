@@ -2,6 +2,7 @@ package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,15 +37,15 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     private ArrayList<PlayerInfo> playersList = new ArrayList<>();
     private boolean random = false;
-    private int start_position = RecyclerView.NO_POSITION;
     private ListAdapter listAdapter;
-    private TextView firstTextView;
+    private ItemTouchHelper itemTouchHelper;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
     private Button startButton;
     private CheckBox randomCheckBox;
     private SharedPreferences saved_state;
     private SharedPreferences.Editor editor;
+    private int draggedItemIndex;
 
 
 
@@ -56,7 +57,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         recyclerview = findViewById(R.id.recyclerView);
         editPlayerName = findViewById(R.id.editTextPlayerName);
         editPlayerName.setImeActionLabel(getResources().getString(R.string.add), EditorInfo.IME_ACTION_DONE);
-        firstTextView = findViewById(R.id.firstTextView);
         randomCheckBox = findViewById(R.id.randomCheckBox);
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
@@ -85,9 +85,34 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
             Collections.addAll(playersList, players);
-            start_position = savedInstanceState.getInt("SELECTED_POSITION");
             random = savedInstanceState.getBoolean("RANDOM");
         }
+
+        // https://www.youtube.com/watch?v=yua1exHtFB4&t=391s
+
+        itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.Callback() {
+                    @Override
+                    public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                        return makeMovementFlags(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0);
+                    }
+
+                    @Override
+                    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                        draggedItemIndex = viewHolder.getAbsoluteAdapterPosition();
+                        int targetIndex = target.getAbsoluteAdapterPosition();
+                        Collections.swap(playersList, draggedItemIndex, targetIndex);
+                        listAdapter.notifyItemMoved(draggedItemIndex, targetIndex);
+                        return false;
+                    }
+
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+                    }
+                }
+        );
+        itemTouchHelper.attachToRecyclerView(recyclerview);
 
         // https://stackoverflow.com/questions/1489852/android-handle-enter-in-an-edittext
         editPlayerName.setOnEditorActionListener((textView, actionId, keyEvent) -> {
@@ -111,12 +136,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         randomCheckBox.setOnCheckedChangeListener((compoundButton, checked) -> {
             if (checked) {
                 randomSelected();
-
-            } else {
-                random = false;
-                if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-                    showFirstTextView();
-                }
             }
         });
         startButton.setOnClickListener(view -> startGame());
@@ -137,16 +156,14 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onResume () {
         super.onResume();
 
-        start_position = getIntent().getIntExtra("SELECTED_POSITION", RecyclerView.NO_POSITION);
         random = getIntent().getBooleanExtra("RANDOM", false);
         createRecyclerView();
 
         if (random) {
             randomCheckBox.setChecked(true);
             randomSelected();
-        } else if (listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            setStarter(listAdapter.getSelected_position());
         }
+
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
         }
@@ -163,10 +180,11 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void createRecyclerView () {
+
         listAdapter = new ListAdapter(this, playersList, getPreferences().getBoolean("SHOW_IMAGES", false), this);
-        listAdapter.setSelected_position(start_position);
         recyclerview.setAdapter(listAdapter);
         recyclerview.setLayoutManager(new LinearLayoutManager(this));
+
     }
 
     private void startGame() {
@@ -174,7 +192,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         Intent intent = new Intent(this, GameActivity.class);
         String json = new Gson().toJson(playersList);
         intent.putExtra("PLAYERS", json);
-        intent.putExtra("FIRST", start_position);
         intent.putExtra("RANDOM", random);
         startActivity(intent);
     }
@@ -204,12 +221,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         return super.dispatchTouchEvent(ev);
     }
 
-    public void setStarter(int position) {
-        start_position = position;
-        firstTextView.setText(getString(R.string.first, playersList.get(position).getName()));
-        if (!random) showFirstTextView();
-    }
-
     public void addPlayer () {
 
         PlayerInfo newPlayer = new PlayerInfo(editPlayerName.getText().toString());
@@ -235,10 +246,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         editPlayerName.setText("");
         listAdapter.notifyItemInserted(0);
-        if (!random && listAdapter.getSelected_position() != RecyclerView.NO_POSITION) {
-            listAdapter.setSelected_position(listAdapter.getSelected_position() + 1);
-            setStarter(listAdapter.getSelected_position());
-        }
         Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
     }
 
@@ -247,30 +254,12 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (playersList.size() < 2) {
             startButton.setEnabled(false);
         }
-        start_position = listAdapter.getSelected_position();
-        if (playersList.isEmpty() || start_position == RecyclerView.NO_POSITION) {
-            hideFirstTextView();
-        }
         listAdapter.notifyItemRemoved(position);
     }
 
     public void randomSelected() {
-        hideFirstTextView();
         random = true;
-        int selPos = listAdapter.getSelected_position();
-        listAdapter.setSelected_position(RecyclerView.NO_POSITION);
-        start_position = RecyclerView.NO_POSITION;
-        listAdapter.notifyItemChanged(selPos);
     }
-
-    public void showFirstTextView() {
-        firstTextView.setVisibility(View.VISIBLE);
-    }
-
-    public void hideFirstTextView() {
-        firstTextView.setVisibility(View.INVISIBLE);
-    }
-
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
@@ -279,7 +268,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         String json = new Gson().toJson(playersList);
         savedInstanceState.putString("PLAYERS", json);
         savedInstanceState.putBoolean("RANDOM", random);
-        savedInstanceState.putInt("SELECTED_POSITION", start_position);
     }
 
     @Override
@@ -289,9 +277,8 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         return true;
     }
     @Override
-    public void onSelectClicked(int position) {
-        setStarter(position);
-    }
+    public void onSelectClicked(int position) {};
+
 
     @Override
     public void onDeleteClicked(int position) {
