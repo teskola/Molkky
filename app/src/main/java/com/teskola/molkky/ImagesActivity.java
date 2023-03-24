@@ -71,8 +71,12 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
                 view.setImageBitmap(photo);
                 view.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 view.setVisibility(View.VISIBLE);
-            } else
-                view.setVisibility(View.GONE);
+            }
+            else
+            {
+                view.setImageResource(R.drawable.camera);
+                view.setScaleType(ImageView.ScaleType.CENTER);
+            }
         }
         else
             view.setVisibility(View.GONE);
