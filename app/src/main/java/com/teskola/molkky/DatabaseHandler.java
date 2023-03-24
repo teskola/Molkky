@@ -3,15 +3,12 @@ package com.teskola.molkky;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
 
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -19,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class DatabaseHandler implements FirebaseManager.DatabaseListener, FirebaseAuth.AuthStateListener {
+public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public static final int ID_LENGTH = 6;     // only even numbers allowed
     private final Database database;
@@ -55,11 +52,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener, Fireba
 
     }
 
-    @Override
-    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-
-    }
-
     public interface DatabaseListener {
         void onError(Error error);
 
@@ -86,8 +78,15 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener, Fireba
         ADD_GAME_FAILED
     }
 
-    public boolean isConnected () {
-        return firebaseManager != null;
+    public boolean isNotConnected() {
+        return firebaseManager == null;
+    }
+
+    public void stop() {
+        FirebaseDatabase.getInstance().goOffline();
+    }
+    public void start() {
+        FirebaseDatabase.getInstance().goOnline();
     }
 
     /*

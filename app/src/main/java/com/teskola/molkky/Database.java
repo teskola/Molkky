@@ -16,9 +16,10 @@ public class Database {
     private HashMap<String, PlayerInfo> playersMap = new HashMap<>();
     long created = 0;
 
-    public Database () {}
+    public Database() {
+    }
 
-    public Database (HashMap<String, HashMap<String, Game>> databaseMap, HashMap<String, PlayerInfo> playersMap) {
+    public Database(HashMap<String, HashMap<String, Game>> databaseMap, HashMap<String, PlayerInfo> playersMap) {
         this.databaseMap = databaseMap;
         this.playersMap = playersMap;
     }
@@ -62,7 +63,7 @@ public class Database {
         if (databaseMap.containsKey(key))
             databaseMap.get(key).put(gameId, game);
         else {
-            HashMap<String,Game> newMap = new HashMap<>();
+            HashMap<String, Game> newMap = new HashMap<>();
             newMap.put(gameId, game);
             databaseMap.put(key, newMap);
         }
@@ -77,11 +78,11 @@ public class Database {
     }
 
     /*
-    *
-    *
-    * Removes player if no games in database for this player.
-    *
-    * */
+     *
+     *
+     * Removes player if no games in database for this player.
+     *
+     * */
 
     public void removePlayer(String id) {
         if (getGames(id).isEmpty())
@@ -97,7 +98,7 @@ public class Database {
         return null;
     }
 
-    public List<PlayerInfo> getPlayers () {
+    public List<PlayerInfo> getPlayers() {
         ArrayList<PlayerInfo> players = new ArrayList<>();
         for (String id : playersMap.keySet()) {
             PlayerInfo player = playersMap.get(id);
@@ -107,13 +108,13 @@ public class Database {
         return players;
     }
 
-    public int getPlayersCount () {
+    public int getPlayersCount() {
         return playersMap.size();
     }
 
-    public int getGamesCount () {
+    public int getGamesCount() {
         int count = 0;
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             count += gamesMap.keySet().size();
@@ -121,9 +122,9 @@ public class Database {
         return count;
     }
 
-    public int getTossesCount () {
+    public int getTossesCount() {
         int count = 0;
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
@@ -136,9 +137,9 @@ public class Database {
         return count;
     }
 
-    public long lastUpdated () {
+    public long lastUpdated() {
         long timestamp = created;
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
@@ -150,18 +151,17 @@ public class Database {
     }
 
 
-
-    public String getPlayerName (String playerId) {
+    public String getPlayerName(String playerId) {
         return playersMap.get(playerId).getName();
     }
 
-    public PlayerStats getStats (PlayerInfo playerInfo) {
+    public PlayerStats getStats(PlayerInfo playerInfo) {
         String playerId = playerInfo.getId();
-        HashSet<String > gameIds = (HashSet<String>) getGameIds(playerId);
+        HashSet<String> gameIds = (HashSet<String>) getGameIds(playerId);
         HashMap<String, ArrayList<Integer>> tosses = new HashMap<>();
         int wins = 0;
 
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String key : gameIds) {
@@ -183,7 +183,7 @@ public class Database {
 
     public Collection<String> getGameIds(String playerId) {
         HashSet<String> ids = new HashSet<>();
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String key : gamesMap.keySet()) {
@@ -200,7 +200,7 @@ public class Database {
         return ids;
     }
 
-    public List<PlayerInfo> getPlayers (ArrayList<PlayerInfo> excludedPlayers) {
+    public List<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
         ArrayList<String> excludedIds = new ArrayList<>();
         for (PlayerInfo playerInfo : excludedPlayers)
             excludedIds.add(playerInfo.getId());
@@ -215,9 +215,9 @@ public class Database {
     }
 
 
-    public List<Game> getGames () {
+    public List<Game> getGames() {
         List<Game> allGames = new ArrayList<>();
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
@@ -230,9 +230,9 @@ public class Database {
         return allGames;
     }
 
-    public List<Game> getGames (String playerId) {
+    public List<Game> getGames(String playerId) {
         List<Game> allGames = new ArrayList<>();
-        for (Map.Entry<String, HashMap<String , Game>> entry : databaseMap.entrySet()) {
+        for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
@@ -248,12 +248,11 @@ public class Database {
             }
         }
         Collections.sort(allGames);
-        Collections.reverse(allGames);
         return allGames;
     }
 
 
-    public boolean nameExists (String name) {
+    public boolean nameExists(String name) {
         for (PlayerInfo playerInfo : playersMap.values()) {
             if (name.equals(playerInfo.getName()))
                 return true;
@@ -261,11 +260,11 @@ public class Database {
         return false;
     }
 
-    public boolean noPlayers () {
+    public boolean noPlayers() {
         return playersMap.isEmpty();
     }
 
-    public Game getGame (String gameId) {
+    public Game getGame(String gameId) {
         for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             Game result = entry.getValue().get(gameId);
             if (result != null) return result;
@@ -274,4 +273,4 @@ public class Database {
     }
 
 
-    }
+}

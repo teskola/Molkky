@@ -1,14 +1,11 @@
 package com.teskola.molkky;
 
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
@@ -107,7 +104,7 @@ public class SettingsActivity extends DatabaseActivity {
     }
 
     public void updateDatabaseStats() {
-        if (!DatabaseHandler.getInstance(this).isConnected()) {
+        if (DatabaseHandler.getInstance(this).isNotConnected()) {
             databaseStats.setVisibility(View.INVISIBLE);
             return;
         }

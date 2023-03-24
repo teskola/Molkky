@@ -1,7 +1,6 @@
 package com.teskola.molkky;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.widget.Toast;
 
 public abstract class DatabaseActivity extends AppCompatActivity implements DatabaseHandler.DatabaseListener {
@@ -9,13 +8,16 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
     protected void onStart() {
         super.onStart();
         DatabaseHandler.getInstance(DatabaseActivity.this).addListener(this);
-        if (!DatabaseHandler.getInstance(DatabaseActivity.this).isConnected())
+        if (DatabaseHandler.getInstance(DatabaseActivity.this).isNotConnected())
             DatabaseHandler.getInstance(DatabaseActivity.this).signIn();
+        else
+            DatabaseHandler.getInstance(DatabaseActivity.this).start();
     }
     @Override
     protected void onStop() {
         super.onStop();
         DatabaseHandler.getInstance(DatabaseActivity.this).removeListener(this);
+        DatabaseHandler.getInstance(DatabaseActivity.this).stop();
 
     }
 
