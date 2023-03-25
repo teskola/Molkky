@@ -156,7 +156,7 @@ public class PlayerStatsActivity extends OptionsActivity {
 
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-        setImage(playerImage, playerIds[position]);
+        setImage(playerImage, playerIds[position], true);
         playerNameTV.setText(playerStats.getName());
         pointsTV.setText(String.valueOf(playerStats.getPoints()));
         gamesTV.setText(String.valueOf(playerStats.getGamesCount()));

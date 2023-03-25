@@ -62,7 +62,7 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
         return preferences;
     }
 
-    public void setImage (ImageView view, String id) {
+    public void setImage (ImageView view, String id, boolean showCamera) {
         if (view == null)
             return;
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
@@ -74,8 +74,12 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
             }
             else
             {
-                view.setImageResource(R.drawable.camera);
-                view.setScaleType(ImageView.ScaleType.CENTER);
+                if (showCamera) {
+                    view.setImageResource(R.drawable.camera);
+                    view.setScaleType(ImageView.ScaleType.CENTER);
+                }
+                else
+                    view.setVisibility(View.GONE);
             }
         }
         else

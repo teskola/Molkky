@@ -3,23 +3,26 @@ package com.teskola.molkky;
 import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
 public class Game implements Comparable<Game> {
-    private ArrayList<Player> players;
+    private final ArrayList<Player> players;
     @Exclude
     private String id;
     private long timestamp;
 
-    public Game(String gameId, ArrayList<Player> players) {
-        this.players = players;
-        this.id = gameId;
+    public Game(List<Player> players) {
+        this.players = (ArrayList<Player>) players;
     }
 
-    public Game() {}
+    public Game() {
+        players = new ArrayList<>();
+    }
 
     public Game(ArrayList<Player> players, boolean random) {
+        this.id = UUID.randomUUID().toString().substring(0, 8);
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -33,6 +36,14 @@ public class Game implements Comparable<Game> {
         else {
             this.players = players;
         }
+    }
+
+    @Exclude
+    public int getTossesCount () {
+        int count = 0;
+        for (Player player : players)
+            count += player.getTosses().size();
+        return count;
     }
 
 
@@ -65,6 +76,15 @@ public class Game implements Comparable<Game> {
             players.subList(0, index).clear();
         }
         players.addAll(transferred);
+    }
+
+    public void addToss (int points) {
+        players.get(0).addToss(points);
+        if (getPlayer(0).countAll() != 50) {
+            setTurn(1);
+            while (players.get(0).isEliminated())
+                setTurn(1);
+        }
     }
 
     public boolean allDropped() {

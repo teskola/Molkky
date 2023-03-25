@@ -71,13 +71,13 @@ public class ScoreCardActivity extends OptionsActivity {
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
             else position = game.getPlayers().size() -1;
-            setImage(playerImage, game.getPlayer(position).getId());
+            setImage(playerImage, game.getPlayer(position).getId(), true);
             updateUI();
         });
         nextIB.setOnClickListener(view -> {
             if (position < game.getPlayers().size() - 1) position++;
             else position = 0;
-            setImage(playerImage, game.getPlayer(position).getId());
+            setImage(playerImage, game.getPlayer(position).getId(), true);
             updateUI();
         });
         allTimeButton.setOnClickListener(view -> {
@@ -92,7 +92,7 @@ public class ScoreCardActivity extends OptionsActivity {
 
         });
 
-        setImage(playerImage, game.getPlayer(position).getId());
+        setImage(playerImage, game.getPlayer(position).getId(), true);
         updateUI();
         playerImage.setOnClickListener(view -> onImageClicked(game.getPlayer(position).getId(), game.getPlayer(position).getName(), 0, new OnImageAdded() {
             @Override
@@ -142,7 +142,7 @@ public class ScoreCardActivity extends OptionsActivity {
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES")) {
-            setImage(playerImage, game.getPlayer(position).getId());
+            setImage(playerImage, game.getPlayer(position).getId(), true);
         }
     }
 }

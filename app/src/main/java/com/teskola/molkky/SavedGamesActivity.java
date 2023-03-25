@@ -50,7 +50,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             String title = getString(R.string.games) + ": " + playerInfo.getName();
             titleTV.setText(title);
             if (getPreferences().getBoolean("SHOW_IMAGES", false))
-                setImage(playerImageView, playerInfo.getId());
+                setImage(playerImageView, playerInfo.getId(), true);
             else
                 playerImageView.setVisibility(View.GONE);
             showAllBtn.setVisibility(View.VISIBLE);
@@ -106,7 +106,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES")) {
             if (!showAll)
-                setImage(playerImageView, playerInfo.getId());
+                setImage(playerImageView, playerInfo.getId(), true);
         }
     }
 }

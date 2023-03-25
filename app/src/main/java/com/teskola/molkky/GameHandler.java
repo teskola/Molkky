@@ -1,14 +1,25 @@
 package com.teskola.molkky;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameHandler {
-    private transient final GameListener listener;
-    private final Game game;
+    private transient GameListener listener;
+    private Game game;
+    private final DatabaseHandler databaseHandler;
+    private boolean livescore = true;
 
-    public GameHandler (Game game, GameListener listener) {
+    public GameHandler (Context context) {
+        this.databaseHandler = DatabaseHandler.getInstance(context);
+    }
+
+    public void setGame (Game game) {
         this.game = game;
+    }
+
+    public void setListener (GameListener listener) {
         this.listener = listener;
     }
 
@@ -16,9 +27,17 @@ public class GameHandler {
         return game;
     }
 
+    public static String getLiveId (String gameId) {
+        return gameId.substring(4,8);
+    }
+
     public interface GameListener {
         void onTurnChanged(int points, int chanceToWin, boolean undo);
         void onGameStatusChanged(boolean gameEnded);
+    }
+
+    public void startPostingLiveData () {
+        databaseHandler.startGame(game);
     }
 
     public int getColor () { return Colors.selectBackground(game.getPlayer(0), false);}
@@ -75,11 +94,13 @@ public class GameHandler {
     }
 
     public void addToss(int points) {
+        if (livescore)
+            databaseHandler.addToss(getLiveId(game.getId()), game.getTossesCount(), points);
         if (!game.getPlayer(0).getUndoStack().empty())
             game.getPlayer(0).getUndoStack().pop();
         game.getPlayer(0).addToss(points);
         if (game.getPlayer(0).countAll() == 50) {
-            listener.onGameStatusChanged(true);
+            endGame();
             return;
         }
         game.setTurn(1);
@@ -89,7 +110,7 @@ public class GameHandler {
             listener.onTurnChanged(getUndoStackValue(), game.getPlayer(0).pointsToWin(), false);
         }
         if (game.allDropped()) {
-            listener.onGameStatusChanged(true);
+            endGame();
         }
 
     }
@@ -102,9 +123,9 @@ public class GameHandler {
         return game.getPlayers().size() - 1;
     }
 
-
-
     public void removeToss () {
+        if (livescore)
+            databaseHandler.removeToss(getLiveId(game.getId()), game.getTossesCount() - 1);
         if (game.getPlayer(0).countAll() == 50) {
             int removed = game.getPlayer(0).removeToss();
             game.getPlayer(0).getUndoStack().push(removed);
@@ -116,9 +137,8 @@ public class GameHandler {
             Player previous = game.getPlayer(game.getPlayers().size() - i);
             Player current = game.getPlayer(0);
             if (previous.getTosses().size() > current.getTosses().size() || !previous.isEliminated()) {
-                int removed = game.getPlayer(game.getPlayers().size() - i)
-                        .getUndoStack().push(game.getPlayer(game.getPlayers().size() - i).removeToss());
-                int chanceToWin = game.getPlayer(game.getPlayers().size() - i).pointsToWin();
+                int removed = previous.getUndoStack().push(previous.removeToss());
+                int chanceToWin = previous.pointsToWin();
                 for (int j=0; j < i; j++) {
                     game.setTurn(game.getPlayers().size() - 1);
                     listener.onTurnChanged(removed, chanceToWin, true);
@@ -129,8 +149,8 @@ public class GameHandler {
         }
     }
 
-
-
-
-
+    public void endGame () {
+        databaseHandler.saveGame(game);
+        listener.onGameStatusChanged(true);
+    }
 }

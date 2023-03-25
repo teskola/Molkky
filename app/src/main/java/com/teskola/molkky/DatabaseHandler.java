@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -68,6 +70,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         DATABASE_NEWUSER,
         DATABASE_USER_REMOVED,
         GAME_ADDED,
+        SPECTATOR_MODE_AVAILABLE,
         CREATED_TIMESTAMP_ADDED,
         PLAYER_ADDED_FROM_DATABASE,
     }
@@ -75,7 +78,8 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     public enum Error {
         NETWORK_ERROR,
         UNKNOWN_ERROR,
-        ADD_GAME_FAILED
+        ADD_GAME_FAILED,
+        SPECTATOR_MODE_UNAVAILABLE
     }
 
     public boolean isNotConnected() {
@@ -227,6 +231,24 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             for (DatabaseListener listener : listeners)
                 listener.onError(Error.ADD_GAME_FAILED);
         });
+    }
+
+    public void startGame(Game game) {
+        firebaseManager.addLiveGame(game, response -> {
+            for (DatabaseListener listener : listeners)
+                listener.onDatabaseEvent(Event.SPECTATOR_MODE_AVAILABLE);
+        }, e -> {
+            for (DatabaseListener listener : listeners)
+                listener.onError(Error.SPECTATOR_MODE_UNAVAILABLE);
+        });
+    }
+
+    public void addToss(String id, int count, int value) {
+            firebaseManager.addToss(id, count, value);
+    }
+
+    public void removeToss(String id, int count) {
+            firebaseManager.removeToss(id, count);
     }
 
     /*

@@ -46,24 +46,41 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
-    private GameHandler handler;
+    private final GameHandler handler = new GameHandler(this);
     private SharedPreferences saved_state;
-    private SharedPreferences.Editor editor;
 
 
+    public void loadState(Bundle savedInstanceState) {
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
+        // Saved Instance
+
+        if (savedInstanceState != null) {
+            String json = savedInstanceState.getString("json");
+            savedGame = savedInstanceState.getBoolean("saved");
+            Game game = new Gson().fromJson(json, Game.class);
+            handler.setGame(game);
+            handler.setListener(this);
+            return;
+        }
+
+        // Saved Preferences
+
+        if (getIntent().getStringExtra("SAVED_GAME") != null) {
+            String json = getIntent().getStringExtra("SAVED_GAME");
+            Game savedGame = new Gson().fromJson(json, Game.class);
+            handler.setGame(savedGame);
+            handler.setListener(this);
+            clearSavedState();
+            return;
+        }
 
         // Saved game
 
         if (getIntent().getStringExtra("gameId") != null) {
             String gameId = getIntent().getStringExtra("gameId");
-            handler = new GameHandler(DatabaseHandler.getInstance(this).getGame(gameId), null);
+            handler.setGame(DatabaseHandler.getInstance(this).getGame(gameId));
             savedGame = true;
+            return;
         }
 
         // New game
@@ -74,28 +91,21 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             ArrayList<Player> playersList = new ArrayList<>();
             Collections.addAll(playersList, players);
             boolean random = getIntent().getBooleanExtra("RANDOM", false);
-            handler = new GameHandler(new Game(playersList, random), this);
+            Game game = new Game(playersList, random);
+            handler.setGame(game);
+            handler.setListener(this);
+            handler.startPostingLiveData();
         }
+    }
 
-        // Saved Preferences
 
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         saved_state = getSharedPreferences("SAVED_STATE", MODE_PRIVATE);
-
-        if (getIntent().getStringExtra("SAVED_GAME") != null) {
-            String json = getIntent().getStringExtra("SAVED_GAME");
-            Game savedGame = new Gson().fromJson(json, Game.class);
-            handler = new GameHandler(savedGame, this);
-            clearSavedState();
-        }
-
-        // Saved Instance
-
-        if (savedInstanceState != null) {
-            String json = savedInstanceState.getString("json");
-            savedGame = savedInstanceState.getBoolean("saved");
-            handler = new GameHandler(new Gson().fromJson(json, Game.class), savedGame ? null : this);
-        }
-
+        loadState(savedInstanceState);
+        setContentView(R.layout.activity_game);
 
         // Set up UI
 
@@ -158,7 +168,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void clearSavedState () {
-        editor = saved_state.edit();
+        SharedPreferences.Editor editor = saved_state.edit();
         editor.remove("SAVED_GAME");
         editor.apply();
     }
@@ -213,7 +223,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //             Top Container
 
         nameTextView.setText(handler.getPlayerName());
-        setImage(playerImage, handler.current().getId());
+        setImage(playerImage, handler.current().getId(), false);
         topContainer.setBackgroundResource(handler.gameEnded() ? R.drawable.gold_background : handler.getColor());
 
         //              Points to win
@@ -294,7 +304,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         recyclerView.getAdapter().notifyItemMoved(!undo ? 0 : handler.last(),!undo ? handler.last() : 0);
 
         nameTextView.setText(handler.getPlayerName());
-        setImage(playerImage, handler.current().getId());
+        setImage(playerImage, handler.current().getId(), false);
         if (chanceToWin > 0) {
             pointsToWinTV.setText(getString(R.string.points_to_win, (chanceToWin)));
             pointsToWinTV.setVisibility(View.VISIBLE);
@@ -316,10 +326,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     public void onGameStatusChanged(boolean gameEnded) {
         invalidateOptionsMenu();
         updateUI();
-        if (gameEnded) {
-            DatabaseHandler.getInstance(this).saveGame(handler.getGame());
+        if (gameEnded)
             clearSavedState();
-        }
     }
 
     @Override
@@ -342,6 +350,6 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES"))
-            setImage(playerImage, handler.current().getId());
+            setImage(playerImage, handler.current().getId(), false);
     }
 }

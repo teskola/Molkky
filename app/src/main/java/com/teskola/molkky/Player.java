@@ -24,10 +24,8 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     }
 
-
-
     public Player() {
-        this.tosses = new ArrayList<>();
+        tosses = new ArrayList<>();
     }
 
     @Exclude
@@ -66,8 +64,6 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         tosses.remove(tosses.size() - 1);
         return  removed_toss_points;
     }
-
-
 
     public int count(int round) {
         int sum = 0;
