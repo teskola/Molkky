@@ -22,7 +22,6 @@ public class Game implements Comparable<Game> {
     }
 
     public Game(ArrayList<Player> players, boolean random) {
-        this.id = UUID.randomUUID().toString().substring(0, 8);
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {

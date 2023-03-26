@@ -242,7 +242,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         //              GameId
 
-        gameIdTV.setText(GameHandler.getLiveId(handler.getGame().getId()));
+        gameIdTV.setText(handler.getLiveId());
     }
 
     @Override

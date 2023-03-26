@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,16 +17,21 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
 public class SettingsActivity extends DatabaseActivity {
     private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
 
     private SwitchCompat imageSwitch;
-    private SwitchCompat allowSpectatorsSwitch;
-    private TextView editTV, gamesTV, playersTV, tossesTV, createdTV, updatedTV;
+    private SwitchCompat useCloudSwitch;
+    private TextView gamesTV, playersTV, tossesTV, createdTV, updatedTV;
     private ImageButton infoButton;
     private ViewGroup databaseStats;
+    private TextInputEditText editTV;
+    private TextInputLayout inputLayout;
 
-    private String created, updated;
+    private String created, updated, current;
 
 
     private boolean showImages;
@@ -37,8 +43,9 @@ public class SettingsActivity extends DatabaseActivity {
         setContentView(R.layout.activity_settings);
 
         imageSwitch = findViewById(R.id.imageSwitch);
-        allowSpectatorsSwitch = findViewById(R.id.allowSpectatorsSwitch);
+        useCloudSwitch = findViewById(R.id.useCloudSwitch);
         editTV = findViewById(R.id.editDBID);
+        inputLayout = findViewById(R.id.databaseInputLayout);
         infoButton = findViewById(R.id.infoButton);
         databaseStats = findViewById(R.id.databaseStatsView);
 
@@ -55,7 +62,6 @@ public class SettingsActivity extends DatabaseActivity {
 
         editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
         editTV.setImeActionLabel(getResources().getString(R.string.confirm), EditorInfo.IME_ACTION_DONE);
-
         updateDatabaseStats();
 
         imageSwitch.setChecked(showImages);
@@ -65,11 +71,9 @@ public class SettingsActivity extends DatabaseActivity {
             editor.apply();
         });
 
-        editTV.setOnEditorActionListener((textView, actionId, keyEvent) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-               checkTextLength();
-            }
-            return false;
+        inputLayout.setEndIconVisible(false);
+        inputLayout.setStartIconOnClickListener(v -> {
+            editTV.setText(DatabaseHandler.getInstance(SettingsActivity.this).getDatabaseId());
         });
 
         editTV.addTextChangedListener(new TextWatcher() {
@@ -80,8 +84,14 @@ public class SettingsActivity extends DatabaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.length() == DatabaseHandler.ID_LENGTH && !s.toString().equals(DatabaseHandler.getInstance(SettingsActivity.this).getDatabaseId()))
-                    DatabaseHandler.getInstance(SettingsActivity.this).changeDatabase(s.toString());
+
+                if (s.length() == DatabaseHandler.DATABASE_ID_LENGTH && !s.toString().equals(DatabaseHandler.getInstance(SettingsActivity.this).getDatabaseId())) {
+                    String current = s.toString();
+                    DatabaseHandler.getInstance(SettingsActivity.this).changeDatabase(current);
+                    return;
+                }
+                inputLayout.setError(null);
+                inputLayout.setEndIconVisible(false);
             }
 
             @Override
@@ -93,14 +103,6 @@ public class SettingsActivity extends DatabaseActivity {
           Toast.makeText(this, getResources().getString(R.string.database_instruction), Toast.LENGTH_LONG).show();
         });
 
-    }
-
-    public void checkTextLength() {
-        String input = editTV.getText().toString();
-        if (input.length() < DatabaseHandler.ID_LENGTH) {
-            Toast.makeText(this, getString(R.string.too_short_id), Toast.LENGTH_SHORT).show();
-        }
-        editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
     }
 
     public void updateDatabaseStats() {
@@ -124,28 +126,28 @@ public class SettingsActivity extends DatabaseActivity {
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (!DatabaseHandler.getInstance(this).getDatabaseId().equals("") && getCurrentFocus() != null && ev.getAction() == MotionEvent.ACTION_UP) {
-            checkTextLength();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-        }
-        return super.dispatchTouchEvent(ev);
-    }
-
-    @Override
     public void onDatabaseEvent(DatabaseHandler.Event event) {
         super.onDatabaseEvent(event);
-        if (event == DatabaseHandler.Event.DATABASE_NOT_FOUND || event == DatabaseHandler.Event.DATABASE_CREATED)
-            editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
-        if (event == DatabaseHandler.Event.GAME_ADDED)
-            updateDatabaseStats();
-        if (event == DatabaseHandler.Event.CREATED_TIMESTAMP_ADDED) {
-            if (updated == null)
-                updated = databaseHandler.getUpdated();
-            updatedTV.setText(updated);
-            created = databaseHandler.getCreated();
-            createdTV.setText(created);
+        switch (event) {
+            case DATABASE_FOUND:
+                inputLayout.setEndIconVisible(true);
+                inputLayout.setEndIconDrawable(R.drawable.checkmark);
+                editTV.setText(current);
+                break;
+            case DATABASE_NOT_FOUND:
+                inputLayout.setEndIconVisible(true);
+                inputLayout.setError(getResources().getString(R.string.database_not_found));
+                break;
+            case GAME_ADDED:
+                updateDatabaseStats();
+                break;
+            case CREATED_TIMESTAMP_ADDED:
+                if (updated == null)
+                    updated = databaseHandler.getUpdated();
+                updatedTV.setText(updated);
+                created = databaseHandler.getCreated();
+                createdTV.setText(created);
+                break;
         }
     }
 }

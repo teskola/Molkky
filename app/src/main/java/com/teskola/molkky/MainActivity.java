@@ -153,9 +153,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     protected void onResume () {
         super.onResume();
-        if (playersList.size() > 1) {
-            startButton.setEnabled(true);
-        }
+        startButton.setEnabled(playersList.size() > 1);
     }
 
     public void createRecyclerView () {
@@ -246,7 +244,9 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
 
     @Override
-    public void onSelectClicked(int position) {};
+    public void onSelectClicked(int position) {
+        Toast.makeText(this, R.string.move_player_instructions, Toast.LENGTH_SHORT).show();
+    };
 
 
     @Override

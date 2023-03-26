@@ -14,7 +14,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editDBID">
+        app:layout_constraintTop_toBottomOf="@+id/databaseInputLayout">
 
 
         <TableRow
@@ -133,12 +133,12 @@
         android:layout_marginTop="32dp"
         android:padding="16dp"
         android:text="@string/show_images"
-        app:layout_constraintEnd_toEndOf="@+id/allowSpectatorsSwitch"
-        app:layout_constraintStart_toStartOf="@+id/allowSpectatorsSwitch"
+        app:layout_constraintEnd_toEndOf="@+id/useCloudSwitch"
+        app:layout_constraintStart_toStartOf="@+id/useCloudSwitch"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/allowSpectatorsSwitch"
+        android:id="@+id/useCloudSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -148,34 +148,47 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageSwitch" />
 
-    <EditText
-        android:id="@+id/editDBID"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:ems="6"
-        android:gravity="center"
-        android:imeOptions="actionDone"
-        android:inputType="textVisiblePassword|textNoSuggestions"
-        android:maxLength="6"
-        android:textColor="@color/black"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="@+id/allowSpectatorsSwitch"
-        app:layout_constraintStart_toStartOf="@+id/allowSpectatorsSwitch"
-        app:layout_constraintTop_toBottomOf="@+id/allowSpectatorsSwitch" />
-
     <ImageButton
         android:id="@+id/infoButton"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginEnd="32dp"
+        android:layout_marginEnd="16dp"
         android:background="@android:color/transparent"
-        android:padding="8dp"
+        android:padding="12dp"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="@+id/editDBID"
+        app:layout_constraintBottom_toBottomOf="@+id/databaseInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/editDBID"
-        app:layout_constraintTop_toTopOf="@+id/editDBID"
+        app:layout_constraintStart_toEndOf="@+id/databaseInputLayout"
+        app:layout_constraintTop_toTopOf="@+id/databaseInputLayout"
         app:srcCompat="@drawable/info_button" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/databaseInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:counterEnabled="true"
+        app:counterMaxLength="6"
+        app:endIconMode="custom"
+        app:startIconDrawable="@drawable/undo"
+        app:startIconTint="@color/teal"
+        app:endIconDrawable="@drawable/checkmark"
+        app:errorIconDrawable="@drawable/error"
+        app:errorIconTint="@color/chestnut"
+        app:endIconTint="@color/dark_green"
+        app:layout_constraintEnd_toEndOf="@+id/useCloudSwitch"
+        app:layout_constraintStart_toStartOf="@+id/useCloudSwitch"
+        app:layout_constraintTop_toBottomOf="@+id/useCloudSwitch">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editDBID"
+            android:layout_width="match_parent"
+            android:imeOptions="actionDone"
+            android:inputType="textVisiblePassword|textNoSuggestions"
+            android:maxLength="6"
+            android:digits="0123456789qwertyuiopasdfghjklzxcvbnm"
+            android:layout_height="wrap_content" />
+    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

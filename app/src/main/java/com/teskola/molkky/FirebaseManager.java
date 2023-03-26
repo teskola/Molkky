@@ -173,6 +173,13 @@ public class FirebaseManager {
         };
     }
 
+    public void stop() {
+        FirebaseDatabase.getInstance().goOffline();
+    }
+    public void start() {
+        FirebaseDatabase.getInstance().goOnline();
+    }
+
     public void searchDatabase (String database, OnSuccessListener<String> response, OnFailureListener error) {
         databaseRef.child(database).child("created").get().addOnCompleteListener(task -> {
             if (task.isSuccessful())
@@ -261,8 +268,7 @@ public class FirebaseManager {
         });
     }
 
-    public void addLiveGame (Game game, OnSuccessListener<String> response, OnFailureListener error) {
-        String id = GameHandler.getLiveId(game.getId());
+    public void addLiveGame (String id, Game game, OnSuccessListener<String> response, OnFailureListener error) {
         int tossesCount = game.getTossesCount();
         while (game.getTossesCount() > 0) {
             for (int i = 1; i < game.getPlayers().size(); i++) {

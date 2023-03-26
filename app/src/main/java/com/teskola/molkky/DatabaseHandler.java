@@ -20,7 +20,8 @@ import java.util.UUID;
 
 public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
-    public static final int ID_LENGTH = 6;     // only even numbers allowed
+    public static final int DATABASE_ID_LENGTH = 6;     // only even numbers allowed
+    public static final int LIVEGAME_ID_LENGTH = 4;
     private final Database database;
     private final ArrayList<DatabaseListener> listeners = new ArrayList<>();
     private static DatabaseHandler instance;
@@ -86,10 +87,12 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public void stop() {
-        FirebaseDatabase.getInstance().goOffline();
+        if (firebaseManager != null)
+            firebaseManager.stop();
     }
     public void start() {
-        FirebaseDatabase.getInstance().goOnline();
+        if (firebaseManager != null)
+            firebaseManager.start();
     }
 
     /*
@@ -104,7 +107,22 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             signIn();
             return "";
         }
-        return ((uid.substring(0, ID_LENGTH / 2) + uid.substring(uid.length() - (ID_LENGTH / 2))).toLowerCase());
+        return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
+    }
+
+    /*
+    *
+    * Takes 4 last characters of user id as live game id.
+    *
+    * */
+
+    public String getLiveGameId () {
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid == null) {
+            signIn();
+            return null;
+        }
+        return uid.substring(uid.length() - LIVEGAME_ID_LENGTH).toLowerCase();
     }
 
     public void addListener(DatabaseListener listener) {
@@ -233,7 +251,11 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public void startGame(Game game) {
-        firebaseManager.addLiveGame(game, response -> {
+        if (firebaseManager == null) {
+            signIn();
+            return;
+        }
+        firebaseManager.addLiveGame(getLiveGameId(), game, response -> {
             for (DatabaseListener listener : listeners)
                 listener.onDatabaseEvent(Event.SPECTATOR_MODE_AVAILABLE);
         }, e -> {
@@ -242,12 +264,16 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void addToss(String id, int count, int value) {
-            firebaseManager.addToss(id, count, value);
+    public void addToss(int count, int value) {
+        if (firebaseManager == null)
+            return;
+        firebaseManager.addToss(getLiveGameId(), count, value);
     }
 
-    public void removeToss(String id, int count) {
-            firebaseManager.removeToss(id, count);
+    public void removeToss(int count) {
+        if (firebaseManager == null)
+            return;
+        firebaseManager.removeToss(getLiveGameId(), count);
     }
 
     /*
@@ -302,7 +328,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         return database.getPlayerName(playerId);
     }
 
-    public List<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
+    public List<PlayerInfo> getPlayers(List<PlayerInfo> excludedPlayers) {
         return database.getPlayers(excludedPlayers);
     }
 

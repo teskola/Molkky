@@ -203,7 +203,7 @@ public class Database {
         return ids;
     }
 
-    public List<PlayerInfo> getPlayers(ArrayList<PlayerInfo> excludedPlayers) {
+    public List<PlayerInfo> getPlayers(List<PlayerInfo> excludedPlayers) {
         ArrayList<String> excludedIds = new ArrayList<>();
         for (PlayerInfo playerInfo : excludedPlayers)
             excludedIds.add(playerInfo.getId());

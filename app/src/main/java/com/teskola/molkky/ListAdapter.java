@@ -37,7 +37,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private int statID = 0;
     private boolean showImages, showTosses, onlyGray;
-    private ArrayList<Boolean> selected = null;
+    private List<Boolean> selected;
 
     private final OnItemClickListener onItemClickListener;
 
@@ -212,7 +212,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    public ListAdapter(Context context, List<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages, OnItemClickListener listener) {
+    public ListAdapter(Context context, List<PlayerInfo> players, List<Boolean> selected, boolean showImages, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
@@ -298,8 +298,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
-                    if (viewId != ADD_PLAYER_VIEW)
-                        onItemClickListener.onSelectClicked(position);
+                    onItemClickListener.onSelectClicked(position);
                 }
             });
 

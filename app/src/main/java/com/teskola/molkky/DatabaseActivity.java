@@ -52,7 +52,6 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
     public void onDatabaseEvent(DatabaseHandler.Event event) {
         switch (event) {
             case DATABASE_FOUND:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_found), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_NEWUSER:
                 break;
@@ -73,7 +72,6 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
                 Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_connected), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_NOT_FOUND:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_not_found), Toast.LENGTH_SHORT).show();
                 break;
             case SPECTATOR_MODE_AVAILABLE:
                 Toast.makeText(DatabaseActivity.this, R.string.spectator_mode_start, Toast.LENGTH_SHORT).show();

@@ -27,8 +27,8 @@ public class GameHandler {
         return game;
     }
 
-    public static String getLiveId (String gameId) {
-        return gameId.substring(4,8);
+    public String getLiveId () {
+        return databaseHandler.getLiveGameId();
     }
 
     public interface GameListener {
@@ -95,7 +95,7 @@ public class GameHandler {
 
     public void addToss(int points) {
         if (livescore)
-            databaseHandler.addToss(getLiveId(game.getId()), game.getTossesCount(), points);
+            databaseHandler.addToss(game.getTossesCount(), points);
         if (!game.getPlayer(0).getUndoStack().empty())
             game.getPlayer(0).getUndoStack().pop();
         game.getPlayer(0).addToss(points);
@@ -125,7 +125,7 @@ public class GameHandler {
 
     public void removeToss () {
         if (livescore)
-            databaseHandler.removeToss(getLiveId(game.getId()), game.getTossesCount() - 1);
+            databaseHandler.removeToss(game.getTossesCount() - 1);
         if (game.getPlayer(0).countAll() == 50) {
             int removed = game.getPlayer(0).removeToss();
             game.getPlayer(0).getUndoStack().push(removed);
