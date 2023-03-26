@@ -74,12 +74,12 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (saved_state.getString("SAVED_GAME", null) != null) {
             Intent intent = new Intent(this, GameActivity.class);
             intent.putExtra("SAVED_GAME", saved_state.getString("SAVED_GAME", null));
-            startActivity(intent);
             editor = saved_state.edit();
             editor.remove("SAVED_GAME");
             editor.apply();
+            startActivity(intent);
+            return;
         }
-
 
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
@@ -155,17 +155,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         super.onResume();
         if (playersList.size() > 1) {
             startButton.setEnabled(true);
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (Build.VERSION.SDK_INT < 29) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-            }
         }
     }
 
@@ -255,12 +244,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         savedInstanceState.putBoolean("RANDOM", randomCheckBox.isChecked());
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        menu.findItem(R.id.new_game).setVisible(false);
-        return true;
-    }
+
     @Override
     public void onSelectClicked(int position) {};
 
@@ -268,12 +252,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onDeleteClicked(int position) {
         deletePlayer(position);
-    }
-
-    @Override
-    public void onImageClicked(String id, String name, int position, OnImageAdded listener) {
-        super.onImageClicked(playersList.get(position).getId(), playersList.get(position).getName(), position, null);
-        listAdapter.notifyItemChanged(position);
     }
 
     @Override

@@ -66,7 +66,9 @@
     <string name="players">pelaajat</string>
     <string name="created">luotu</string>
     <string name="updated">päivitetty</string>
+    <string name="spectate">Seuraa peliä</string>
     <string name="spectator_mode_start">Pelinseuranta käynnissä.</string>
     <string name="spectator_mode_error">Pelinseuranta ei onnistunut.</string>
+
 
 </resources>

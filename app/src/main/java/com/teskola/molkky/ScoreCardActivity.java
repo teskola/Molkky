@@ -79,7 +79,7 @@ public class ScoreCardActivity extends OptionsActivity {
             startActivity(intent);
         });
 
-        playerImage.setOnClickListener(view -> onImageClicked(players[position].getId(), players[position].getName(), 0, photo -> playerImage.setImageBitmap(photo)));
+        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, photo -> playerImage.setImageBitmap(photo)));
     }
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})

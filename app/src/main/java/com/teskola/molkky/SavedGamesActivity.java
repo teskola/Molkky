@@ -69,7 +69,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         ListAdapter listAdapter = new ListAdapter(this, games, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        playerImageView.setOnClickListener(view -> onImageClicked(playerInfo.getId(), playerInfo.getName(), 0, photo -> playerImageView.setImageBitmap(photo)));
+        playerImageView.setOnClickListener(view -> onImageClicked(playerInfo, 0, photo -> playerImageView.setImageBitmap(photo)));
     }
 
     @Override

@@ -138,25 +138,29 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // Add images
 
         if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
+           /* defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+            defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);*/
+
             Bitmap photo = ImageHandler.getInstance(context).getPhoto(players.get(position).getId());
-            defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+
             if (photo != null) {
                 defaultViewHolder.playerImageView.setImageBitmap(photo);
                 defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             }
             else {
                 DefaultViewHolder finalDefaultViewHolder = defaultViewHolder;
-                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position).getId(), players.get(position).getName(), new ImageHandler.ImageListener() {
+                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position), new ImageHandler.ImageListener() {
                     @Override
                     public void onSuccess(Bitmap bitmap) {
-                        finalDefaultViewHolder.playerImageView.setImageBitmap(bitmap);
                         finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        finalDefaultViewHolder.playerImageView.setImageBitmap(bitmap);
                     }
 
                     @Override
                     public void onFailure() {
-                        finalDefaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
                         finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+                        finalDefaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
+
                     }
                 });
             }
@@ -176,7 +180,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void onDeleteClicked(int position);
 
-        void onImageClicked(String id, String name, int position, ImagesActivity.OnImageAdded listener);
+        void onImageClicked(PlayerInfo playerInfo, int position, ImagesActivity.OnImageAdded listener);
     }
 
     @SuppressWarnings("unchecked")
@@ -280,7 +284,13 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 playerImageView.setOnClickListener(view -> {
                     int position = DefaultViewHolder.this.getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        onItemClickListener.onImageClicked(players.get(position).getId(), players.get(position).getName(), position, null);
+                        onItemClickListener.onImageClicked(players.get(position), position, new ImagesActivity.OnImageAdded() {
+                            @Override
+                            public void onSuccess(Bitmap photo) {
+                                playerImageView.setImageBitmap(photo);
+                                notifyItemChanged(position);
+                            }
+                        });
                 });
             } else playerImageView.setVisibility(View.GONE);
 

@@ -3,9 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
 
     <item
-        android:id="@+id/new_game"
-        android:title="@string/new_game"
-        />
+        android:id="@+id/spectate"
+        android:title="@string/spectate"
+        android:icon="@drawable/spectate"
+        app:showAsAction="ifRoom"
+    />
     <item
         android:id="@+id/stats"
         android:title="@string/stats"
@@ -15,16 +17,20 @@
         />
     <item
         android:id="@+id/saved_games"
-        app:showAsAction="never"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/saved_games"
         android:title="@string/saved_games">
     </item>
     <item
         android:id="@+id/settings"
         android:title="@string/settings"
         android:icon="@drawable/settings"
+        app:iconTint="@color/white"
+        app:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/rules"
         android:title="@string/rules"
+        app:showAsAction="never"
         />
 </menu>

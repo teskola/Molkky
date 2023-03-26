@@ -41,7 +41,7 @@ public class ImageHandler {
     private final FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
     private final StorageReference storageReference = firebaseStorage.getReference();
     private final File filesDir;
-    public static final String PATH = "/Molkky";
+    public static final String PATH = "/Mölkky";
 
     public static ImageHandler getInstance(Context context) {
         if (instance == null)
@@ -102,14 +102,14 @@ public class ImageHandler {
     *
     * */
 
-    public void downloadFromFirestorage (Context context, String id, String name, ImageListener listener) {
-        StorageReference imageRef = storageReference.child("images/" + id + ".jpg");
+    public void downloadFromFirestorage (Context context, PlayerInfo playerInfo, ImageListener listener) {
+        StorageReference imageRef = storageReference.child("images/" + playerInfo.getId() + ".jpg");
         final long MAX_SIZE = 512 * 512;
         imageRef.getBytes(MAX_SIZE).addOnSuccessListener(bytes -> {
             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             listener.onSuccess(bitmap);
             try {
-                save(context, bitmap, id, name);
+                save(context, bitmap, playerInfo.getId(), playerInfo.getName());
             } catch (IOException e) {
                 e.printStackTrace();
             }

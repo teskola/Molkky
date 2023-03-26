@@ -19,10 +19,6 @@ public abstract class OptionsActivity extends ImagesActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = null;
         switch (item.getItemId()) {
-            case R.id.new_game:
-                intent = new Intent(this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                break;
             case R.id.stats:
                 if (DatabaseHandler.getInstance(this).noPlayers()) {
                     Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
