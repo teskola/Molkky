@@ -10,6 +10,8 @@
         android:id="@+id/stats"
         android:title="@string/stats"
         android:icon="@drawable/show_chart"
+        app:iconTint="@color/white"
+        app:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/saved_games"

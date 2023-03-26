@@ -43,11 +43,9 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
         if (getIntent().getExtras() != null) {
             showAll = false;
-            playerInfo = new PlayerInfo();
-            playerInfo.setId(getIntent().getStringExtra("PLAYER_ID"));
+            playerInfo = new PlayerInfo(getIntent().getStringExtra("PLAYER_ID"), getIntent().getStringExtra("PLAYER_NAME"));
             games = DatabaseHandler.getInstance(this).getGames(playerInfo.getId());
-            playerInfo.setName(DatabaseHandler.getInstance(this).getPlayerName(playerInfo.getId()));
-            String title = getString(R.string.games) + ": " + playerInfo.getName();
+            String title = playerInfo.getName();
             titleTV.setText(title);
             if (getPreferences().getBoolean("SHOW_IMAGES", false))
                 setImage(playerImageView, playerInfo.getId(), true);
@@ -62,29 +60,16 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             games = DatabaseHandler.getInstance(this).getGames();
 
         }
-        showAllBtn.setOnClickListener(view -> showAllGames());
+        showAllBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(this, SavedGamesActivity.class);
+            startActivity(intent);
+        });
 
         recyclerView = findViewById(R.id.savedGamesRW);
         ListAdapter listAdapter = new ListAdapter(this, games, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         playerImageView.setOnClickListener(view -> onImageClicked(playerInfo.getId(), playerInfo.getName(), 0, photo -> playerImageView.setImageBitmap(photo)));
-    }
-
-    public void showAllGames() {
-        ArrayList<GameInfo> allGames = DatabaseHandler.getInstance(this).getGames();
-        while (!games.isEmpty()) {
-            games.remove(0);
-            recyclerView.getAdapter().notifyItemRemoved(0);
-        }
-        for (GameInfo gameInfo : allGames) {
-            games.add(gameInfo);
-            recyclerView.getAdapter().notifyItemInserted(games.size() - 1);
-        }
-
-        titleTV.setText(getString(R.string.saved_games));
-        playerImageView.setVisibility(View.GONE);
-        showAllBtn.setVisibility(View.INVISIBLE);
     }
 
     @Override

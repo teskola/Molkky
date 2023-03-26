@@ -1,5 +1,6 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,6 +16,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +24,7 @@ import java.util.Collections;
 public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
-    private int statID;
+    private int statID = 0;
     private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
@@ -52,7 +54,8 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         recyclerView = findViewById(R.id.allStatsRW);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
-        statID = getIntent().getIntExtra("STAT_ID", 0);
+        if (savedInstanceState != null)
+            statID = savedInstanceState.getInt("STAT_ID");
 
         ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) DatabaseHandler.getInstance(this).getPlayers();
         for (PlayerInfo player : players) {
@@ -135,14 +138,18 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
 
     @Override
     public void onSelectClicked(int position) {
-        String[] playerIds = new String[playerStats.size()];
-        for (int i = 0; i < playerStats.size(); i++) {
-            playerIds[i] = playerStats.get(i).getId();
-        }
         Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-        intent.putExtra("PLAYER_IDS", playerIds);
+
+        String json = new Gson().toJson(playerStats);
+        intent.putExtra("STATS", json);
         intent.putExtra("POSITION", position);
         startActivity(intent);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putInt("STAT_ID", statID);
     }
 
     @Override

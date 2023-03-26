@@ -56,7 +56,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public interface DatabaseListener {
         void onError(Error error);
-
         void onDatabaseEvent(Event event);
     }
 

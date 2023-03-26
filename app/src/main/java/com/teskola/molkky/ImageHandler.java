@@ -105,23 +105,15 @@ public class ImageHandler {
     public void downloadFromFirestorage (Context context, String id, String name, ImageListener listener) {
         StorageReference imageRef = storageReference.child("images/" + id + ".jpg");
         final long MAX_SIZE = 512 * 512;
-        imageRef.getBytes(MAX_SIZE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                listener.onSuccess(bitmap);
-                try {
-                    save(context, bitmap, id, name);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        imageRef.getBytes(MAX_SIZE).addOnSuccessListener(bytes -> {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            listener.onSuccess(bitmap);
+            try {
+                save(context, bitmap, id, name);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                listener.onFailure();
-            }
-        });
+        }).addOnFailureListener(e -> listener.onFailure());
 
     }
 
@@ -157,8 +149,7 @@ public class ImageHandler {
                    dir.mkdirs();
                }
            }
-           catch(Exception e){
-               Log.w("creating file error", e.toString());
+           catch(Exception ignored){
            }
            File imageFile = new File(fullPath, name + "_" + timeStamp + ".png");
            FileOutputStream outputStream = new FileOutputStream(imageFile);

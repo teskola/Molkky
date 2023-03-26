@@ -38,6 +38,7 @@ public class Database {
         databaseMap.remove(delete);
 
         // Remove players, who have zero games played
+
         ArrayList<String> ids = new ArrayList<>();
         for (String id : playersMap.keySet())
             ids.add(id);
@@ -154,6 +155,8 @@ public class Database {
     public String getPlayerName(String playerId) {
         return playersMap.get(playerId).getName();
     }
+
+    // Overload this
 
     public PlayerStats getStats(PlayerInfo playerInfo) {
         String playerId = playerInfo.getId();

@@ -38,6 +38,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private TextView pointsTextView;
     private TextView nameTextView;
     private TextView pointsToWinTV;
+    private TextView gameIdTV;
     private ViewGroup throwingPinView;
     private ImageView throwingPinImageView;
     private Button okButton;
@@ -59,7 +60,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             savedGame = savedInstanceState.getBoolean("saved");
             Game game = new Gson().fromJson(json, Game.class);
             handler.setGame(game);
-            handler.setListener(this);
+            handler.setListener(savedGame ? null : this);
             return;
         }
 
@@ -70,6 +71,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             Game savedGame = new Gson().fromJson(json, Game.class);
             handler.setGame(savedGame);
             handler.setListener(this);
+            handler.startPostingLiveData();
             clearSavedState();
             return;
         }
@@ -120,6 +122,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         recyclerView = findViewById(R.id.verticalRecyclerView);
         topContainer = findViewById(R.id.topContainer);
         playerImage = findViewById(R.id.game_IW);
+        gameIdTV = findViewById(R.id.gameIdTV);
 
         updateUI();
 
@@ -205,7 +208,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         //              Chart Button
 
-        chartButton.setVisibility((!handler.gameEnded() && !spectateMode) ? View.GONE : View.VISIBLE);
+        chartButton.setVisibility((handler.gameEnded() || spectateMode) ? View.VISIBLE : View.GONE);
 
         //              Seekbar
 
@@ -237,6 +240,10 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //              Throwing pin view
 
         throwingPinView.setVisibility(handler.gameEnded() ? View.VISIBLE : View.INVISIBLE);
+
+        //              GameId
+
+        gameIdTV.setText(GameHandler.getLiveId(handler.getGame().getId()));
     }
 
     @Override
@@ -255,11 +262,10 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     public void openScorecard(int position) {
+
         Intent intent = new Intent(this, ScoreCardActivity.class);
-        Game newGame = handler.getGame();
-        Collections.sort(newGame.getPlayers());
-        String json = new Gson().toJson(handler.getGame());
-        intent.putExtra("GAME", json);
+        String json = new Gson().toJson(handler.getPlayers(true));
+        intent.putExtra("PLAYERS", json);
         intent.putExtra("POSITION", position);
         startActivity(intent);
     }
