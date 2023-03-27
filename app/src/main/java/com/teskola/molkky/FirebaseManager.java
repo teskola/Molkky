@@ -56,7 +56,6 @@ public class FirebaseManager {
     public FirebaseManager(Database database, DatabaseListener listener) {
         this.listener = listener;
         this.database = database;
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         databaseRef = firebase.getReference("databases");
         usersRef = firebase.getReference("users");
         liveRef = firebase.getReference("livegames");
@@ -65,7 +64,6 @@ public class FirebaseManager {
     public FirebaseManager(String databaseId, Database database, DatabaseListener listener) {
         this.listener = listener;
         this.database = database;
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         databaseRef = firebase.getReference("databases");
         usersRef = firebase.getReference("users");
         liveRef = firebase.getReference("livegames");
@@ -93,12 +91,11 @@ public class FirebaseManager {
 
         @Override
         public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-            myGamesRef.get(snapshot.getKey()).removeEventListener(gameListeners.get(snapshot.getKey()));
-            myGamesRef.remove(snapshot.getKey());
-            database.removeDatabase(snapshot.getKey());
-            listener.onUserRemoved();
-
+            // if (!myGamesRef.isEmpty() && myGamesRef.get(snapshot.getKey()) != null)
+                myGamesRef.get(snapshot.getKey()).removeEventListener(gameListeners.get(snapshot.getKey()));
+                myGamesRef.remove(snapshot.getKey());
+                database.removeDatabase(snapshot.getKey());
+                listener.onUserRemoved();
         }
 
         @Override
@@ -215,10 +212,12 @@ public class FirebaseManager {
     }
 
     public void removeUser(String db, String uid, OnSuccessListener<Void> response, OnFailureListener error) {
-        myDatabaseRef.removeEventListener(databaseListeners.get(myDatabaseRef));
+        //if (databaseListeners.get(myDatabaseRef) != null)
+            myDatabaseRef.removeEventListener(databaseListeners.get(myDatabaseRef));
         databaseListeners.remove(myDatabaseRef);
         for (String key : myGamesRef.keySet()) {
-            myGamesRef.get(key).removeEventListener(gameListeners.get(key));
+            // if (gameListeners.get(key) != null)
+                myGamesRef.get(key).removeEventListener(gameListeners.get(key));
             database.removeDatabase(key);
         }
         myGamesRef.clear();
@@ -267,6 +266,24 @@ public class FirebaseManager {
                 error.onFailure(Objects.requireNonNull(task.getException()));
         });
     }
+
+    public void getLiveGamePlayers (String gameId, OnSuccessListener<PlayerInfo[]> response, OnFailureListener error) {
+        liveRef.child(gameId).child("players").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DataSnapshot ds = task.getResult();
+                if (!Objects.equals(ds.getValue(), "null")) {
+                    error.onFailure(new Exception("game not found"));
+                    return;
+                }
+                PlayerInfo[] players = ds.getValue(PlayerInfo[].class);
+                response.onSuccess(players);
+            }
+            else {
+                error.onFailure(task.getException());
+            }
+        });
+    }
+
 
     public void addLiveGame (String id, Game game, OnSuccessListener<String> response, OnFailureListener error) {
         int tossesCount = game.getTossesCount();

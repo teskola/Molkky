@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameHandler {
-    private transient GameListener listener;
+    private GameListener listener;
     private Game game;
     private final DatabaseHandler databaseHandler;
     private boolean livescore = true;

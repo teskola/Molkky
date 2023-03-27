@@ -54,7 +54,7 @@
                 android:id="@+id/settings_playersTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans"
 
                 android:textSize="20sp" />
@@ -75,7 +75,7 @@
                 android:id="@+id/settings_tossesTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans"
                 android:text=""
                 android:textSize="20sp" />
@@ -96,7 +96,7 @@
                 android:id="@+id/settings_createdTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans"
                 android:textSize="20sp" />
         </TableRow>
@@ -117,7 +117,7 @@
                 android:id="@+id/settings_updatedTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans"
                 android:text=""
                 android:textSize="20sp" />
@@ -148,47 +148,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageSwitch" />
 
-    <ImageButton
-        android:id="@+id/infoButton"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
-        android:background="@android:color/transparent"
-        android:padding="12dp"
-        android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="@+id/databaseInputLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/databaseInputLayout"
-        app:layout_constraintTop_toTopOf="@+id/databaseInputLayout"
-        app:srcCompat="@drawable/info_button" />
-
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/databaseInputLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:hint="@string/database_id"
+        app:expandedHintEnabled="false"
+        app:boxStrokeColor="@color/teal"
         app:counterEnabled="true"
         app:counterMaxLength="6"
-        app:endIconMode="custom"
-        app:startIconDrawable="@drawable/undo"
-        app:startIconTint="@color/teal"
         app:endIconDrawable="@drawable/checkmark"
+        app:endIconMode="custom"
+        app:endIconTint="@color/checkmark_tint"
         app:errorIconDrawable="@drawable/error"
-        app:errorIconTint="@color/chestnut"
-        app:endIconTint="@color/dark_green"
+        app:hintTextColor="@color/teal"
         app:layout_constraintEnd_toEndOf="@+id/useCloudSwitch"
         app:layout_constraintStart_toStartOf="@+id/useCloudSwitch"
-        app:layout_constraintTop_toBottomOf="@+id/useCloudSwitch">
+        app:layout_constraintTop_toBottomOf="@+id/useCloudSwitch"
+        app:startIconDrawable="@drawable/info_button"
+        app:startIconTint="@color/info_tint">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editDBID"
             android:layout_width="match_parent"
-            android:imeOptions="actionDone"
+            android:layout_height="wrap_content"
             android:inputType="textVisiblePassword|textNoSuggestions"
-            android:maxLength="6"
-            android:digits="0123456789qwertyuiopasdfghjklzxcvbnm"
-            android:layout_height="wrap_content" />
+            android:maxLength="6" />
     </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

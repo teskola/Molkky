@@ -1,27 +1,53 @@
 package com.teskola.molkky;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.view.ContextThemeWrapper;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.appcompat.view.menu.MenuBuilder;
+import com.google.android.material.textfield.TextInputLayout;
 
 public abstract class OptionsActivity extends ImagesActivity {
 
     public void showSpectateDialog () {
         AlertDialog.Builder spectateDialog = new AlertDialog.Builder(this);
-        final EditText editText = new EditText(this);
-        spectateDialog.setTitle(R.string.spectate);
-        spectateDialog.setMessage(R.string.spectate_code_instruction);
-        spectateDialog.setView(R.layout.spectate_view);
-        spectateDialog.setPositiveButton(R.string.ok, (dialog, which) -> {
+        LayoutInflater inflater = getLayoutInflater();
+        View inputView = inflater.inflate(R.layout.spectate_view, null);
+        TextInputLayout inputLayout = inputView.findViewById(R.id.spectateInput);
+        EditText editText = inputLayout.getEditText();
 
+        inputLayout.setStartIconOnClickListener(v -> Toast.makeText(OptionsActivity.this, R.string.spectate_instructions, Toast.LENGTH_SHORT).show());
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() == 4) {
+                    // TODO tee juttuja
+                }
+                else
+                    inputLayout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
         });
+
+        spectateDialog.setTitle(R.string.spectate);
+        spectateDialog.setMessage(R.string.set_code);
+        spectateDialog.setView(inputView);
+
         spectateDialog.setNegativeButton(R.string.cancel, (dialog, which) -> {
 
         });

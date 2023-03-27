@@ -75,11 +75,11 @@ public abstract class ImagesActivity extends DatabaseActivity implements ListAda
         if (view == null)
             return;
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
+            view.setVisibility(View.VISIBLE);
             Bitmap photo = ImageHandler.getInstance(this).getPhoto(id);
             if (photo != null) {
                 view.setImageBitmap(photo);
                 view.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                view.setVisibility(View.VISIBLE);
             }
             else
             {

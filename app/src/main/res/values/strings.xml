@@ -71,7 +71,8 @@
     <string name="spectator_mode_start">Pelinseuranta käynnissä.</string>
     <string name="spectator_mode_error">Pelinseuranta ei onnistunut.</string>
     <string name="move_player_instructions">Vaihda heittojärjestystä painamalla pelaajaa pidempään.</string>
-    <string name="spectate_code_instruction">Aseta pelin koodi.</string>
+    <string name="set_code">Aseta pelin koodi.</string>
+    <string name="spectate_instructions">Koodi löytyy pelinäkymän vasemmasta alakulmasta.</string>
     <string name="select_players">Valitse pelaajat</string>
     <string name="name">nimi</string>
 

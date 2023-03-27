@@ -44,7 +44,7 @@ public class ScoreCardActivity extends OptionsActivity {
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
 
-        allTimeButton.setVisibility(DatabaseHandler.getInstance(this).isNotConnected() ? View.INVISIBLE : View.VISIBLE);
+        allTimeButton.setVisibility(DatabaseHandler.getInstance(this).isConnected() ? View.VISIBLE : View.INVISIBLE);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));

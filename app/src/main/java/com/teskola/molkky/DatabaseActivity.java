@@ -1,6 +1,9 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.MenuItem;
 import android.widget.Toast;
 
 public abstract class DatabaseActivity extends AppCompatActivity implements DatabaseHandler.DatabaseListener {
@@ -8,10 +11,7 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
     protected void onResume() {
         super.onResume();
         DatabaseHandler.getInstance(DatabaseActivity.this).addListener(this);
-        if (DatabaseHandler.getInstance(DatabaseActivity.this).isNotConnected())
-            DatabaseHandler.getInstance(DatabaseActivity.this).signIn();
-        else
-            DatabaseHandler.getInstance(DatabaseActivity.this).start();
+        DatabaseHandler.getInstance(DatabaseActivity.this).start();
     }
     @Override
     protected void onPause() {
@@ -26,6 +26,15 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
         super.onDestroy();
         DatabaseHandler.getInstance(DatabaseActivity.this).removeListener(this);
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -58,23 +67,18 @@ public abstract class DatabaseActivity extends AppCompatActivity implements Data
             case DATABASE_USER_REMOVED:
                 break;
             case GAME_ADDED:
-                // Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_game_added), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_CHANGED:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_changed), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_CREATED:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_created), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_DISCONNECTED:
                 break;
             case DATABASE_CONNECTED:
-                Toast.makeText(DatabaseActivity.this, getResources().getString(R.string.database_connected), Toast.LENGTH_SHORT).show();
                 break;
             case DATABASE_NOT_FOUND:
                 break;
             case SPECTATOR_MODE_AVAILABLE:
-                Toast.makeText(DatabaseActivity.this, R.string.spectator_mode_start, Toast.LENGTH_SHORT).show();
                 break;
             case CREATED_TIMESTAMP_ADDED:
                 break;

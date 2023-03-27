@@ -11,6 +11,7 @@
     <color name="beige">#FFF5BD</color>
     <color name="light_gray">#F4F4F4</color>
     <color name="gray">#DFDFDF</color>
+    <color name="dark_gray">#666666</color>
     <color name="dark_green">#56AE57</color>
     <color name="light_green">#9dd866</color>
     <color name="dark_beige">#FFDFB2</color>
