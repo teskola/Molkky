@@ -267,15 +267,19 @@ public class FirebaseManager {
         });
     }
 
-    public void getLiveGamePlayers (String gameId, OnSuccessListener<PlayerInfo[]> response, OnFailureListener error) {
+    public void getLiveGamePlayers (String gameId, OnSuccessListener<List<PlayerInfo>> response, OnFailureListener error) {
         liveRef.child(gameId).child("players").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DataSnapshot ds = task.getResult();
-                if (!Objects.equals(ds.getValue(), "null")) {
+                if (ds.getValue() == null) {
                     error.onFailure(new Exception("game not found"));
                     return;
                 }
-                PlayerInfo[] players = ds.getValue(PlayerInfo[].class);
+                List<PlayerInfo> players = new ArrayList<>();
+                for (DataSnapshot child : ds.getChildren()) {
+                    PlayerInfo player = child.getValue(PlayerInfo.class);
+                    players.add(player);
+                }
                 response.onSuccess(players);
             }
             else {
@@ -309,28 +313,32 @@ public class FirebaseManager {
             } else
                 error.onFailure(task.getException());
         });
-        Map<String, Object> tosses = new HashMap<>();
+        List<Object> tosses = new ArrayList<>();
         for (int i = 0; i < tossesCount; i++) {
-            tosses.put(String.valueOf(i), (long) game.getPlayer(0).getUndoStack().peek());
+            tosses.add(game.getPlayer(0).getUndoStack().peek());
             game.addToss(game.getPlayer(0).getUndoStack().pop());
         }
         if (tosses.size() > 0)
-            liveRef.child(id + "/tosses/").updateChildren(tosses);
+            liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Map<String, Object> timestamp = new HashMap<>();
+                        timestamp.put("updated", ServerValue.TIMESTAMP);
+                        liveRef.child(id).updateChildren(timestamp);
+                    }
+                }
+            });
     }
 
-    public void addToss (String id, int count, int value) {
-        Map<String, Object> toss = new HashMap<>();
-        Map<String, Object> timestamp = new HashMap<>();
-        toss.put(String.valueOf(count), (long) value);
-        timestamp.put("lastUpdate", ServerValue.TIMESTAMP);
-        liveRef.child(id).child("tosses").updateChildren(toss);
-        liveRef.child(id).child("tosses").updateChildren(timestamp);
-    }
-    public void removeToss (String id, int count) {
-        Map<String , Object> timestamp = new HashMap<>();
-        timestamp.put("lastUpdate", ServerValue.TIMESTAMP);
-        liveRef.child(id).child("tosses").child(String.valueOf(count)).removeValue();
-        liveRef.child(id).child("tosses").updateChildren(timestamp);
+    public void setTosses (String id, List<Integer> tosses) {
+        liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Map<String, Object> timestamp = new HashMap<>();
+                timestamp.put("updated", ServerValue.TIMESTAMP);
+                liveRef.child(id).updateChildren(timestamp);
+            }
+        });
     }
 
     public void setLiveGameListener (String id, LiveGameListener liveGameListener) {

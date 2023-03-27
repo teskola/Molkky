@@ -147,6 +147,10 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         connectToFirebase();
     }
 
+    public FirebaseManager getFirebaseManager() {
+        return firebaseManager;
+    }
+
     public void connectToFirebase() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             signIn();
@@ -242,16 +246,8 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void addToss(int count, int value) {
-        if (firebaseManager == null)
-            return;
-        firebaseManager.addToss(getLiveGameId(), count, value);
-    }
-
-    public void removeToss(int count) {
-        if (firebaseManager == null)
-            return;
-        firebaseManager.removeToss(getLiveGameId(), count);
+    public void updateTosses (List<Integer> tosses) {
+        firebaseManager.setTosses(getLiveGameId(), tosses);
     }
 
     /*
@@ -360,17 +356,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.lastUpdated());
     }
 
-    public List<PlayerInfo> getLiveGame (String id) {
-        final PlayerInfo[][] players = new PlayerInfo[1][1];
-        firebaseManager.getLiveGamePlayers(id, new OnSuccessListener<PlayerInfo[]>() {
-            @Override
-            public void onSuccess(PlayerInfo[] playerInfos) {
-                players[0] = playerInfos;
-            }
-        }, e -> {
 
-        });
-        return null;
-    }
 
 }

@@ -84,7 +84,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             return;
         }
 
-        // New game
+        // New game or spectate mode
 
         if (getIntent().getStringExtra("PLAYERS") != null) {
             String json = getIntent().getStringExtra("PLAYERS");
@@ -95,7 +95,13 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             Game game = new Game(playersList, random);
             handler.setGame(game);
             handler.setListener(this);
-            handler.startPostingLiveData();
+            if (getIntent().getStringExtra("SPECTATE_MODE") == null)
+                handler.startPostingLiveData();
+            else {
+                String gameId = getIntent().getStringExtra("SPECTATE_MODE");
+                handler.startFetchingLiveData(gameId);
+            }
+
         }
     }
 
