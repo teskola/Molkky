@@ -79,7 +79,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     defaultViewHolder.playerView.setBackgroundResource(R.drawable.gray_background);
                 break;
             case SAVED_GAMES_ACTIVITY:
-                defaultViewHolder.nameTV.setText(games.get(position).getData());
+                defaultViewHolder.nameTV.setText(games.get(position).toString());
                 break;
             case STATS_ACTIVITY:
                 defaultViewHolder.nameTV.setText(players.get(position).getName());

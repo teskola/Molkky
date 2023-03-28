@@ -267,31 +267,12 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         }
     }
 
-    public ArrayList<GameInfo> getGames() {
-        List<Game> games = database.getGames();
-        ArrayList<GameInfo> result = new ArrayList<>();
-        for (Game game : games) {
-            String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(game.getTimestamp());
-            GameInfo gameInfo = new GameInfo(game.getId(), timestamp, game.getPlayers().get(0).getName());
-            result.add(gameInfo);
-        }
-        return result;
+    public List<GameInfo> getGames() {
+       return database.getGames();
     }
 
-    public ArrayList<GameInfo> getGames(String playerId) {
-        List<Game> games = database.getGames();
-        ArrayList<GameInfo> result = new ArrayList<>();
-        for (Game game : games) {
-            for (Player player : game.getPlayers()) {
-                if (player.getId().equals(playerId)) {
-                    String timestamp = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(game.getTimestamp());
-                    GameInfo gameInfo = new GameInfo(game.getId(), timestamp, game.getPlayers().get(0).getName());
-                    result.add(gameInfo);
-                    break;
-                }
-            }
-        }
-        return result;
+    public List<GameInfo> getGames(String playerId) {
+        return database.getGames(playerId);
     }
 
     public List<PlayerInfo> getPlayers() {

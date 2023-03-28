@@ -5,9 +5,8 @@ import com.google.firebase.database.Exclude;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
-public class Game implements Comparable<Game> {
+public class Game {
     private final ArrayList<Player> players;
     @Exclude
     private String id;
@@ -99,8 +98,4 @@ public class Game implements Comparable<Game> {
         return id;
     }
 
-    @Override
-    public int compareTo(Game game) {
-        return Long.compare(game.timestamp, this.timestamp);
-    }
 }

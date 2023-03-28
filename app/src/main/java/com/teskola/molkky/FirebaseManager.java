@@ -225,9 +225,10 @@ public class FirebaseManager {
             gameId = usersRef.child(user).child("games").push().getKey();
         else
             gameId = game.getId();
-        Date date = new Date();
-        game.setTimestamp(date.getTime());
-        usersRef.child(user).child("/games/" + gameId).setValue(game).addOnCompleteListener(task -> {
+        HashMap<String, Object> data = new HashMap<>(2);
+        data.put("timestamp", ServerValue.TIMESTAMP);
+        data.put("players", game.getPlayers());
+        usersRef.child(user).child("/games/" + gameId).setValue(data).addOnCompleteListener(task -> {
             if (task.isSuccessful())
                 response.onSuccess(gameId);
             else

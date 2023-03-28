@@ -218,33 +218,31 @@ public class Database {
     }
 
 
-    public List<Game> getGames() {
-        List<Game> allGames = new ArrayList<>();
+    public List<GameInfo> getGames() {
+        List<GameInfo> allGames = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
                 Game game = gamesMap.get(id);
-                game.setId(id);
-                allGames.add(game);
+                allGames.add(new GameInfo(id, game.getTimestamp(), game.getPlayer(0).getName()));
             }
         }
         Collections.sort(allGames);
         return allGames;
     }
 
-    public List<Game> getGames(String playerId) {
-        List<Game> allGames = new ArrayList<>();
+    public List<GameInfo> getGames(String playerId) {
+        List<GameInfo> allGames = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
                 Game game = gamesMap.get(id);
-                game.setId(id);
                 ArrayList<Player> players = game.getPlayers();
                 for (Player player : players) {
                     if (player.getId().equals(playerId)) {
-                        allGames.add(game);
+                        allGames.add(new GameInfo(id, game.getTimestamp(), game.getPlayer(0).getName()));
                         break;
                     }
                 }
