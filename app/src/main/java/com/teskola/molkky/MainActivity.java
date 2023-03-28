@@ -71,11 +71,11 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             editor.remove("SAVED_SELECTION");
             editor.apply();
         }
-        if (saved_state.getString("SAVED_GAME", null) != null) {
+        if (saved_state.getString("SAVED_STATE", null) != null) {
             Intent intent = new Intent(this, GameActivity.class);
-            intent.putExtra("SAVED_GAME", saved_state.getString("SAVED_GAME", null));
+            intent.putExtra("SAVED_STATE", saved_state.getString("SAVED_STATE", null));
             editor = saved_state.edit();
-            editor.remove("SAVED_GAME");
+            editor.remove("SAVED_STATE");
             editor.apply();
             startActivity(intent);
             return;

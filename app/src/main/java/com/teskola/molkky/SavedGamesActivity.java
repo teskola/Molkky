@@ -18,13 +18,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    private List<GameInfo> games = new ArrayList<>();
+    private List<Game> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
@@ -81,9 +82,10 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
     @Override
     public void onSelectClicked(int position) {
-        String gameId = games.get(position).getId();
         Intent intent = new Intent(getApplicationContext(), GameActivity.class);
-        intent.putExtra("gameId", gameId);
+        String json = new Gson().toJson(games.get(position));
+        intent.putExtra("SAVED_STATE", json);
+        intent.putExtra("SAVED_GAME", true);
         startActivity(intent);
     }
 

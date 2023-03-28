@@ -267,11 +267,11 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         }
     }
 
-    public List<GameInfo> getGames() {
+    public List<Game> getGames() {
        return database.getGames();
     }
 
-    public List<GameInfo> getGames(String playerId) {
+    public List<Game> getGames(String playerId) {
         return database.getGames(playerId);
     }
 

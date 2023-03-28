@@ -1,12 +1,16 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
+
 import com.google.firebase.database.Exclude;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
-public class Game {
+public class Game implements Comparable<Game> {
     private final ArrayList<Player> players;
     @Exclude
     private String id;
@@ -53,10 +57,6 @@ public class Game {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public ArrayList<Player> getPlayers() {
         return players;
     }
@@ -98,4 +98,16 @@ public class Game {
         return id;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
+        return timestampString + " (" + getPlayers().get(0).getName() + ")";
+
+    }
+
+    @Override
+    public int compareTo(Game game) {
+        return Long.compare(game.timestamp, this.timestamp);
+    }
 }

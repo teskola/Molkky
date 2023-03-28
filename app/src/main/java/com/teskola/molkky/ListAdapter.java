@@ -33,7 +33,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int viewId;
 
     private List<? extends PlayerInfo> players;
-    private List<GameInfo> games;
+    private List<Game> games;
 
     private int statID = 0;
     private boolean showImages, showTosses, onlyGray;
@@ -199,7 +199,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 break;
             case ("com.teskola.molkky.SavedGamesActivity"):
                 viewId = SAVED_GAMES_ACTIVITY;
-                this.games = (List<GameInfo>) data;
+                this.games = (List<Game>) data;
                 break;
             case ("com.teskola.molkky.AllStatsActivity"):
                 viewId = STATS_ACTIVITY;

@@ -53,41 +53,25 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     public void loadState(Bundle savedInstanceState) {
 
+        String json = null;
+
         // Saved Instance
 
         if (savedInstanceState != null) {
-            String json = savedInstanceState.getString("json");
+            json = savedInstanceState.getString("json");
             savedGame = savedInstanceState.getBoolean("saved");
-            Game game = new Gson().fromJson(json, Game.class);
-            handler.setGame(game);
-            handler.setListener(savedGame ? null : this);
-            return;
-        }
 
-        // Saved Preferences
+            // Saved Preferences or SavedGameActivity
 
-        if (getIntent().getStringExtra("SAVED_GAME") != null) {
-            String json = getIntent().getStringExtra("SAVED_GAME");
-            Game savedGame = new Gson().fromJson(json, Game.class);
-            handler.setGame(savedGame);
-            handler.setListener(this);
-            handler.startPostingLiveData();
-            return;
-        }
+        } else if (getIntent().getStringExtra("SAVED_STATE") != null) {
 
-        // Saved game
+            json = getIntent().getStringExtra("SAVED_STATE");
+            savedGame = getIntent().getBooleanExtra("SAVED_GAME", false);
 
-        if (getIntent().getStringExtra("gameId") != null) {
-            String gameId = getIntent().getStringExtra("gameId");
-            handler.setGame(DatabaseHandler.getInstance(this).getGame(gameId));
-            savedGame = true;
-            return;
-        }
+            // New game or spectate mode
 
-        // New game or spectate mode
-
-        if (getIntent().getStringExtra("PLAYERS") != null) {
-            String json = getIntent().getStringExtra("PLAYERS");
+        } else if (getIntent().getStringExtra("PLAYERS") != null ) {
+            json = getIntent().getStringExtra("PLAYERS");
             Player[] players = new Gson().fromJson(json, Player[].class);
             ArrayList<Player> playersList = new ArrayList<>();
             Collections.addAll(playersList, players);
@@ -101,8 +85,13 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
                 String gameId = getIntent().getStringExtra("SPECTATE_MODE");
                 handler.startFetchingLiveData(gameId);
             }
-
+            return;
         }
+
+        Game game = new Gson().fromJson(json, Game.class);
+        handler.setGame(game);
+        handler.setListener(savedGame ? null : this);
+        if (!savedGame) handler.startPostingLiveData();
     }
 
 
@@ -177,7 +166,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     public void clearSavedState () {
         SharedPreferences.Editor editor = saved_state.edit();
-        editor.remove("SAVED_GAME");
+        editor.remove("SAVED_STATE");
         editor.apply();
     }
 
@@ -346,7 +335,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (!savedGame && !spectateMode && !handler.gameEnded()) {
             SharedPreferences.Editor editor = saved_state.edit();
             String json = new Gson().toJson(handler.getGame());
-            editor.putString("SAVED_GAME", json);
+            editor.putString("SAVED_STATE", json);
             editor.apply();
         }
     }

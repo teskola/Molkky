@@ -218,22 +218,22 @@ public class Database {
     }
 
 
-    public List<GameInfo> getGames() {
-        List<GameInfo> allGames = new ArrayList<>();
+    public List<Game> getGames() {
+        List<Game> allGames = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
                 Game game = gamesMap.get(id);
-                allGames.add(new GameInfo(id, game.getTimestamp(), game.getPlayer(0).getName()));
+                allGames.add(game);
             }
         }
         Collections.sort(allGames);
         return allGames;
     }
 
-    public List<GameInfo> getGames(String playerId) {
-        List<GameInfo> allGames = new ArrayList<>();
+    public List<Game> getGames(String playerId) {
+        List<Game> allGames = new ArrayList<>();
         for (Map.Entry<String, HashMap<String, Game>> entry : databaseMap.entrySet()) {
             HashMap<String, Game> gamesMap;
             gamesMap = entry.getValue();
@@ -242,7 +242,7 @@ public class Database {
                 ArrayList<Player> players = game.getPlayers();
                 for (Player player : players) {
                     if (player.getId().equals(playerId)) {
-                        allGames.add(new GameInfo(id, game.getTimestamp(), game.getPlayer(0).getName()));
+                        allGames.add(game);
                         break;
                     }
                 }
