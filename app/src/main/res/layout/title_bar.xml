@@ -63,7 +63,7 @@
                 android:id="@+id/titleTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"

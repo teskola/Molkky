@@ -23,7 +23,7 @@
             android:id="@+id/nameTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/josefin_sans"
+            android:fontFamily="@font/josefin_sans_light"
             android:gravity="center|start"
             android:padding="10dp"
             android:textColor="@color/black"

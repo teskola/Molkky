@@ -11,7 +11,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.gson.Gson;
+
+import java.util.Objects;
 
 public abstract class OptionsActivity extends ImagesActivity {
 
@@ -32,7 +39,20 @@ public abstract class OptionsActivity extends ImagesActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() == 4) {
-                    // TODO tee juttuja
+                    String gameId = s.toString();
+                    DatabaseHandler.getInstance(OptionsActivity.this).getFirebaseManager().getLiveGamePlayers(gameId, playerInfos -> {
+                        String json = new Gson().toJson(playerInfos);
+                        Intent intent = new Intent(OptionsActivity.this, GameActivity.class);
+                        intent.putExtra("PLAYERS", json);
+                        intent.putExtra("SPECTATE_MODE", gameId);
+                        startActivity(intent);
+                    }, e -> {
+                        if (Objects.equals(e.getMessage(), "game not found")) {
+                            inputLayout.setError(getString(R.string.game_not_found));
+                        } else
+                            Toast.makeText(OptionsActivity.this, getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show();
+                    });
+
                 }
                 else
                     inputLayout.setError(null);

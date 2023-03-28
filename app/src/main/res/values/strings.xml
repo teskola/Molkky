@@ -75,6 +75,6 @@
     <string name="spectate_instructions">Koodi löytyy pelinäkymän vasemmasta alakulmasta.</string>
     <string name="select_players">Valitse pelaajat</string>
     <string name="name">nimi</string>
-
+    <string name="game_not_found">Peliä ei löytynyt</string>
 
 </resources>

@@ -4,12 +4,26 @@ import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 public class GameHandler {
     private GameListener listener;
     private Game game;
     private final DatabaseHandler databaseHandler;
-    private boolean livescore = true;
+    private boolean postTosses;
+    private final ArrayList<Integer> tosses = new ArrayList<>();
+
+    private final FirebaseManager.LiveGameListener liveGameListener = newTosses -> {
+        while (newTosses.size() > tosses.size()) {
+            addToss(newTosses.get(tosses.size()));
+            tosses.add(newTosses.get(tosses.size()));
+        }
+        while (newTosses.size() < tosses.size()) {
+            removeToss();
+            tosses.remove(tosses.size() - 1);
+        }
+    };
 
     public GameHandler (Context context) {
         this.databaseHandler = DatabaseHandler.getInstance(context);
@@ -37,7 +51,12 @@ public class GameHandler {
     }
 
     public void startPostingLiveData () {
+        postTosses = true;
         databaseHandler.startGame(game);
+    }
+
+    public void startFetchingLiveData (String gameId) {
+        databaseHandler.getFirebaseManager().setLiveGameListener(gameId, liveGameListener);
     }
 
     public int getColor () { return Colors.selectBackground(game.getPlayer(0), false);}
@@ -94,8 +113,9 @@ public class GameHandler {
     }
 
     public void addToss(int points) {
-        if (livescore)
-            databaseHandler.addToss(game.getTossesCount(), points);
+        tosses.add(points);
+        if (postTosses)
+            databaseHandler.updateTosses(tosses);
         if (!game.getPlayer(0).getUndoStack().empty())
             game.getPlayer(0).getUndoStack().pop();
         game.getPlayer(0).addToss(points);
@@ -124,8 +144,9 @@ public class GameHandler {
     }
 
     public void removeToss () {
-        if (livescore)
-            databaseHandler.removeToss(game.getTossesCount() - 1);
+        tosses.remove(tosses.size() - 1);
+        if (postTosses)
+            databaseHandler.updateTosses(tosses);
         if (game.getPlayer(0).countAll() == 50) {
             int removed = game.getPlayer(0).removeToss();
             game.getPlayer(0).getUndoStack().push(removed);

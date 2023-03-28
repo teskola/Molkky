@@ -24,7 +24,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/games"
                 android:textSize="20sp" />
 
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
 
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:textSize="20sp" />
         </TableRow>
 
@@ -46,7 +46,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/players"
                 android:textSize="20sp" />
 
@@ -55,7 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
 
                 android:textSize="20sp" />
         </TableRow>
@@ -67,7 +67,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/tosses"
                 android:textSize="20sp" />
 
@@ -76,7 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text=""
                 android:textSize="20sp" />
         </TableRow>
@@ -88,7 +88,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/created"
                 android:textSize="20sp" />
 
@@ -97,7 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:textSize="20sp" />
         </TableRow>
 
@@ -109,7 +109,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/updated"
                 android:textSize="20sp" />
 
@@ -118,7 +118,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:fontFamily="@font/josefin_sans"
+                android:fontFamily="@font/josefin_sans_light"
                 android:text=""
                 android:textSize="20sp" />
         </TableRow>

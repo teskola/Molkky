@@ -14,12 +14,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,8 +51,7 @@ public class FirebaseManager {
     }
 
     public interface LiveGameListener {
-        void onTossAdded(int value);
-        void onTossRemoved(int count);
+        void onTossesChanges (List<Integer> tosses);
     }
 
     public FirebaseManager(Database database, DatabaseListener listener) {
@@ -109,25 +110,13 @@ public class FirebaseManager {
         }
     };
 
-    private final ChildEventListener tossListener = new ChildEventListener() {
+    private final ValueEventListener tossListener = new ValueEventListener() {
         @Override
-        public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-            liveGameListener.onTossAdded((int) snapshot.getValue());
-        }
-
-        @Override
-        public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-        }
-
-        @Override
-        public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-            liveGameListener.onTossRemoved(Integer.valueOf(snapshot.getKey()));
-        }
-
-        @Override
-        public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            List<Integer> tosses = new ArrayList<>();
+            if (snapshot.exists())
+                tosses = (List<Integer>) snapshot.getValue();
+            liveGameListener.onTossesChanges(tosses);
         }
 
         @Override
@@ -267,15 +256,19 @@ public class FirebaseManager {
         });
     }
 
-    public void getLiveGamePlayers (String gameId, OnSuccessListener<PlayerInfo[]> response, OnFailureListener error) {
+    public void getLiveGamePlayers (String gameId, OnSuccessListener<List<PlayerInfo>> response, OnFailureListener error) {
         liveRef.child(gameId).child("players").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DataSnapshot ds = task.getResult();
-                if (!Objects.equals(ds.getValue(), "null")) {
+                if (ds.getValue() == null) {
                     error.onFailure(new Exception("game not found"));
                     return;
                 }
-                PlayerInfo[] players = ds.getValue(PlayerInfo[].class);
+                List<PlayerInfo> players = new ArrayList<>();
+                for (DataSnapshot child : ds.getChildren()) {
+                    PlayerInfo player = child.getValue(PlayerInfo.class);
+                    players.add(player);
+                }
                 response.onSuccess(players);
             }
             else {
@@ -309,33 +302,37 @@ public class FirebaseManager {
             } else
                 error.onFailure(task.getException());
         });
-        Map<String, Object> tosses = new HashMap<>();
+        List<Object> tosses = new ArrayList<>();
         for (int i = 0; i < tossesCount; i++) {
-            tosses.put(String.valueOf(i), (long) game.getPlayer(0).getUndoStack().peek());
+            tosses.add(game.getPlayer(0).getUndoStack().peek());
             game.addToss(game.getPlayer(0).getUndoStack().pop());
         }
         if (tosses.size() > 0)
-            liveRef.child(id + "/tosses/").updateChildren(tosses);
+            liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Map<String, Object> timestamp = new HashMap<>();
+                        timestamp.put("updated", ServerValue.TIMESTAMP);
+                        liveRef.child(id).updateChildren(timestamp);
+                    }
+                }
+            });
     }
 
-    public void addToss (String id, int count, int value) {
-        Map<String, Object> toss = new HashMap<>();
-        Map<String, Object> timestamp = new HashMap<>();
-        toss.put(String.valueOf(count), (long) value);
-        timestamp.put("lastUpdate", ServerValue.TIMESTAMP);
-        liveRef.child(id).child("tosses").updateChildren(toss);
-        liveRef.child(id).child("tosses").updateChildren(timestamp);
-    }
-    public void removeToss (String id, int count) {
-        Map<String , Object> timestamp = new HashMap<>();
-        timestamp.put("lastUpdate", ServerValue.TIMESTAMP);
-        liveRef.child(id).child("tosses").child(String.valueOf(count)).removeValue();
-        liveRef.child(id).child("tosses").updateChildren(timestamp);
+    public void setTosses (String id, List<Integer> tosses) {
+        liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Map<String, Object> timestamp = new HashMap<>();
+                timestamp.put("updated", ServerValue.TIMESTAMP);
+                liveRef.child(id).updateChildren(timestamp);
+            }
+        });
     }
 
     public void setLiveGameListener (String id, LiveGameListener liveGameListener) {
         this.liveGameListener = liveGameListener;
-        liveRef.child(id).child("tosses").addChildEventListener(tossListener);
+        liveRef.child(id).child("tosses").addValueEventListener(tossListener);
     }
 
     public void removeLiveGameListener (String id) {
