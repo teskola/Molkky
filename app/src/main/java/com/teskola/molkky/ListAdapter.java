@@ -337,9 +337,9 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public String buildTossesString(int position) {
         Player player = (Player) players.get(position);
-        ArrayList<Integer> tosses =  player.getTosses();
+        List<Long> tosses =  player.getTosses();
         StringBuilder sb = new StringBuilder();
-        for (Integer toss : tosses) {
+        for (long toss : tosses) {
             if (toss < 10)
                 sb.append(" ").append(toss);
             else

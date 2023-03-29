@@ -4,21 +4,22 @@ import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 public class Player extends PlayerInfo implements Comparable<Player> {
 
-    private ArrayList<Integer> tosses;
+    private List<Long> tosses;
     @Exclude
-    private Stack<Integer> undoStack;
+    private Stack<Long> undoStack;
 
-    public Player(String id, String name, ArrayList<Integer> tosses) {
+    public Player(String id, String name, List<Long> tosses) {
         super(id, name);
         this.tosses = tosses;
         this.undoStack = new Stack<>();
     }
 
-    public Player(ArrayList<Integer> tosses) {
+    public Player(List<Long> tosses) {
         super();
         this.tosses = tosses;
 
@@ -42,27 +43,27 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     * Initializes undoStack if not initialized and returns undoStack.
     * */
     @Exclude
-    public Stack<Integer> getUndoStack() {
+    public Stack<Long> getUndoStack() {
         if (undoStack == null) {
             undoStack = new Stack<>();
         }
         return undoStack;
     }
 
-    public ArrayList<Integer> getTosses() {
+    public List<Long> getTosses() {
         return tosses;
     }
 
-    public int getToss(int round) { return tosses.get(round);}
+    public long getToss(int round) { return tosses.get(round);}
 
-    public void addToss(int points) {
+    public void addToss(long points) {
         tosses.add(points);
     }
 /*
 * Removes player's last toss. Returns value of the removed toss.
 * */
-    public int removeToss() {
-        int removed_toss_points = tosses.get(tosses.size() -1);
+    public long removeToss() {
+        long removed_toss_points = tosses.get(tosses.size() -1);
         tosses.remove(tosses.size() - 1);
         return  removed_toss_points;
     }
@@ -110,7 +111,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     @Override
     public int compareTo(Player player) {
         if (Boolean.compare(this.isEliminated(), player.isEliminated()) == 0)
-        return Integer.compare(player.countAll(), this.countAll());
+        return Long.compare(player.countAll(), this.countAll());
         else
             return Boolean.compare(this.isEliminated(), player.isEliminated());
     }
@@ -121,7 +122,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     public int hits() {
         int count = 0;
-        for (int i : getTosses()) {
+        for (long i : getTosses()) {
             if (i != 0) count++;
         }
         return count;
@@ -133,7 +134,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 
     public float mean() {
         int sum = 0;
-        for (int i : tosses) {
+        for (long i : tosses) {
             sum += i;
         }
         return (float) sum / (float) tosses.size();

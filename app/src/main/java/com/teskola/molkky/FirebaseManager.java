@@ -1,7 +1,7 @@
 package com.teskola.molkky;
 
 
-import android.util.Pair;
+import com.google.firebase.database.core.utilities.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 
 public class FirebaseManager {
@@ -36,6 +35,7 @@ public class FirebaseManager {
     private final DatabaseReference databaseRef = firebase.getReference("databases");
     private final DatabaseReference liveRef = firebase.getReference("livegames");
     private final DatabaseReference homeRef;
+    private DatabaseReference createdRef;
     private DatabaseReference myDatabaseRef;
     private final String uid;
     private final HashMap<String, DatabaseReference> myGamesRef = new HashMap<>();
@@ -54,7 +54,7 @@ public class FirebaseManager {
     }
 
     public interface LiveGameListener {
-        void onTossesChanges (List<Pair<String, Long>> tosses);
+        void onTossesChanges (List<Toss> tosses);
     }
 
     public FirebaseManager(String uid, String dbid, DatabaseListener listener) {
@@ -63,8 +63,8 @@ public class FirebaseManager {
         data = new Data();
         myDatabaseRef = firebase.getReference("databases/" + dbid + "/users/");
         homeRef = firebase.getReference("users/" + uid);
-        homeRef.addChildEventListener(gamesListener("home"));
-        homeRef.addChildEventListener(playersListener("home"));
+        homeRef.child("games").addChildEventListener(gamesListener("home"));
+        homeRef.child("players").addChildEventListener(playersListener("home"));
         myDatabaseRef.addChildEventListener(databaseListener);
     }
 
@@ -74,25 +74,44 @@ public class FirebaseManager {
 
     public static class Data {
 
-       private final Map<String, String> names = new HashMap<>();
-       private final Map<String, Map<String, Data.Game>> games = new HashMap<>();
+       static Map<String, String> names = new HashMap<>();
+       static Map<String, Map<String, Data.Game>> games = new HashMap<>();
+       static long updated = 0;
+       static long created = 0;
 
        public Data () {}
 
 
         public static class Game implements Comparable<Game> {
-            List<Pair<String, Long>> tosses;
-            long timestamp;
-            List<String> players;
-            String winner;
+            static List<Toss> tosses;
+            static long timestamp;
+            static List<String> players;
+            static String winner;
 
             public Game() {}
+
+            public List<Toss> getTosses() {
+                return tosses;
+            }
+
+            public long getTimestamp () {
+                return timestamp;
+            }
+            public List<String> getPlayers () {
+                return players;
+            }
+
+            public String getWinner () {
+                return winner;
+            }
+
 
             @NonNull
             @Override
             public String toString() {
+
                 String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
-                return timestampString + " (" + winner + ")";
+                return timestampString + " (" + names.get(winner) + ")";
 
             }
 
@@ -102,8 +121,12 @@ public class FirebaseManager {
             }
         }
 
-        public void addGame (String dbid, String gid, Game game) {
-           Objects.requireNonNull(games.get(dbid)).put(gid, game);
+        public void addGame (String dbid, String gid, @NonNull Game game) {
+           if (game.timestamp > updated)
+               updated = game.timestamp;
+           if (!games.containsKey(dbid))
+               games.put(dbid, new HashMap<>());
+           games.get(dbid).put(gid, game);
        }
 
         public void removeGame (String dbid, String gid) {
@@ -191,6 +214,59 @@ public class FirebaseManager {
           return names.size() == 0;
         }
 
+        private Map<String, List<Long>> getTosses (String pid) {
+           Map<String, List<Long>> allTosses = new HashMap<>();
+            for (Map<String, Game> database : games.values()) {
+                for (String gid : database.keySet()) {
+                    Game game = database.get(gid);
+                    List<Long> list = new ArrayList<>();
+                    for (Toss toss : game.tosses) {
+                        if (toss.getPid().equals(pid))
+                            list.add(toss.getValue());
+                    }
+                    allTosses.put(gid, list);
+                }
+            }
+            return allTosses;
+        }
+
+        private int getWins (String pid) {
+           int wins = 0;
+            for (Map<String,Game> database : games.values()) {
+                for (Game game : database.values()) {
+                    if (game.winner.equals(pid)) {
+                        wins++;
+                    }
+                }
+            }
+            return wins;
+        }
+
+        public PlayerStats getPlayerStats (PlayerInfo playerInfo) {
+           String pid = playerInfo.getId();
+           return new PlayerStats(playerInfo, getWins(pid),getTosses(pid));
+        }
+
+        public int getGamesCount() {
+            int count = 0;
+            for (String dbid : games.keySet())
+                count += games.get(dbid).size();
+            return count;
+        }
+
+        public int getPlayersCount () {
+           return names.size();
+        }
+        public int getTossesCount () {
+           int count = 0;
+           for (Map<String, Game> database : games.values()) {
+               for (Game game : database.values()) {
+                   count += game.tosses.size();
+               }
+           }
+           return count;
+        }
+
     }
 
 
@@ -243,7 +319,7 @@ public class FirebaseManager {
     private final ValueEventListener tossListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            liveGameListener.onTossesChanges((List<Pair<String, Long>>) snapshot.getValue());
+            liveGameListener.onTossesChanges((List<Toss>) snapshot.getValue());
         }
 
         @Override
@@ -252,16 +328,24 @@ public class FirebaseManager {
         }
     };
 
-    private ChildEventListener playersListener(String databaseId) {
+    private ChildEventListener playersListener(String user) {
         return new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+                if (data.names.containsKey(snapshot.getKey()))
+                    return;
+                String name = (String) snapshot.getValue();
+                int i = 1;
+                while (data.names.containsValue(name)) {
+                    name += i;
+                }
+                data.names.put(snapshot.getKey(), name);
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+                if (user.equals(uid))
+                    data.names.put(snapshot.getKey(), (String) snapshot.getValue());
             }
 
             @Override
@@ -285,7 +369,8 @@ public class FirebaseManager {
         return new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                data.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Data.Game.class));
+                Data.Game game = snapshot.getValue(Data.Game.class);
+                data.addGame(databaseId, snapshot.getKey(), game);
                 listener.onGameAdded();
             }
 
@@ -315,6 +400,19 @@ public class FirebaseManager {
         };
     }
 
+    private final ValueEventListener createdListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+            if (snapshot.getValue() != null)
+                data.created = (long) snapshot.getValue();
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+
+        }
+    };
+
     public void stop() {
         FirebaseDatabase.getInstance().goOffline();
     }
@@ -322,10 +420,10 @@ public class FirebaseManager {
         FirebaseDatabase.getInstance().goOnline();
     }
 
-    public void searchDatabase (String database, OnSuccessListener<String> response, OnFailureListener error) {
+    public void searchDatabase (String database, OnSuccessListener<Long> response, OnFailureListener error) {
         databaseRef.child(database).child("created").get().addOnCompleteListener(task -> {
             if (task.isSuccessful())
-                response.onSuccess(String.valueOf(task.getResult().getValue()));
+                response.onSuccess((Long) task.getResult().getValue());
             else error.onFailure(Objects.requireNonNull(task.getException()));
         });
     }
@@ -347,6 +445,8 @@ public class FirebaseManager {
             if (task.isSuccessful()) {
                 myDatabaseRef = firebase.getReference("databases/" + database + "/users/");
                 myDatabaseRef.addChildEventListener(databaseListener);
+                createdRef = databaseRef.child(database).child("created");
+                createdRef.addListenerForSingleValueEvent(createdListener);
                 response.onSuccess(null);
             }
             else
@@ -361,6 +461,7 @@ public class FirebaseManager {
             // if (gameListeners.get(key) != null)
             myGamesRef.get(key).removeEventListener(gameListeners.get(key));
             myPlayersRef.get(key).removeEventListener(playerListeners.get(key));
+            createdRef.removeEventListener(createdListener);
             data.removeDatabase(key);
         }
         myGamesRef.clear();
@@ -374,7 +475,7 @@ public class FirebaseManager {
         });
     }
 
-    public void addGameToDatabase(Game game, List<Pair<String, Long>> tosses, OnSuccessListener<String> response, OnFailureListener error) {
+    public void addGameToDatabase(Game game, List<Toss> tosses, OnSuccessListener<String> response, OnFailureListener error) {
         String gameId;
         if (game.getId() == null)
             gameId = homeRef.child("games").push().getKey();
@@ -486,7 +587,7 @@ public class FirebaseManager {
             });
     }
 
-    public void setTosses (String id, List<Pair<String, Long>> tosses) {
+    public void setTosses (String id, List<Toss> tosses) {
         liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Map<String, Object> timestamp = new HashMap<>();

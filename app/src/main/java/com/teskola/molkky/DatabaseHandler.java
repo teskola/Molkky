@@ -3,7 +3,7 @@ package com.teskola.molkky;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Pair;
+import com.google.firebase.database.core.utilities.Pair;
 
 
 import androidx.annotation.NonNull;
@@ -203,7 +203,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             }, e -> {
                 for (DatabaseListener listener : listeners)
                     listener.onError(Error.UNKNOWN_ERROR);
-            }).addUser(databaseId, response -> {
+            }).addUser(getShortId(), response -> {
                 databaseId = getShortId();
                 for (DatabaseListener listener : listeners)
                     listener.onDatabaseEvent(Event.DATABASE_CREATED);
@@ -217,7 +217,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void saveGame(Game game, List<Pair<String, Long>> tosses) {
+    public void saveGame(Game game, List<Toss> tosses) {
         if (firebaseManager == null) {
             return;
         }
@@ -245,7 +245,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void updateTosses (List<Pair<String, Long>> tosses) {
+    public void updateTosses (List<Toss> tosses) {
         firebaseManager.setTosses(getLiveGameId(), tosses);
     }
 
@@ -278,10 +278,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         return firebaseManager.getData().getPlayers();
     }
 
-    public String getPlayerName(String playerId) {
-        return database.getPlayerName(playerId);
-    }
-
     public List<PlayerInfo> getPlayers(List<PlayerInfo> excludedPlayers) {
         ArrayList<String> pids = new ArrayList<>();
         for (PlayerInfo player : excludedPlayers)
@@ -294,45 +290,35 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public PlayerStats getPlayerStats(PlayerInfo playerInfo) {
-        return database.getStats(playerInfo);
+        return firebaseManager.getData().getPlayerStats(playerInfo);
     }
 
     public int getGamesCount () {
-        return database.getGamesCount();
+        return firebaseManager.getData().getGamesCount();
     }
 
     public int getPlayersCount() {
-        return database.getPlayersCount();
+        return firebaseManager.getData().getPlayersCount();
     }
 
     public int getTossesCount () {
-        return database.getTossesCount();
+        return firebaseManager.getData().getTossesCount();
     }
 
     public String getCreated () {
         if (firebaseManager == null) {
             return null;
         }
-        if (database.getCreated() == 0) {
-            firebaseManager.searchDatabase(databaseId, response -> {
-                if (!response.equals("null")) {
-                    database.setCreated(Long.parseLong(response));
-                    for (DatabaseListener listener : listeners)
-                        listener.onDatabaseEvent(Event.CREATED_TIMESTAMP_ADDED);
-                }
-            }, e -> {
-                for (DatabaseListener listener : listeners)
-                    listener.onError(Error.UNKNOWN_ERROR);
-            });
+        if (firebaseManager.getData().created == 0) {
             return null;
         }
-        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.getCreated());
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(firebaseManager.getData().created);
     }
 
     public String getUpdated () {
-        if (database.lastUpdated() == 0)
+        if (firebaseManager.getData().updated == 0)
             return null;
-        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(database.lastUpdated());
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(firebaseManager.getData().updated);
     }
 
 

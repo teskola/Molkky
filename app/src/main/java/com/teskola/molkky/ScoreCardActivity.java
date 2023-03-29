@@ -109,7 +109,7 @@ public class ScoreCardActivity extends OptionsActivity {
             TextView toss = view.findViewById(R.id.tossesNumberTV);
             TextView value = view.findViewById(R.id.tossesValueTV);
             TextView pointsTV = view.findViewById(R.id.tossesPointsTV);
-            int tossInt = players[position].getToss(i);
+            long tossInt = players[position].getToss(i);
             int points = players[position].count(i);
             toss.setText(getString(R.string.scorecard_toss, i+1));
             value.setText(String.valueOf(tossInt));

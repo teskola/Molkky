@@ -82,7 +82,7 @@ public class Game {
         players.addAll(transferred);
     }
 
-    public void addToss (int points) {
+    public void addToss (long points) {
         players.get(0).addToss(points);
         if (getPlayer(0).countAll() != 50) {
             setTurn(1);

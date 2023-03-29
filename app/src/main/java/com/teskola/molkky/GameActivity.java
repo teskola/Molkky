@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, GameHandler.GameListener {
-    public static final int SEEKBAR_DEFAULT_POSITION = 6;
+    public static final long SEEKBAR_DEFAULT_POSITION = 6;
 
     private boolean savedGame = false;
     private boolean spectateMode = false;
@@ -207,7 +207,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         //              Seekbar
 
         seekBar.setVisibility((handler.gameEnded() || spectateMode) ? View.INVISIBLE : View.VISIBLE);
-        seekBar.setProgress(handler.getSeekbarPosition());
+        seekBar.setProgress((int) handler.getSeekbarPosition());
 
         //              Points View
 
@@ -315,7 +315,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             pointsTextView.setText(String.valueOf(points));
             okButton.setEnabled(true);
         } else {
-            seekBar.setProgress(SEEKBAR_DEFAULT_POSITION);
+            seekBar.setProgress((int) SEEKBAR_DEFAULT_POSITION);
             pointsTextView.setText("-");
             okButton.setEnabled(false);
         }
