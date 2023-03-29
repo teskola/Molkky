@@ -46,21 +46,24 @@ public class Database {
             removePlayer(id);
     }
 
-    private void addPlayers(Game game) {
-        ArrayList<Player> players = game.getPlayers();
+    public void addPlayer (PlayerInfo playerInfo) {
+        if (playerInfo.getName() == null)
+            return;
+        int i = 1;
+        while (nameExists(playerInfo.getName()) != null)
+            playerInfo.setName(playerInfo.getName() + i);
+        playersMap.put(playerInfo.getId(), playerInfo);
+    }
+
+    public void addPlayers(List<Player> players) {
         for (Player player : players) {
             if (!playersMap.containsKey(player.getId())) {
-                int i = 1;
-                while (nameExists(player.getName())) {
-                    player.setName(player.getName() + i);
-                }
                 playersMap.put(player.getId(), player);
             }
         }
     }
 
     public void addGame(String key, String gameId, Game game) {
-        addPlayers(game);
         if (databaseMap.containsKey(key))
             databaseMap.get(key).put(gameId, game);
         else {
@@ -73,7 +76,7 @@ public class Database {
     public void removeGame(String key, String gameId) {
         Game game = databaseMap.get(key).get(gameId);
         databaseMap.get(key).remove(gameId);
-        ArrayList<Player> players = game.getPlayers();
+        List<Player> players = game.getPlayers();
         for (Player player : players)
             removePlayer(player.getId());
     }
@@ -151,6 +154,9 @@ public class Database {
         return timestamp;
     }
 
+    public boolean playerExists(String playerId) {
+        return playersMap.containsKey(playerId);
+    }
 
     public String getPlayerName(String playerId) {
         return playersMap.get(playerId).getName();
@@ -191,7 +197,7 @@ public class Database {
             gamesMap = entry.getValue();
             for (String key : gamesMap.keySet()) {
                 Game game = gamesMap.get(key);
-                ArrayList<Player> players = game.getPlayers();
+                List<Player> players = game.getPlayers();
                 for (Player player : players) {
                     if (player.getId().equals(playerId)) {
                         ids.add(key);
@@ -217,6 +223,12 @@ public class Database {
         return players;
     }
 
+    private void getPlayerNames (Game game) {
+        for (Player player : game.getPlayers()) {
+            player.setName(playersMap.get(player.getId()).getName());
+        }
+    }
+
 
     public List<Game> getGames() {
         List<Game> allGames = new ArrayList<>();
@@ -225,6 +237,7 @@ public class Database {
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
                 Game game = gamesMap.get(id);
+                getPlayerNames(game);
                 allGames.add(game);
             }
         }
@@ -239,9 +252,10 @@ public class Database {
             gamesMap = entry.getValue();
             for (String id : gamesMap.keySet()) {
                 Game game = gamesMap.get(id);
-                ArrayList<Player> players = game.getPlayers();
+                List<Player> players = game.getPlayers();
                 for (Player player : players) {
                     if (player.getId().equals(playerId)) {
+                        getPlayerNames(game);
                         allGames.add(game);
                         break;
                     }
@@ -253,12 +267,12 @@ public class Database {
     }
 
 
-    public boolean nameExists(String name) {
+    public String nameExists(String name) {
         for (PlayerInfo playerInfo : playersMap.values()) {
             if (name.equals(playerInfo.getName()))
-                return true;
+                return playerInfo.getId();
         }
-        return false;
+        return null;
     }
 
     public boolean noPlayers() {

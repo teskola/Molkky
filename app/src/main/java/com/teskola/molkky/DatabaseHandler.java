@@ -3,6 +3,7 @@ package com.teskola.molkky;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Pair;
 
 
 import androidx.annotation.NonNull;
@@ -16,13 +17,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 public class DatabaseHandler implements FirebaseManager.DatabaseListener {
 
     public static final int DATABASE_ID_LENGTH = 6;     // only even numbers allowed
     public static final int LIVEGAME_ID_LENGTH = 4;
-    private final Database database;
     private final ArrayList<DatabaseListener> listeners = new ArrayList<>();
     private static DatabaseHandler instance;
     private FirebaseManager firebaseManager;
@@ -111,6 +112,10 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
     }
 
+    public static String getDatabaseId(String uid) {
+        return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
+    }
+
     /*
     *
     * Takes 4 last characters of user id as live game id.
@@ -140,24 +145,17 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     private DatabaseHandler(Context context) {
-        database = new Database();
         preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         databaseId = preferences.getString("DATABASE", getShortId());
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        connectToFirebase();
+        if (FirebaseAuth.getInstance().getUid() == null)
+            signIn();
+        else
+            firebaseManager = new FirebaseManager(FirebaseAuth.getInstance().getUid(), databaseId, this);
     }
 
     public FirebaseManager getFirebaseManager() {
         return firebaseManager;
-    }
-
-    public void connectToFirebase() {
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            signIn();
-            return;
-        }
-        if (firebaseManager == null)
-            firebaseManager = new FirebaseManager(databaseId, database, this);
     }
 
     public void changeDatabase(String newDatabaseId) {
@@ -173,15 +171,15 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             for (DatabaseListener listener : listeners)
                 listener.onDatabaseEvent(Event.DATABASE_FOUND);
 
-            firebaseManager.removeUser(databaseId, FirebaseAuth.getInstance().getUid(),
-                    res1 -> firebaseManager.addUser(newDatabaseId, FirebaseAuth.getInstance().getUid(), res2 -> {
+            firebaseManager.removeUser(databaseId,
+                    res1 -> firebaseManager.addUser(newDatabaseId, res2 -> {
                         for (DatabaseListener listener : listeners)
                             listener.onDatabaseEvent(Event.DATABASE_CHANGED);
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putString("DATABASE", newDatabaseId);
                         databaseId = newDatabaseId;
                         editor.apply();
-                        database.setCreated(Long.parseLong(response));
+                         // database.setCreated(Long.parseLong(response));
                     }, e -> {
                         for (DatabaseListener listener : listeners)
                             listener.onError(Error.UNKNOWN_ERROR);
@@ -198,14 +196,14 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     public void signIn() {
 
         FirebaseAuth.getInstance().signInAnonymously().addOnSuccessListener(authResult -> {
-            firebaseManager = new FirebaseManager(database, this);
+            firebaseManager = new FirebaseManager(FirebaseAuth.getInstance().getUid(), databaseId, this);
             firebaseManager.initializeDatabase(getShortId(), response -> {
                 for (DatabaseListener listener : listeners)
                     listener.onDatabaseEvent(Event.DATABASE_CONNECTED);
             }, e -> {
                 for (DatabaseListener listener : listeners)
                     listener.onError(Error.UNKNOWN_ERROR);
-            }).addUser(getShortId(), FirebaseAuth.getInstance().getUid(), response -> {
+            }).addUser(databaseId, response -> {
                 databaseId = getShortId();
                 for (DatabaseListener listener : listeners)
                     listener.onDatabaseEvent(Event.DATABASE_CREATED);
@@ -219,11 +217,12 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void saveGame(Game game) {
+    public void saveGame(Game game, List<Pair<String, Long>> tosses) {
         if (firebaseManager == null) {
             return;
         }
-        firebaseManager.addGameToDatabase(game, FirebaseAuth.getInstance().getUid(), response -> {
+
+        firebaseManager.addGameToDatabase(game, tosses, response -> {
             game.setId(response);
             for (DatabaseListener listener : listeners)
                 listener.onDatabaseEvent(Event.GAME_ADDED);
@@ -246,7 +245,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         });
     }
 
-    public void updateTosses (List<Integer> tosses) {
+    public void updateTosses (List<Pair<String, Long>> tosses) {
         firebaseManager.setTosses(getLiveGameId(), tosses);
     }
 
@@ -257,7 +256,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     * */
 
     public boolean addPlayer(PlayerInfo player) {
-        String playerId = database.getPlayerId(player.getName());
+        String playerId = firebaseManager.getData().getPlayerId(player.getName());
         if (playerId != null) {
             player.setId(playerId);
             return true;
@@ -267,16 +266,16 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         }
     }
 
-    public List<Game> getGames() {
-       return database.getGames();
+    public List<FirebaseManager.Data.Game> getGames() {
+        return firebaseManager.getData().getGames();
     }
 
-    public List<Game> getGames(String playerId) {
-        return database.getGames(playerId);
+    public List<FirebaseManager.Data.Game> getGames(String playerId) {
+        return firebaseManager.getData().getGames(playerId);
     }
 
     public List<PlayerInfo> getPlayers() {
-        return database.getPlayers();
+        return firebaseManager.getData().getPlayers();
     }
 
     public String getPlayerName(String playerId) {
@@ -284,15 +283,14 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public List<PlayerInfo> getPlayers(List<PlayerInfo> excludedPlayers) {
-        return database.getPlayers(excludedPlayers);
-    }
-
-    public Game getGame(String id) {
-        return database.getGame(id);
+        ArrayList<String> pids = new ArrayList<>();
+        for (PlayerInfo player : excludedPlayers)
+            pids.add(player.getId());
+        return firebaseManager.getData().getPlayers(pids);
     }
 
     public boolean noPlayers () {
-        return database.noPlayers();
+        return firebaseManager.getData().noPlayers();
     }
 
     public PlayerStats getPlayerStats(PlayerInfo playerInfo) {

@@ -33,7 +33,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private int viewId;
 
     private List<? extends PlayerInfo> players;
-    private List<Game> games;
+    private List<FirebaseManager.Data.Game> games;
 
     private int statID = 0;
     private boolean showImages, showTosses, onlyGray;
@@ -199,7 +199,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 break;
             case ("com.teskola.molkky.SavedGamesActivity"):
                 viewId = SAVED_GAMES_ACTIVITY;
-                this.games = (List<Game>) data;
+                this.games = (List<FirebaseManager.Data.Game>) data;
                 break;
             case ("com.teskola.molkky.AllStatsActivity"):
                 viewId = STATS_ACTIVITY;

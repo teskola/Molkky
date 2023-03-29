@@ -25,7 +25,7 @@ import java.util.List;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    private List<Game> games = new ArrayList<>();
+    private List<FirebaseManager.Data.Game> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;

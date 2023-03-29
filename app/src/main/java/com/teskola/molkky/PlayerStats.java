@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class PlayerStats extends PlayerInfo {
 
-    private final HashMap<String, ArrayList<Integer>> tosses;
+    private final HashMap<String, ArrayList<Long>> tosses;
     private final int wins;
     private int points = -1;
     private int tossesCount= -1;
@@ -15,7 +15,7 @@ public class PlayerStats extends PlayerInfo {
     private int excesses = -1;
     private int winningChances = -1;
 
-    public PlayerStats(PlayerInfo player, int wins, HashMap<String, ArrayList<Integer>> tosses) {
+    public PlayerStats(PlayerInfo player, int wins, HashMap<String, ArrayList<Long>> tosses) {
         super(player.getId(), player.getName());
         this.wins = wins;
         this.tosses = tosses;
@@ -24,7 +24,7 @@ public class PlayerStats extends PlayerInfo {
     public int getTosses(int value) {
         int count = 0;
         for (String key : tosses.keySet()) {
-            for (int i : tosses.get(key)) {
+            for (long i : tosses.get(key)) {
                 if (i == value)
                     count++;
             }

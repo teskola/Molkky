@@ -1,30 +1,31 @@
 package com.teskola.molkky;
 
-import androidx.annotation.NonNull;
 
 import com.google.firebase.database.Exclude;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 
-public class Game implements Comparable<Game> {
-    private final ArrayList<Player> players;
-    @Exclude
+public class Game {
+    private final List<Player> players;
+    private final List<Object> pids = new ArrayList<>();
     private String id;
     private long timestamp;
 
     public Game(List<Player> players) {
-        this.players = (ArrayList<Player>) players;
+        this.players = players;
+    }
+
+    public Game(List<Player> players, long timestamp) {
+        this.players = players;
+        this.timestamp = timestamp;
     }
 
     public Game() {
         players = new ArrayList<>();
     }
 
-    public Game(ArrayList<Player> players, boolean random) {
+    public Game(List<Player> players, boolean random) {
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -38,6 +39,8 @@ public class Game implements Comparable<Game> {
         else {
             this.players = players;
         }
+        for (Player player : this.players)
+            pids.add(player.getId());
     }
 
     @Exclude
@@ -48,6 +51,9 @@ public class Game implements Comparable<Game> {
         return count;
     }
 
+    public List<Object> getPids() {
+        return pids;
+    }
 
     public void setId (String id) {
         this.id = id;
@@ -57,7 +63,7 @@ public class Game implements Comparable<Game> {
         return timestamp;
     }
 
-    public ArrayList<Player> getPlayers() {
+    public List<Player> getPlayers() {
         return players;
     }
 
@@ -98,16 +104,4 @@ public class Game implements Comparable<Game> {
         return id;
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
-        return timestampString + " (" + getPlayers().get(0).getName() + ")";
-
-    }
-
-    @Override
-    public int compareTo(Game game) {
-        return Long.compare(game.timestamp, this.timestamp);
-    }
 }

@@ -2,9 +2,9 @@ package com.teskola.molkky;
 
 import android.content.Context;
 
+import android.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 public class GameHandler {
@@ -12,11 +12,11 @@ public class GameHandler {
     private Game game;
     private final DatabaseHandler databaseHandler;
     private boolean postTosses;
-    private final ArrayList<Integer> tosses = new ArrayList<>();
+    private final List<Pair<String, Long>> tosses = new ArrayList<>();
 
     private final FirebaseManager.LiveGameListener liveGameListener = newTosses -> {
         while (newTosses.size() > tosses.size()) {
-            addToss(newTosses.get(tosses.size()));
+            addToss(newTosses.get(tosses.size()).second);
             tosses.add(newTosses.get(tosses.size()));
         }
         while (newTosses.size() < tosses.size()) {
@@ -69,7 +69,7 @@ public class GameHandler {
         return game.getPlayer(0);
     }
 
-    public ArrayList<Player> getPlayers (boolean sorted) {
+    public List<Player> getPlayers (boolean sorted) {
         if (!sorted)
             return game.getPlayers();
         ArrayList<Player> sortedPlayers = new ArrayList<>(game.getPlayers());
@@ -113,7 +113,7 @@ public class GameHandler {
     }
 
     public void addToss(int points) {
-        tosses.add(points);
+        tosses.add(new Pair<>(game.getPlayer(0).getId(), (long) points));
         if (postTosses)
             databaseHandler.updateTosses(tosses);
         if (!game.getPlayer(0).getUndoStack().empty())
@@ -171,7 +171,8 @@ public class GameHandler {
     }
 
     public void endGame () {
-        databaseHandler.saveGame(game);
+
+        databaseHandler.saveGame(game, tosses);
         listener.onGameStatusChanged(true);
     }
 }

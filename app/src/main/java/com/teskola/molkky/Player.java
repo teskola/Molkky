@@ -28,6 +28,8 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         tosses = new ArrayList<>();
     }
 
+
+
     @Exclude
     public boolean isEliminated() {
         return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
