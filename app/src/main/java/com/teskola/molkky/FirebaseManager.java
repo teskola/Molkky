@@ -35,7 +35,6 @@ public class FirebaseManager {
     private final DatabaseReference databaseRef = firebase.getReference("databases");
     private final DatabaseReference liveRef = firebase.getReference("livegames");
     private final DatabaseReference homeRef;
-    private DatabaseReference createdRef;
     private DatabaseReference myDatabaseRef;
     private final String uid;
     private final HashMap<String, DatabaseReference> myGamesRef = new HashMap<>();
@@ -64,7 +63,7 @@ public class FirebaseManager {
         myDatabaseRef = firebase.getReference("databases/" + dbid + "/users/");
         homeRef = firebase.getReference("users/" + uid);
         homeRef.child("games").addChildEventListener(gamesListener("home"));
-        homeRef.child("players").addChildEventListener(playersListener("home"));
+        homeRef.child("names").addChildEventListener(playersListener("home"));
         myDatabaseRef.addChildEventListener(databaseListener);
     }
 
@@ -74,50 +73,34 @@ public class FirebaseManager {
 
     public static class Data {
 
-       static Map<String, String> names = new HashMap<>();
-       static Map<String, Map<String, Data.Game>> games = new HashMap<>();
+       private final Map<String, String> names = new HashMap<>();
+       private final Map<String, Map<String, Data.Game>> games = new HashMap<>();
        static long updated = 0;
        static long created = 0;
 
+
+
        public Data () {}
 
-
-        public static class Game implements Comparable<Game> {
-            static List<Toss> tosses;
-            static long timestamp;
-            static List<String> players;
-            static String winner;
+        public static class Game {
+            private List<Toss> tosses;
+            private long timestamp;
+            private List<String> players;
+            private String winner;
 
             public Game() {}
 
             public List<Toss> getTosses() {
                 return tosses;
             }
-
             public long getTimestamp () {
                 return timestamp;
             }
             public List<String> getPlayers () {
                 return players;
             }
-
             public String getWinner () {
                 return winner;
-            }
-
-
-            @NonNull
-            @Override
-            public String toString() {
-
-                String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
-                return timestampString + " (" + names.get(winner) + ")";
-
-            }
-
-            @Override
-            public int compareTo(Game game) {
-                return Long.compare(game.timestamp, this.timestamp);
             }
         }
 
@@ -165,27 +148,27 @@ public class FirebaseManager {
            return null;
         }
 
-        public List<Game> getGames() {
-           Map<String, Game> allGames = new HashMap<>();
-           for (String key : games.keySet()) {
-               allGames.putAll(games.get(key));
+        public List<SavedGamesActivity.GameInfo> getGames() {
+           List<SavedGamesActivity.GameInfo> gameInfos = new ArrayList<>();
+           for (String dbid : games.keySet()) {
+               for (Map.Entry<String, Game> gameEntry : games.get(dbid).entrySet()) {
+                   gameInfos.add(new SavedGamesActivity.GameInfo(gameEntry.getKey(), names.get(gameEntry.getValue().winner), gameEntry.getValue().timestamp));
+               }
            }
-           List<Game> list = new ArrayList<>(allGames.values());
-            Collections.sort(list);
-            return list;
+            Collections.sort(gameInfos);
+            return gameInfos;
         }
 
-        public List<Game> getGames(String pid) {
-           List<Game> list = new ArrayList<>();
-            for (Map<String, Game> database : games.values()) {
-                for (Game game : database.values()) {
-                    if (game.players.contains(pid)) {
-                        list.add(game);
-                    }
+        public List<SavedGamesActivity.GameInfo> getGames(String pid) {
+            List<SavedGamesActivity.GameInfo> gameInfos = new ArrayList<>();
+            for (String dbid : games.keySet()) {
+                for (Map.Entry<String, Game> gameEntry : games.get(dbid).entrySet()) {
+                    if (gameEntry.getValue().players.contains(pid))
+                        gameInfos.add(new SavedGamesActivity.GameInfo(gameEntry.getKey(), names.get(gameEntry.getValue().winner), gameEntry.getValue().timestamp));
                 }
             }
-            Collections.sort(list);
-            return list;
+            Collections.sort(gameInfos);
+            return gameInfos;
         }
 
         public List<PlayerInfo> getPlayers() {
@@ -214,7 +197,7 @@ public class FirebaseManager {
           return names.size() == 0;
         }
 
-        private Map<String, List<Long>> getTosses (String pid) {
+        public Map<String, List<Long>> getTosses (String pid) {
            Map<String, List<Long>> allTosses = new HashMap<>();
             for (Map<String, Game> database : games.values()) {
                 for (String gid : database.keySet()) {
@@ -230,7 +213,7 @@ public class FirebaseManager {
             return allTosses;
         }
 
-        private int getWins (String pid) {
+        public int getWins (String pid) {
            int wins = 0;
             for (Map<String,Game> database : games.values()) {
                 for (Game game : database.values()) {
@@ -240,11 +223,6 @@ public class FirebaseManager {
                 }
             }
             return wins;
-        }
-
-        public PlayerStats getPlayerStats (PlayerInfo playerInfo) {
-           String pid = playerInfo.getId();
-           return new PlayerStats(playerInfo, getWins(pid),getTosses(pid));
         }
 
         public int getGamesCount() {
@@ -268,8 +246,6 @@ public class FirebaseManager {
         }
 
     }
-
-
 
     private final ChildEventListener databaseListener = new ChildEventListener() {
         @Override
@@ -296,13 +272,14 @@ public class FirebaseManager {
 
         @Override
         public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-            // if (!myGamesRef.isEmpty() && myGamesRef.get(snapshot.getKey()) != null)
+            if (!myGamesRef.isEmpty() && myGamesRef.get(snapshot.getKey()) != null) {       // taitaa olla turha
                 Objects.requireNonNull(myGamesRef.get(snapshot.getKey())).removeEventListener(Objects.requireNonNull(gameListeners.get(snapshot.getKey())));
                 Objects.requireNonNull(myPlayersRef.get(snapshot.getKey())).removeEventListener(Objects.requireNonNull(playerListeners.get(snapshot.getKey())));
                 myGamesRef.remove(snapshot.getKey());
                 myPlayersRef.remove(snapshot.getKey());
                 data.removeDatabase(snapshot.getKey());
                 listener.onUserRemoved();
+            }
         }
 
         @Override
@@ -400,19 +377,6 @@ public class FirebaseManager {
         };
     }
 
-    private final ValueEventListener createdListener = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot snapshot) {
-            if (snapshot.getValue() != null)
-                data.created = (long) snapshot.getValue();
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError error) {
-
-        }
-    };
-
     public void stop() {
         FirebaseDatabase.getInstance().goOffline();
     }
@@ -420,10 +384,10 @@ public class FirebaseManager {
         FirebaseDatabase.getInstance().goOnline();
     }
 
-    public void searchDatabase (String database, OnSuccessListener<Long> response, OnFailureListener error) {
+    public void searchDatabase (String database, OnSuccessListener<String> response, OnFailureListener error) {
         databaseRef.child(database).child("created").get().addOnCompleteListener(task -> {
             if (task.isSuccessful())
-                response.onSuccess((Long) task.getResult().getValue());
+                response.onSuccess(String.valueOf(task.getResult().getValue()));
             else error.onFailure(Objects.requireNonNull(task.getException()));
         });
     }
@@ -445,8 +409,6 @@ public class FirebaseManager {
             if (task.isSuccessful()) {
                 myDatabaseRef = firebase.getReference("databases/" + database + "/users/");
                 myDatabaseRef.addChildEventListener(databaseListener);
-                createdRef = databaseRef.child(database).child("created");
-                createdRef.addListenerForSingleValueEvent(createdListener);
                 response.onSuccess(null);
             }
             else
@@ -461,7 +423,6 @@ public class FirebaseManager {
             // if (gameListeners.get(key) != null)
             myGamesRef.get(key).removeEventListener(gameListeners.get(key));
             myPlayersRef.get(key).removeEventListener(playerListeners.get(key));
-            createdRef.removeEventListener(createdListener);
             data.removeDatabase(key);
         }
         myGamesRef.clear();
@@ -498,7 +459,7 @@ public class FirebaseManager {
             else
                 error.onFailure(Objects.requireNonNull(task.getException()));
         });
-        homeRef.child("players").updateChildren(names);
+        homeRef.child("names").updateChildren(names);
 
     }
 

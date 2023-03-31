@@ -112,9 +112,6 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
     }
 
-    public static String getDatabaseId(String uid) {
-        return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
-    }
 
     /*
     *
@@ -179,7 +176,8 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
                         editor.putString("DATABASE", newDatabaseId);
                         databaseId = newDatabaseId;
                         editor.apply();
-                         // database.setCreated(Long.parseLong(response));
+                        FirebaseManager.Data.created = Long.parseLong(response);
+                        if (FirebaseManager.Data.updated == 0) FirebaseManager.Data.updated = FirebaseManager.Data.created;
                     }, e -> {
                         for (DatabaseListener listener : listeners)
                             listener.onError(Error.UNKNOWN_ERROR);
@@ -266,11 +264,11 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         }
     }
 
-    public List<FirebaseManager.Data.Game> getGames() {
+    public List<SavedGamesActivity.GameInfo> getGames() {
         return firebaseManager.getData().getGames();
     }
 
-    public List<FirebaseManager.Data.Game> getGames(String playerId) {
+    public List<SavedGamesActivity.GameInfo> getGames(String playerId) {
         return firebaseManager.getData().getGames(playerId);
     }
 
@@ -290,7 +288,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
     }
 
     public PlayerStats getPlayerStats(PlayerInfo playerInfo) {
-        return firebaseManager.getData().getPlayerStats(playerInfo);
+        return new PlayerStats(playerInfo, firebaseManager.getData().getWins(playerInfo.getId()), firebaseManager.getData().getTosses(playerInfo.getId()));
     }
 
     public int getGamesCount () {
@@ -309,16 +307,26 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
         if (firebaseManager == null) {
             return null;
         }
-        if (firebaseManager.getData().created == 0) {
+        if (FirebaseManager.Data.created == 0) {
+            firebaseManager.searchDatabase(databaseId, response -> {
+                FirebaseManager.Data.created = Long.parseLong(response);
+                if (FirebaseManager.Data.updated == 0)
+                    FirebaseManager.Data.updated = FirebaseManager.Data.created;
+                for (DatabaseListener listener : listeners)
+                    listener.onDatabaseEvent(Event.CREATED_TIMESTAMP_ADDED);
+            }, e -> {
+                for (DatabaseListener listener : listeners)
+                    listener.onError(Error.UNKNOWN_ERROR);
+            });
             return null;
         }
-        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(firebaseManager.getData().created);
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(FirebaseManager.Data.created);
     }
 
     public String getUpdated () {
-        if (firebaseManager.getData().updated == 0)
+        if (FirebaseManager.Data.updated == 0)
             return null;
-        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(firebaseManager.getData().updated);
+        return new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(FirebaseManager.Data.updated);
     }
 
 

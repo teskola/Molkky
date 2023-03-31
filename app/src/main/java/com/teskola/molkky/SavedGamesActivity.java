@@ -20,18 +20,42 @@ import android.widget.TextView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    private List<FirebaseManager.Data.Game> games = new ArrayList<>();
+    private List<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
     private Button showAllBtn;
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
     private PlayerInfo playerInfo;
     private boolean showAll;
+
+    public static class GameInfo implements Comparable<GameInfo> {
+        private String gid;
+        private String winnerName;
+        private long timestamp;
+
+        public GameInfo (String gid, String winnerName, long timestamp) {
+            this.gid = gid;
+            this.winnerName = winnerName;
+            this.timestamp = timestamp;
+        }
+
+        public String toString () {
+            String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
+            return timestampString + " (" + winnerName + ")";
+        }
+
+        @Override
+        public int compareTo(GameInfo gameInfo) {
+            return Long.compare(gameInfo.timestamp, this.timestamp);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

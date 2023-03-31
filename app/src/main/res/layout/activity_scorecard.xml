@@ -26,6 +26,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/hits"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
 
             <TextView
@@ -33,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-
+                android:textColor="@color/black"
                 android:fontFamily="@font/josefin_sans_light"
                 android:textSize="16sp" />
 
@@ -42,6 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:textColor="@color/black"
                 android:fontFamily="@font/josefin_sans_light"
                 android:textSize="16sp" />
         </TableRow>
@@ -56,6 +58,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/mean"
+                android:textColor="@color/black"
+
                 android:textSize="16sp" />
 
             <TextView
@@ -64,6 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
         </TableRow>
 
@@ -76,6 +81,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/excesses"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
 
             <TextView
@@ -85,6 +91,7 @@
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text=""
+                android:textColor="@color/black"
                 android:textSize="16sp" />
         </TableRow>
 
@@ -97,6 +104,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/winning_chances"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
 
             <TextView
@@ -105,7 +113,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
-                android:text=""
+                android:textColor="@color/black"
                 android:textSize="16sp" />
         </TableRow>
 
@@ -118,6 +126,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/elimination"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
 
             <TextView
@@ -126,6 +135,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:textSize="16sp" />
         </TableRow>
 

@@ -153,9 +153,6 @@ public class SettingsActivity extends DatabaseActivity {
                 updateDatabaseStats();
                 break;
             case CREATED_TIMESTAMP_ADDED:
-                if (updated == null)
-                    updated = databaseHandler.getUpdated();
-                updatedTV.setText(updated);
                 created = databaseHandler.getCreated();
                 createdTV.setText(created);
                 break;
