@@ -8,7 +8,6 @@ import java.util.Random;
 
 public class Game {
     private final List<Player> players;
-    private final List<Object> pids = new ArrayList<>();
     private String id;
     private long timestamp;
 
@@ -39,8 +38,7 @@ public class Game {
         else {
             this.players = players;
         }
-        for (Player player : this.players)
-            pids.add(player.getId());
+
     }
 
     @Exclude
@@ -49,10 +47,6 @@ public class Game {
         for (Player player : players)
             count += player.getTosses().size();
         return count;
-    }
-
-    public List<Object> getPids() {
-        return pids;
     }
 
     public void setId (String id) {

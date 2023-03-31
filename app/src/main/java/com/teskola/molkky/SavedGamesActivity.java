@@ -37,18 +37,32 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
     public static class GameInfo implements Comparable<GameInfo> {
         private String gid;
-        private String winnerName;
+        private String winner;
         private long timestamp;
+
+        public String getGid() {
+            return gid;
+        }
+
+        public String getWinner() {
+            return winner;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public GameInfo() {}
 
         public GameInfo (String gid, String winnerName, long timestamp) {
             this.gid = gid;
-            this.winnerName = winnerName;
+            this.winner = winnerName;
             this.timestamp = timestamp;
         }
 
         public String toString () {
             String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
-            return timestampString + " (" + winnerName + ")";
+            return timestampString + " (" + winner + ")";
         }
 
         @Override

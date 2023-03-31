@@ -1,18 +1,21 @@
 package com.teskola.molkky;
 
-import com.google.firebase.database.Exclude;
-
-import java.util.Objects;
-
-
 public class PlayerInfo {
-    @Exclude
     private String id;
     private String name;
+    private boolean image = false;
 
     public PlayerInfo(String id, String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public boolean hasImage() {
+        return image;
+    }
+
+    public void setImage(boolean image) {
+        this.image = image;
     }
 
     public PlayerInfo(String name) {
@@ -43,10 +46,5 @@ public class PlayerInfo {
         if (o == null || getClass() != o.getClass()) return false;
         PlayerInfo that = (PlayerInfo) o;
         return id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }

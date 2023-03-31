@@ -436,30 +436,41 @@ public class FirebaseManager {
         });
     }
 
-    public void addGameToDatabase(Game game, List<Toss> tosses, OnSuccessListener<String> response, OnFailureListener error) {
-        String gameId;
+    public void addGameToDatabase(Game game) {
+
+        // get game id
+
         if (game.getId() == null)
-            gameId = homeRef.child("games").push().getKey();
-        else
-            gameId = game.getId();
+            game.setId(homeRef.child("games").push().getKey());
+
+        // update names and game ids for players
 
         Map<String, Object> names = new HashMap<>(game.getPlayers().size());
         for (Player player : game.getPlayers()) {
+            homeRef.child("players").child(player.getId()).child(game.getId()).setValue(true);
             names.put(player.getId(), player.getName());
         }
-
-        HashMap<String, Object> data = new HashMap<>(4);
-        data.put("timestamp", ServerValue.TIMESTAMP);
-        data.put("winner", game.getPlayer(0).getId());
-        data.put("players", game.getPids());
-        data.put("tosses", tosses);
-        homeRef.child("/games/" + gameId).setValue(data).addOnCompleteListener(task -> {
-            if (task.isSuccessful())
-                response.onSuccess(gameId);
-            else
-                error.onFailure(Objects.requireNonNull(task.getException()));
-        });
         homeRef.child("names").updateChildren(names);
+
+        // game metadata
+
+        HashMap<String, Object> metaData = new HashMap<>(3);
+        metaData.put("timestamp", ServerValue.TIMESTAMP);
+        metaData.put("tossCount", (long) game.getTossesCount());
+        metaData.put("winner", game.getPlayer(0).getId());
+        homeRef.child("games").child("meta").child(game.getId()).setValue(metaData);
+
+        // player ids
+
+        List<Object> pids = new ArrayList<>(game.getPlayers().size());
+        for (Player player : game.getPlayers())
+            pids.add(player.getId());
+        homeRef.child("games").child("players").child(game.getId()).setValue(pids);
+
+        // tosses
+
+        for (Player player : game.getPlayers())
+            homeRef.child("tosses").child(game.getId()).child(player.getId()).setValue(player.getTosses());
 
     }
 

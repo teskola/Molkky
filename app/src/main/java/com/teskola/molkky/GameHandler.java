@@ -13,6 +13,7 @@ public class GameHandler {
     private final DatabaseHandler databaseHandler;
     private boolean postTosses;
     private final List<Toss> tosses = new ArrayList<>();
+    private List<PlayerInfo> startingOrder;
 
     private final FirebaseManager.LiveGameListener liveGameListener = newTosses -> {
         while (newTosses.size() > tosses.size()) {

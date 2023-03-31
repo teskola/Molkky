@@ -220,14 +220,7 @@ public class DatabaseHandler implements FirebaseManager.DatabaseListener {
             return;
         }
 
-        firebaseManager.addGameToDatabase(game, tosses, response -> {
-            game.setId(response);
-            for (DatabaseListener listener : listeners)
-                listener.onDatabaseEvent(Event.GAME_ADDED);
-        }, e -> {
-            for (DatabaseListener listener : listeners)
-                listener.onError(Error.ADD_GAME_FAILED);
-        });
+        firebaseManager.addGameToDatabase(game);
     }
 
     public void startGame(Game game) {
