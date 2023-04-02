@@ -1,7 +1,5 @@
 package com.teskola.molkky;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -22,9 +20,8 @@ import android.widget.ImageView;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 
-public abstract class ImagesActivity extends DatabaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+public abstract class ImagesActivity extends BaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int PERMISSIONS_REQUEST = 100;
     private OnImageAdded listener;

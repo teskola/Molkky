@@ -4,11 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -57,9 +54,9 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         if (savedInstanceState != null)
             statID = savedInstanceState.getInt("STAT_ID");
 
-        ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) DatabaseHandler.getInstance(this).getPlayers();
+        ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) MetaHandler.getInstance(this).getPlayers();
         for (PlayerInfo player : players) {
-            playerStats.add(DatabaseHandler.getInstance(this).getPlayerStats(player));
+            playerStats.add(MetaHandler.getInstance(this).getPlayerStats(player));
         }
 
         createRecyclerView();

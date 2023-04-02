@@ -1,44 +1,34 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.view.Menu;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
-    private ArrayList<PlayerInfo> playersList = new ArrayList<>();
+    private List<PlayerInfo> playersList = new ArrayList<>();
     private ListAdapter listAdapter;
-    private ItemTouchHelper itemTouchHelper;
     private RecyclerView recyclerview;
     private EditText editPlayerName;
     private Button startButton;
@@ -46,11 +36,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private SharedPreferences saved_state;
     private SharedPreferences.Editor editor;
     private int draggedItemIndex;
+    private PlayerHandler playerHandler;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        playerHandler = new PlayerHandler(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
@@ -90,7 +82,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // https://www.youtube.com/watch?v=yua1exHtFB4&t=391s
 
-        itemTouchHelper = new ItemTouchHelper(
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
                 new ItemTouchHelper.Callback() {
                     @Override
                     public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
@@ -154,6 +146,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onResume () {
         super.onResume();
         startButton.setEnabled(playersList.size() > 1);
+        playerHandler.start();
+    }
+
+    @Override
+    protected void onPause () {
+        super.onPause();
+        playerHandler.stop();
     }
 
     public void createRecyclerView () {
@@ -173,16 +172,21 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     private void selectPlayers() {
+        if (playerHandler.noSavedPlayers()) {
+            Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent (this, SelectPlayersActivity.class);
         if (!playersList.isEmpty()) {
-            String json = new Gson().toJson(playersList);
-            intent.putExtra("SELECTED_PLAYERS", json);
+            String addedJson = new Gson().toJson(playersList);
+            intent.putExtra("SELECTED_PLAYERS", addedJson);
         }
-        if (!DatabaseHandler.getInstance(this).noPlayers()) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
-        }
+
+        List<PlayerInfo> otherPlayers = playerHandler.getPlayers(playersList);
+        String allJson = new Gson().toJson(otherPlayers);
+        intent.putExtra("OTHER_PLAYERS", allJson);
+        startActivity(intent);
+
     }
 
 
@@ -212,7 +216,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         // Check if name is already in database. If not, give player unique id.
 
-        if(DatabaseHandler.getInstance(this).addPlayer(newPlayer))
+        if(playerHandler.addPlayer(newPlayer))
             Toast.makeText(this, getString(R.string.fetched_from_database, newPlayer.getName()), Toast.LENGTH_SHORT).show();
 
         playersList.add(0, newPlayer);
@@ -220,7 +224,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             startButton.setEnabled(true);
         }
 
-        editPlayerName.setText("");
+        editPlayerName.setText(null);
         listAdapter.notifyItemInserted(0);
         Objects.requireNonNull(recyclerview.getLayoutManager()).scrollToPosition(0);
     }

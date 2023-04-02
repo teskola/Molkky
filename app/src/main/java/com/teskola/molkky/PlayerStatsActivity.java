@@ -6,7 +6,6 @@ import androidx.core.content.ContextCompat;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
@@ -79,7 +78,7 @@ public class PlayerStatsActivity extends OptionsActivity {
             PlayerInfo[] playerInfos = new Gson().fromJson(json, PlayerInfo[].class);
             players = new PlayerStats[playerInfos.length];
             for (int i=0; i < playerInfos.length; i++)
-                players[i] = DatabaseHandler.getInstance(this).getPlayerStats(playerInfos[i]);
+                players[i] = MetaHandler.getInstance(this).getPlayerStats(playerInfos[i]);
         }
 
         if (savedInstanceState != null)

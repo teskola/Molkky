@@ -76,5 +76,6 @@
     <string name="select_players">Valitse pelaajat</string>
     <string name="name">nimi</string>
     <string name="game_not_found">Peliä ei löytynyt</string>
+    <string name="signin_failed">Kirjautuminen palvelimelle epäonnistui. Pelien tallennus ei ole käytössä.</string>
 
 </resources>

@@ -1,33 +1,23 @@
 package com.teskola.molkky;
 
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.SwitchCompat;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import java.util.Stack;
-
-public class SettingsActivity extends DatabaseActivity {
-    private DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
+public class SettingsActivity extends BaseActivity implements MetaHandler.DatabaseListener {
+    private MetaHandler databaseHandler;
 
     private SwitchCompat imageSwitch;
     private SwitchCompat useCloudSwitch;
@@ -35,13 +25,13 @@ public class SettingsActivity extends DatabaseActivity {
     private ViewGroup databaseStats;
     private EditText editTV;
     private TextInputLayout inputLayout;
-    private String created, updated;
     private boolean showImages, useCloud;
     private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        databaseHandler = new MetaHandler(this, this);
         setContentView(R.layout.activity_settings);
 
         imageSwitch = findViewById(R.id.imageSwitch);
@@ -59,9 +49,9 @@ public class SettingsActivity extends DatabaseActivity {
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
         useCloud = preferences.getBoolean("USE_CLOUD", true);
-        editTV.setText(DatabaseHandler.getInstance(this).getDatabaseId());
-        editTV.setSelection(editTV.getText().length());
-        updateDatabaseStats();
+        String dbid = preferences.getString("DATABASE", null);
+        editTV.setText(dbid);
+        editTV.setSelection(editTV.getText().length());         // cursor to the end of text field
 
         imageSwitch.setChecked(showImages);
         imageSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
@@ -90,17 +80,18 @@ public class SettingsActivity extends DatabaseActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().equals(DatabaseHandler.getInstance(SettingsActivity.this).getDatabaseId())) {
+                String dbid = preferences.getString("DATABASE", null);
+                if (s.toString().equals(dbid)) {
                     inputLayout.setEndIconVisible(true);
                     inputLayout.setBoxStrokeColor(getResources().getColor(R.color.dark_green));
                     return;
                 }
 
-                if (s.length() == DatabaseHandler.DATABASE_ID_LENGTH) {
-                    DatabaseHandler.getInstance(SettingsActivity.this).changeDatabase(s.toString());
+                if (s.length() == FirebaseManager.DATABASE_ID_LENGTH) {
+                    databaseHandler.changeDatabase(s.toString());
                     return;
                 }
-                if (s.length() < DatabaseHandler.DATABASE_ID_LENGTH) {
+                if (s.length() < FirebaseManager.DATABASE_ID_LENGTH) {
                     inputLayout.setError(null);
                     inputLayout.setEndIconVisible(false);
                     inputLayout.setBoxStrokeColor(getResources().getColor(R.color.teal));
@@ -113,49 +104,62 @@ public class SettingsActivity extends DatabaseActivity {
         });
     }
 
-    public void updateDatabaseStats() {
-        if (!DatabaseHandler.getInstance(this).isConnected()) {
-            databaseStats.setVisibility(View.INVISIBLE);
-            return;
-        }
-        databaseStats.setVisibility(View.VISIBLE);
-        int games = databaseHandler.getGamesCount();
-        int players = databaseHandler.getPlayersCount();
-        int tosses = databaseHandler.getTossesCount();
-        created = databaseHandler.getCreated();
-        updated = databaseHandler.getUpdated();
-        gamesTV.setText(String.valueOf(games));
-        playersTV.setText(String.valueOf(players));
-        tossesTV.setText(String.valueOf(tosses));
-        if (databaseHandler.getUpdated() != null)
-            updatedTV.setText(updated);
-        if (databaseHandler.getCreated() != null)
-            createdTV.setText(created);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        databaseHandler.close();
     }
 
     @Override
-    public void onDatabaseEvent(DatabaseHandler.Event event) {
-        super.onDatabaseEvent(event);
-        switch (event) {
-            case DATABASE_FOUND:
-                inputLayout.setBoxStrokeColor(getResources().getColor(R.color.dark_green));
-                inputLayout.setEndIconVisible(true);
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-                break;
-            case DATABASE_NOT_FOUND:
-                inputLayout.setError(getResources().getString(R.string.database_not_found));
-                break;
-            case GAME_ADDED:
-                updateDatabaseStats();
-                break;
-            case DATABASE_USER_REMOVED:
-                updateDatabaseStats();
-                break;
-            case CREATED_TIMESTAMP_ADDED:
-                created = databaseHandler.getCreated();
-                createdTV.setText(created);
-                break;
+    public void onError(MetaHandler.Error error) {
+        if (error == MetaHandler.Error.UNKNOWN_ERROR) {
+            Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show();
         }
+        else if (error == MetaHandler.Error.NETWORK_ERROR)
+            Toast.makeText(this, R.string.database_connection_failed, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDatabaseEvent(MetaHandler.Event event) {
+        if (event == MetaHandler.Event.DATABASE_FOUND) {
+            inputLayout.setBoxStrokeColor(getResources().getColor(R.color.dark_green));
+            inputLayout.setEndIconVisible(true);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        } else if (event == MetaHandler.Event.DATABASE_NOT_FOUND) {
+            inputLayout.setError(getResources().getString(R.string.database_not_found));
+        }
+    }
+
+    @Override
+    public void onGamesReceived(int count) {
+        databaseStats.setVisibility(View.VISIBLE);
+        gamesTV.setText(String.valueOf(count));
+    }
+
+    @Override
+    public void onPlayersReceived(int count) {
+        databaseStats.setVisibility(View.VISIBLE);
+        playersTV.setText(String.valueOf(count));
+    }
+
+    @Override
+    public void onTossesReceived(int count) {
+        databaseStats.setVisibility(View.VISIBLE);
+        tossesTV.setText(String.valueOf(count));
+    }
+
+    @Override
+    public void onUpdatedReceived(String date) {
+        databaseStats.setVisibility(View.VISIBLE);
+        updatedTV.setText(date);
+    }
+
+    @Override
+    public void onCreatedReceived(String date) {
+        databaseStats.setVisibility(View.VISIBLE);
+        createdTV.setText(date);
+        if (updatedTV.getText() == null)
+            updatedTV.setText(date);
     }
 }

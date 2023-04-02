@@ -4,27 +4,23 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class SelectPlayersActivity extends ImagesActivity implements ListAdapter.OnItemClickListener {
-    private  List<Boolean> selected = new ArrayList<>();
-    private  List<PlayerInfo> allPlayers = new ArrayList<>();
+    private List<Boolean> selected = new ArrayList<>(); // muuta arrayksi
+    private List<PlayerInfo> allPlayers = new ArrayList<>();
     private RecyclerView recyclerView;
 
 
@@ -44,20 +40,19 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
         } else  {
 
             if (getIntent().getStringExtra("SELECTED_PLAYERS") != null) {
-                String json = getIntent().getStringExtra("SELECTED_PLAYERS");
-                PlayerInfo[] players = new Gson().fromJson(json, PlayerInfo[].class);
-                for (PlayerInfo player : players) {
+                String selectedJson = getIntent().getStringExtra("SELECTED_PLAYERS");
+                PlayerInfo[] selectedPlayers = new Gson().fromJson(selectedJson, PlayerInfo[].class);
+                for (PlayerInfo player : selectedPlayers) {
                     allPlayers.add(player);
                     selected.add(true);
                 }
+                String other = getIntent().getStringExtra("OTHER_PLAYERS");
+                PlayerInfo[] otherPlayers = new Gson().fromJson(other, PlayerInfo[].class);
+                for (PlayerInfo player : otherPlayers) {
+                    allPlayers.add(player);
+                    selected.add(false);
+                }
             }
-
-            List<PlayerInfo> savedPlayers = DatabaseHandler.getInstance(this).getPlayers(allPlayers);
-            for (PlayerInfo player : savedPlayers) {
-                allPlayers.add(player);
-                selected.add(false);
-            }
-
         }
 
         setContentView(R.layout.activity_select_players);
@@ -73,6 +68,7 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
 
     public void createRecyclerView() {
         recyclerView.setAdapter(new ListAdapter(getApplicationContext(), allPlayers, selected, getPreferences().getBoolean("SHOW_IMAGES", false), this));
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
@@ -82,13 +78,14 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
         String json_players = new Gson().toJson(allPlayers);
         String json_selected = new Gson().toJson(selected);
         savedInstanceState.putString("ALL_PLAYERS", json_players);
+
         savedInstanceState.putString("SELECTED_BOOLEAN", json_selected);
     }
 
     @Override
     public void onSelectClicked(int position) {
         selected.set(position, !selected.get(position));
-        recyclerView.getAdapter().notifyItemChanged(position);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyItemChanged(position);
     }
 
     @Override

@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 public class GameActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, GameHandler.GameListener {
     public static final long SEEKBAR_DEFAULT_POSITION = 6;
@@ -192,6 +193,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
             listAdapter = new ListAdapter(handler.getPlayers(false), false, true, null);
         }
         recyclerView.setAdapter(listAdapter);
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //              OK-Button
@@ -284,7 +286,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         return true;
     }
 
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         super.onOptionsItemSelected(item);
         return false;
     }
@@ -298,8 +300,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onTurnChanged(int points, int chanceToWin, boolean undo) {
 
-        recyclerView.getLayoutManager().scrollToPosition(0);
-        recyclerView.getAdapter().notifyItemChanged(!undo ? 0 : handler.last());
+        Objects.requireNonNull(recyclerView.getLayoutManager()).scrollToPosition(0);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyItemChanged(!undo ? 0 : handler.last());
         recyclerView.getAdapter().notifyItemMoved(!undo ? 0 : handler.last(),!undo ? handler.last() : 0);
 
         nameTextView.setText(handler.getPlayerName());

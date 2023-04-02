@@ -13,8 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 
@@ -40,7 +38,7 @@ public abstract class OptionsActivity extends ImagesActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() == 4) {
                     String gameId = s.toString();
-                    DatabaseHandler.getInstance(OptionsActivity.this).getFirebaseManager().getLiveGamePlayers(gameId, playerInfos -> {
+                    MetaHandler.getInstance(OptionsActivity.this).getFirebaseManager().getLiveGamePlayers(gameId, playerInfos -> {
                         String json = new Gson().toJson(playerInfos);
                         Intent intent = new Intent(OptionsActivity.this, GameActivity.class);
                         intent.putExtra("PLAYERS", json);
@@ -82,21 +80,21 @@ public abstract class OptionsActivity extends ImagesActivity {
     }
 
     @SuppressLint("NonConstantResourceId")
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Intent intent = null;
         switch (item.getItemId()) {
             case R.id.spectate:
                 showSpectateDialog();
                 return true;
             case R.id.stats:
-                if (DatabaseHandler.getInstance(this).noPlayers()) {
+                if (MetaHandler.getInstance(this).noPlayers()) {
                     Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
                     return true;
                 }
                 intent = new Intent(this, AllStatsActivity.class);
                 break;
             case R.id.saved_games:
-                if (DatabaseHandler.getInstance(this).getGamesCount() == 0) {
+                if (MetaHandler.getInstance(this).getGamesCount() == 0) {
                     Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
                     return true;
                 }

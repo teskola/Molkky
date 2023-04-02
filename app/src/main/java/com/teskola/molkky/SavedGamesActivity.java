@@ -1,20 +1,15 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
@@ -60,6 +55,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             this.timestamp = timestamp;
         }
 
+        @NonNull
         public String toString () {
             String timestampString = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(timestamp);
             return timestampString + " (" + winner + ")";
@@ -83,7 +79,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         if (getIntent().getExtras() != null) {
             showAll = false;
             playerInfo = new PlayerInfo(getIntent().getStringExtra("PLAYER_ID"), getIntent().getStringExtra("PLAYER_NAME"));
-            games = DatabaseHandler.getInstance(this).getGames(playerInfo.getId());
+            games = MetaHandler.getInstance(this).getGames(playerInfo.getId());
             String title = playerInfo.getName();
             titleTV.setText(title);
             if (getPreferences().getBoolean("SHOW_IMAGES", false))
@@ -96,7 +92,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             showAll = true;
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            games = DatabaseHandler.getInstance(this).getGames();
+            games = MetaHandler.getInstance(this).getGames();
 
         }
         showAllBtn.setOnClickListener(view -> {

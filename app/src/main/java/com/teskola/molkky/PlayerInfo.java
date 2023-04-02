@@ -1,21 +1,30 @@
 package com.teskola.molkky;
 
+import com.google.firebase.database.Exclude;
+
 public class PlayerInfo {
     private String id;
     private String name;
+    @Exclude
     private boolean image = false;
+    @Exclude
+    private String alterEgo;
 
     public PlayerInfo(String id, String name) {
         this.id = id;
         this.name = name;
     }
-
+    @Exclude
     public boolean hasImage() {
         return image;
     }
 
     public void setImage(boolean image) {
         this.image = image;
+    }
+
+    public void setAlterEgo (String alterEgo) {
+        this.alterEgo = alterEgo;
     }
 
     public PlayerInfo(String name) {
@@ -25,11 +34,15 @@ public class PlayerInfo {
     public PlayerInfo() {}
 
     public String getName() {
+        return (alterEgo != null ? alterEgo : name);
+    }
+
+    public String getNameInDatabase() {
         return name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.alterEgo = name;
     }
 
     public String getId() {

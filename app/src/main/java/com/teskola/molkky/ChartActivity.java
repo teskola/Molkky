@@ -20,7 +20,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChartActivity extends DatabaseActivity {
+public class ChartActivity extends BaseActivity {
     private Game game;
     private ViewGroup switchContainer;
     private LineChart chart;

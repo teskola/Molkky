@@ -2,7 +2,6 @@ package com.teskola.molkky;
 
 import android.content.Context;
 
-import com.google.firebase.database.core.utilities.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.List;
 public class GameHandler {
     private GameListener listener;
     private Game game;
-    private final DatabaseHandler databaseHandler;
+    private final FirebaseManager firebaseManager;
     private boolean postTosses;
     private final List<Toss> tosses = new ArrayList<>();
     private List<PlayerInfo> startingOrder;
@@ -27,7 +26,7 @@ public class GameHandler {
     };
 
     public GameHandler (Context context) {
-        this.databaseHandler = DatabaseHandler.getInstance(context);
+        this.firebaseManager = FirebaseManager.getInstance(context);
     }
 
     public void setGame (Game game) {
@@ -43,7 +42,7 @@ public class GameHandler {
     }
 
     public String getLiveId () {
-        return databaseHandler.getLiveGameId();
+        return firebaseManager.getLiveGameId();
     }
 
     public interface GameListener {
@@ -173,7 +172,7 @@ public class GameHandler {
 
     public void endGame () {
 
-        databaseHandler.saveGame(game, tosses);
+        firebaseManager.addGameToDatabase(game);
         listener.onGameStatusChanged(true);
     }
 }
