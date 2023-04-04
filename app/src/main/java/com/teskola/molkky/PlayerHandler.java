@@ -6,9 +6,7 @@ import android.content.SharedPreferences;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,12 +20,41 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     private final Map<String, Set<PlayerInfo>> namesMap;
     private final FirebaseManager firebaseManager;
     private final SharedPreferences alterEgos;
+    private OnEmptyDatabaseListener emptyDatabaseListener;
+    private OnPlayersAddedListener onPlayersAddedListener;
+    private static PlayerHandler instance;
 
-    public PlayerHandler (Context context) {
+    public static PlayerHandler getInstance(Context context) {
+        if (instance == null)
+            instance = new PlayerHandler(context.getApplicationContext());
+        return instance;
+    }
+
+    private PlayerHandler (Context context) {
         namesMap = new HashMap<>();
         firebaseManager = FirebaseManager.getInstance(context);
         alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
         start();
+    }
+
+    public interface OnPlayersAddedListener {
+        void onAdded ();
+    }
+
+    public interface OnEmptyDatabaseListener {
+        void onEmpty ();
+    }
+
+    public void setEmptyDatabaseListener (OnEmptyDatabaseListener onEmptyDatabaseListener) {
+        this.emptyDatabaseListener = onEmptyDatabaseListener;
+    }
+
+    public void registerOnPlayersAddedListener(OnPlayersAddedListener onPlayersAddedListener) {
+        this.onPlayersAddedListener = onPlayersAddedListener;
+    }
+
+    public void unRegisterOnPlayersAddedLister() {
+        this.onPlayersAddedListener = null;
     }
 
     public void start() {
@@ -40,12 +67,16 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
 
     @Override
     public void onPlayersReceived(Map<String, Set<PlayerInfo>> players) {
+        if (onPlayersAddedListener != null)
+            onPlayersAddedListener.onAdded();
         namesMap.putAll(players);
     }
 
     @Override
     public void onDatabaseRemoved(String key) {
         namesMap.remove(key);
+        if (namesMap.isEmpty())
+            emptyDatabaseListener.onEmpty();
     }
 
     public boolean addPlayer(PlayerInfo player) {
@@ -178,6 +209,16 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     }
 
 
+    public String getPlayerName (String dbid, String id) {
+        String alterEgo = alterEgos.getString(id, null);
+        if (alterEgo != null)
+            return alterEgo;
+        for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {
+            if (playerInfo.getId().equals(id))
+                return  playerInfo.getName();
+        }
+        return null;
+    }
 
     private String findPlayerName (String id) {
         for (String dbid : namesMap.keySet()) {

@@ -1,5 +1,6 @@
 package com.teskola.molkky;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 import android.content.Context;
@@ -16,7 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputLayout;
 
-public class SettingsActivity extends BaseActivity implements MetaHandler.DatabaseListener {
+public class SettingsActivity extends AppCompatActivity implements MetaHandler.DatabaseListener {
     private MetaHandler databaseHandler;
 
     private SwitchCompat imageSwitch;

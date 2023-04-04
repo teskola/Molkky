@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 
 import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
@@ -48,52 +49,54 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     private ConstraintLayout topContainer;
     private ImageView playerImage;
 
-    private final GameHandler handler = new GameHandler(this);
+    private GameHandler handler;
     private SharedPreferences saved_state;
 
 
     public void loadState(Bundle savedInstanceState) {
 
-        String json = null;
+        String gameJson = null;
 
-        // Saved Instance
+        // Saved state
 
         if (savedInstanceState != null) {
-            json = savedInstanceState.getString("json");
-            savedGame = savedInstanceState.getBoolean("saved");
+            gameJson = savedInstanceState.getString("json");
+        }
+        else if (getIntent().getStringExtra("SAVED_STATE") != null) {
+            gameJson = getIntent().getStringExtra("SAVED_STATE");
+        }
 
-            // Saved Preferences or SavedGameActivity
-
-        } else if (getIntent().getStringExtra("SAVED_STATE") != null) {
-
-            json = getIntent().getStringExtra("SAVED_STATE");
+        if (gameJson != null) {
+            String liveId = getIntent().getStringExtra("SPECTATE_MODE");
+            spectateMode = liveId != null;
             savedGame = getIntent().getBooleanExtra("SAVED_GAME", false);
-
-            // New game or spectate mode
-
-        } else if (getIntent().getStringExtra("PLAYERS") != null ) {
-            json = getIntent().getStringExtra("PLAYERS");
-            Player[] players = new Gson().fromJson(json, Player[].class);
-            ArrayList<Player> playersList = new ArrayList<>();
-            Collections.addAll(playersList, players);
-            boolean random = getIntent().getBooleanExtra("RANDOM", false);
-            Game game = new Game(playersList, random);
-            handler.setGame(game);
-            handler.setListener(this);
-            if (getIntent().getStringExtra("SPECTATE_MODE") == null)
-                handler.startPostingLiveData();
-            else {
-                String gameId = getIntent().getStringExtra("SPECTATE_MODE");
-                handler.startFetchingLiveData(gameId);
-            }
+            handler = new GameHandler(this, gameJson, liveId, savedGame ? null : this);
             return;
         }
 
-        Game game = new Gson().fromJson(json, Game.class);
-        handler.setGame(game);
-        handler.setListener(savedGame ? null : this);
-        if (!savedGame) handler.startPostingLiveData();
+        // New game
+
+        String playersJson = getIntent().getStringExtra("PLAYERS");
+
+        if (getIntent().getStringExtra("SPECTATE_MODE") == null) {
+            savedGame = false;
+            spectateMode = false;
+            boolean random = getIntent().getBooleanExtra("RANDOM", false);
+            handler = new GameHandler(this, playersJson, random, this);
+            return;
+        }
+
+        // New spectator
+
+        spectateMode = true;
+        savedGame = false;
+        String liveId = getIntent().getStringExtra("SPECTATE_MODE");
+        handler = new GameHandler(this, playersJson, liveId);
+
     }
+
+
+
 
 
     @SuppressLint("ClickableViewAccessibility")
@@ -152,8 +155,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
                     int points = Integer.parseInt(pointsTextView.getText().toString());
                     handler.addToss(points);
                 }
-            }
-            else
+            } else
                 startNewGame();
         });
 
@@ -165,7 +167,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         });
     }
 
-    public void clearSavedState () {
+    public void clearSavedState() {
         SharedPreferences.Editor editor = saved_state.edit();
         editor.remove("SAVED_STATE");
         editor.apply();
@@ -175,8 +177,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     public void onBackPressed() {
         if (savedGame || spectateMode || handler.noTosses()) {
             super.onBackPressed();
-        }
-        else
+        } else
             handler.removeToss();
     }
 
@@ -188,8 +189,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         ListAdapter listAdapter;
         if (handler.gameEnded()) {
             listAdapter = new ListAdapter(handler.getPlayers(true), true, false, this);
-        }
-        else {
+        } else {
             listAdapter = new ListAdapter(handler.getPlayers(false), false, true, null);
         }
         recyclerView.setAdapter(listAdapter);
@@ -302,7 +302,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
 
         Objects.requireNonNull(recyclerView.getLayoutManager()).scrollToPosition(0);
         Objects.requireNonNull(recyclerView.getAdapter()).notifyItemChanged(!undo ? 0 : handler.last());
-        recyclerView.getAdapter().notifyItemMoved(!undo ? 0 : handler.last(),!undo ? handler.last() : 0);
+        recyclerView.getAdapter().notifyItemMoved(!undo ? 0 : handler.last(), !undo ? handler.last() : 0);
 
         nameTextView.setText(handler.getPlayerName());
         setImage(playerImage, handler.current().getId(), false);
@@ -332,7 +332,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     @Override
-    protected void onPause () {
+    protected void onPause() {
         super.onPause();
         if (!savedGame && !spectateMode && !handler.gameEnded()) {
             SharedPreferences.Editor editor = saved_state.edit();
@@ -343,9 +343,10 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     @Override
-    protected void onDestroy () {
+    protected void onDestroy() {
         super.onDestroy();
         clearSavedState();
+        handler.close();
     }
 
     @Override

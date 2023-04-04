@@ -2,12 +2,15 @@ package com.teskola.molkky;
 
 import static java.lang.Math.min;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -20,7 +23,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChartActivity extends BaseActivity {
+public class ChartActivity extends AppCompatActivity {
     private Game game;
     private ViewGroup switchContainer;
     private LineChart chart;
@@ -101,6 +104,15 @@ public class ChartActivity extends BaseActivity {
             R.color.pale_orange,
             R.color.robin
     };
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
 
 

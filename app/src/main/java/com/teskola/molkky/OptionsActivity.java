@@ -20,6 +20,8 @@ import java.util.Objects;
 
 public abstract class OptionsActivity extends ImagesActivity {
 
+    public boolean noGamesInDatabase = false;
+
     public void showSpectateDialog () {
         AlertDialog.Builder spectateDialog = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
@@ -38,7 +40,7 @@ public abstract class OptionsActivity extends ImagesActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() == 4) {
                     String gameId = s.toString();
-                    MetaHandler.getInstance(OptionsActivity.this).getFirebaseManager().getLiveGamePlayers(gameId, playerInfos -> {
+                    FirebaseManager.getInstance(OptionsActivity.this).getLiveGamePlayers(gameId, playerInfos -> {
                         String json = new Gson().toJson(playerInfos);
                         Intent intent = new Intent(OptionsActivity.this, GameActivity.class);
                         intent.putExtra("PLAYERS", json);
@@ -81,33 +83,31 @@ public abstract class OptionsActivity extends ImagesActivity {
 
     @SuppressLint("NonConstantResourceId")
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        Intent intent = null;
         switch (item.getItemId()) {
             case R.id.spectate:
                 showSpectateDialog();
                 return true;
             case R.id.stats:
-                if (MetaHandler.getInstance(this).noPlayers()) {
+                if (noGamesInDatabase) {
                     Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
                     return true;
                 }
-                intent = new Intent(this, AllStatsActivity.class);
-                break;
+                startActivity(new Intent(this, AllStatsActivity.class));
+                return true;
             case R.id.saved_games:
-                if (MetaHandler.getInstance(this).getGamesCount() == 0) {
+                if (noGamesInDatabase) {
                     Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
                     return true;
                 }
-                intent = new Intent(this, SavedGamesActivity.class);
-                break;
+                startActivity(new Intent(this, SavedGamesActivity.class));
+                return true;
             case R.id.settings:
-                intent = new Intent(this, SettingsActivity.class);
-                break;
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
             case R.id.rules:
-                intent = new Intent(this, RulesActivity.class);
-                break;
+                startActivity(new Intent(this, RulesActivity.class));
+                return true;
         }
-        startActivity(intent);
         return false;
     }
 

@@ -41,20 +41,28 @@ public class FirebaseManager {
     private DatabaseReference databaseRef;
     private final Map<String, DatabaseReference> userRefs = new HashMap<>(1);
     private final DatabaseReference liveRef = firebase.getReference("livegames");
-    private PlayersByGameListener playersByGameListener;
+    private StatsListener statsListener;
+    private GamesListener gamesListener;
     private NamesListener namesListener;
-    private MetaListener metaListener;
+    private List<MetaGamesListener> metaGamesListeners;
+    private MetaPlayersListener metaPlayersListener;
     private LiveGameListener liveGameListener;
 
     private final SharedPreferences preferences;
+    private final SharedPreferences alterEgos;
     private String uid;
     private String dbid;
     public static class MetaData {
+        private String id;
         private long timestamp;
         private long tossCount;
         private String winner;
 
         public MetaData() {}
+
+        public void setId(String id) {this.id = id;}
+
+        public String getId() { return  id;}
 
         public long getTimestamp() {
             return timestamp;
@@ -73,14 +81,12 @@ public class FirebaseManager {
         @Override
         public void onChildAdded(@NonNull DataSnapshot ds, @Nullable String previousChildName) {
             userRefs.put(ds.getKey(), firebase.getReference("users").child(Objects.requireNonNull(ds.getKey())));
-            if (metaListener != null) {
+            if (!metaGamesListeners.isEmpty())
                 Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(metaGamesListener(ds.getKey()));
+            if (metaPlayersListener != null)
                 Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(metaPlayersListener(ds.getKey()));
-            }
-            if (namesListener != null) {
+            if (namesListener != null)
                 Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(namesListener(ds.getKey()));
-            }
-
         }
 
         @Override
@@ -92,17 +98,20 @@ public class FirebaseManager {
         public void onChildRemoved(@NonNull DataSnapshot snapshot) {
             if (Objects.equals(snapshot.getKey(), uid))
                 return;
-            if (metaListener != null) {
+            for (MetaGamesListener metaGamesListener : metaGamesListeners) {
                 Objects.requireNonNull(userRefs.get(snapshot.getKey())).removeEventListener(metaGamesListener(snapshot.getKey()));
-                Objects.requireNonNull(userRefs.get(snapshot.getKey())).removeEventListener(metaPlayersListener(snapshot.getKey()));
-                metaListener.onDatabaseRemoved(snapshot.getKey());
+                metaGamesListener.onDatabaseRemoved(snapshot.getKey());
             }
+            if (metaPlayersListener != null) {
+                Objects.requireNonNull(userRefs.get(snapshot.getKey())).removeEventListener(metaPlayersListener(snapshot.getKey()));
+                metaPlayersListener.onDatabaseRemoved(snapshot.getKey());
+            }
+
             if (namesListener != null) {
                 Objects.requireNonNull(userRefs.get(snapshot.getKey())).removeEventListener(namesListener(snapshot.getKey()));
                 namesListener.onDatabaseRemoved(snapshot.getKey());
             }
             userRefs.remove(snapshot.getKey());
-
         }
 
         @Override
@@ -135,11 +144,13 @@ public class FirebaseManager {
                 Set<MetaData> metaDataSet = new HashSet<>();
                 for (DataSnapshot game : snapshot.getChildren()) {
                     MetaData metaData = game.getValue(MetaData.class);
+                    Objects.requireNonNull(metaData).setId(game.getKey());
                     metaDataSet.add(metaData);
                 }
                 Map<String, Set<MetaData>> metaDataMap = new HashMap<>();
                 metaDataMap.put(key, metaDataSet);
-                metaListener.onGamesReceived(metaDataMap);
+                for (MetaGamesListener metaGamesListener : metaGamesListeners)
+                    metaGamesListener.onGamesReceived(metaDataMap);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -158,7 +169,7 @@ public class FirebaseManager {
                 }
                 Map<String, Set<String>> playerMap = new HashMap<>();
                 playerMap.put(key, playerSet);
-                metaListener.onPlayersReceived(playerMap);
+                metaPlayersListener.onPlayersReceived(playerMap);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -184,93 +195,28 @@ public class FirebaseManager {
         };
     }
 
-    private ChildEventListener playersListener(String user) {
-        return new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                if (data.names.containsKey(snapshot.getKey()))
-                    return;
-                String name = (String) snapshot.getValue();
-                int i = 1;
-                while (data.names.containsValue(name)) {
-                    name += i;
-                }
-                data.names.put(snapshot.getKey(), name);
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                if (user.equals(uid))
-                    data.names.put(snapshot.getKey(), (String) snapshot.getValue());
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-    }
-
-    private ChildEventListener gamesListener(String databaseId) {
-        return new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Data.Game game = snapshot.getValue(Data.Game.class);
-                data.addGame(databaseId, snapshot.getKey(), game);
-                listener.onGameAdded();
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                data.addGame(databaseId, snapshot.getKey(), snapshot.getValue(Data.Game.class));
-                listener.onGameAdded();
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                data.removeGame(databaseId, snapshot.getKey());
-                listener.onGameRemoved();
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-    }
-
     public interface NamesListener {
         void onPlayersReceived(Map<String, Set<PlayerInfo>> players);
         void onDatabaseRemoved(String id);
     }
 
-    public interface MetaListener {
+    public interface MetaGamesListener {
         void onGamesReceived(Map<String, Set<MetaData>> data);
+        void onDatabaseRemoved(String id);
+    }
+
+    public interface MetaPlayersListener {
         void onPlayersReceived(Map<String, Set<String>> players);
         void onDatabaseRemoved(String id);
 
     }
 
-    public interface PlayersByGameListener {
-        void onDataReceived(Map<String, List<String>> data);
-        void onDatabaseRemoved(String id);
+    public interface GamesListener {
+        void onGameReceived(SavedGamesActivity.GameInfo gameInfo);
+    }
+
+    public interface StatsListener {
+        void onGamesReceived(Map<String, Map<String, Map<String, Boolean>>> data);
     }
 
     public interface LiveGameListener {
@@ -289,6 +235,7 @@ public class FirebaseManager {
         if (uid == null)
             signIn();
         preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
         dbid = preferences.getString("DATABASE", getShortId());
         addUser(dbid, null, null);
     }
@@ -300,6 +247,22 @@ public class FirebaseManager {
         editor.apply();
     }
 
+    public void registerStatsListener (StatsListener statsListener) {
+        this.statsListener = statsListener;
+    }
+
+    public void unRegisterStatsListener (StatsListener statsListener) {
+        this.statsListener = null;
+    }
+
+    public void registerGamesListener (GamesListener gamesListener) {
+        this.gamesListener = gamesListener;
+    }
+
+    public void unRegisterGamesListener (GamesListener gamesListener) {
+        this.gamesListener = null;
+    }
+
     public void registerNamesListener (NamesListener namesListener) {
         this.namesListener = namesListener;
         fetchNames();
@@ -307,22 +270,33 @@ public class FirebaseManager {
 
     public void unRegisterNamesListener() {
         for (String key : userRefs.keySet())
-            userRefs.get(key).removeEventListener(namesListener(key));
+            Objects.requireNonNull(userRefs.get(key)).removeEventListener(namesListener(key));
         this.namesListener = null;
     }
 
-    public void registerMetaListener(MetaListener metaListener) {
-        this.metaListener = metaListener;
+    public void registerMetaGamesListener(MetaGamesListener metaGamesListener) {
+        metaGamesListeners.add(metaGamesListener);
         fetchMetaGameData();
+    }
+
+    public void registerMetaPlayersListener(MetaPlayersListener metaPlayersListener) {
+        this.metaPlayersListener = metaPlayersListener;
         fetchMetaPlayerData();
     }
 
-    public void unregisterMetaListener() {
+    public void unRegisterMetaGamesListener(MetaGamesListener metaGamesListener) {
+        metaGamesListeners.remove(metaGamesListener);
+        if (metaGamesListeners.isEmpty()) {
+            for (String key : userRefs.keySet())
+                Objects.requireNonNull(userRefs.get(key)).removeEventListener(metaGamesListener(key));
+        }
+    }
+
+    public void unregisterMetaPlayersListener() {
         for (String key : userRefs.keySet()) {
-            Objects.requireNonNull(userRefs.get(key)).removeEventListener(metaGamesListener(key));
             Objects.requireNonNull(userRefs.get(key)).removeEventListener(metaPlayersListener(key));
         }
-        this.metaListener = null;
+        this.metaPlayersListener = null;
     }
 
     public String getShortId() {
@@ -362,6 +336,89 @@ public class FirebaseManager {
             }
 
         });
+    }
+
+    public void fetchName (String dbid, String pid, OnSuccessListener<String> onSuccessListener) {
+        userRefs.get(dbid).child("names/" + pid).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                onSuccessListener.onSuccess(task.getResult().getValue(String.class));
+            }
+        });
+    }
+
+    public void fetchPlayersById (String dbid, String gid, OnSuccessListener<List<String>> onSuccessListener) {
+        userRefs.get(dbid).child("games/players/" + gid).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                List<String> players = (List<String>) task.getResult().getValue();
+                onSuccessListener.onSuccess(players);
+            }
+        });
+    }
+
+    public void fetchTossesById (String dbid, String gid, OnSuccessListener<Map<String, Object>> onSuccessListener) {
+        userRefs.get(dbid).child("tosses/" + gid).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                Map<String, Object> tosses = (Map<String, Object>) task.getResult().getValue();
+                onSuccessListener.onSuccess(tosses);
+            }
+        });
+    }
+
+    public void fetchGamesAndWins (String pid) {
+        for (String key : userRefs.keySet()) {
+            userRefs.get(key).child("players/" + pid).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        if (task.getResult().exists()) {
+                            Map<String, Map<String, Map<String, Boolean>>> data = new HashMap<>();
+                            Map<String, Map<String, Boolean>> allGames = new HashMap<>();
+                            Map<String, Boolean> games = new HashMap<>();
+                            for (DataSnapshot gameId : task.getResult().getChildren())
+                                games.put(gameId.getKey(), gameId.getValue(Boolean.class));
+                            allGames.put(pid, games);
+                            data.put(key, allGames);
+                            statsListener.onGamesReceived(data);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    public void fetchTosses (String dbid, String gid, String pid, OnSuccessListener<List<Long>> onSuccessListener) {
+        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                List<Long> tosses = (List<Long>) task.getResult().getValue();
+                onSuccessListener.onSuccess(tosses);
+            }
+        });
+    }
+
+
+    public void fetchGamesById (String pid) {
+        for (String key : userRefs.keySet()) {
+            Objects.requireNonNull(userRefs.get(key)).child("players/" + pid).get().addOnCompleteListener(idTask -> {
+                if (idTask.isSuccessful()) {
+                    for (DataSnapshot ds : idTask.getResult().getChildren()) {
+                        userRefs.get(key).child("games/meta/" + ds.getKey()).get().addOnCompleteListener(gameTask -> {
+                            MetaData metaData = gameTask.getResult().getValue(MetaData.class);
+                            if (alterEgos.contains(Objects.requireNonNull(metaData).getWinner())) {
+                                SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), alterEgos.getString(metaData.getWinner(), null), metaData.getTimestamp());
+                                gamesListener.onGameReceived(gameInfo);
+                            }
+                            else {
+                                fetchName(key, metaData.getWinner(), name -> {
+                                    SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), name, metaData.getTimestamp());
+                                    gamesListener.onGameReceived(gameInfo);
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
     }
 
     public void fetchCreated(OnSuccessListener<Long> response, OnFailureListener failureListener) {
@@ -447,7 +504,7 @@ public class FirebaseManager {
 
         Map<String, Object> names = new HashMap<>(game.getPlayers().size());
         for (Player player : game.getPlayers()) {
-            homeRef.child("players").child(player.getId()).child(game.getId()).setValue(true);
+            homeRef.child("players").child(player.getId()).child(game.getId()).setValue(game.getPlayer(0).getId().equals(player.getId()));
             names.put(player.getId(), player.getNameInDatabase());
         }
         homeRef.child("names").updateChildren(names);
@@ -511,13 +568,13 @@ public class FirebaseManager {
                 response.onSuccess(players);
             }
             else {
-                error.onFailure(task.getException());
+                error.onFailure(Objects.requireNonNull(task.getException()));
             }
         });
     }
 
 
-    public void addLiveGame (String id, Game game, OnSuccessListener<String> response, OnFailureListener error) {
+    public void addLiveGame (Game game) {
         int tossesCount = game.getTossesCount();
         while (game.getTossesCount() > 0) {
             for (int i = 1; i < game.getPlayers().size(); i++) {
@@ -530,16 +587,15 @@ public class FirebaseManager {
                 }
             }
         }
+        String id = getLiveGameId();
         Map<String, Object> players = new HashMap<>();
         players.put("players", game.getPlayers());
         liveRef.child(id).updateChildren(players).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                response.onSuccess(id);
                 Map<String, Object> timestamp = new HashMap<>();
                 timestamp.put("started", ServerValue.TIMESTAMP);
                 liveRef.child(id).updateChildren(timestamp);
-            } else
-                error.onFailure(task.getException());
+            }
         });
         List<Object> tosses = new ArrayList<>();
         for (int i = 0; i < tossesCount; i++) {
@@ -559,12 +615,12 @@ public class FirebaseManager {
             });
     }
 
-    public void setTosses (String id, List<Toss> tosses) {
-        liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(task -> {
+    public void postTosses (List<Toss> tosses) {
+        liveRef.child(getLiveGameId() + "/tosses/").setValue(tosses).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Map<String, Object> timestamp = new HashMap<>();
                 timestamp.put("updated", ServerValue.TIMESTAMP);
-                liveRef.child(id).updateChildren(timestamp);
+                liveRef.child(getLiveGameId()).updateChildren(timestamp);
             }
         });
     }

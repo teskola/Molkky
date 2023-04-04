@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
+public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, PlayerHandler.OnEmptyDatabaseListener {
 
     private List<PlayerInfo> playersList = new ArrayList<>();
     private ListAdapter listAdapter;
@@ -42,7 +42,9 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        playerHandler = new PlayerHandler(this);
+
+        playerHandler = PlayerHandler.getInstance(this);
+        playerHandler.setEmptyDatabaseListener(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
@@ -146,13 +148,21 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onResume () {
         super.onResume();
         startButton.setEnabled(playersList.size() > 1);
-        playerHandler.start();
+        // playerHandler.start();
+        if (playerHandler.noSavedPlayers()) {
+            noGamesInDatabase = true;
+            playerHandler.registerOnPlayersAddedListener(() -> {
+                noGamesInDatabase = false;
+                playerHandler.unRegisterOnPlayersAddedLister();
+            });
+        }
     }
 
     @Override
     protected void onPause () {
         super.onPause();
-        playerHandler.stop();
+        playerHandler.unRegisterOnPlayersAddedLister();
+        // playerHandler.stop();
     }
 
     public void createRecyclerView () {
@@ -275,5 +285,10 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (key.equals("SHOW_IMAGES")) {
             createRecyclerView();
         }
+    }
+
+    @Override
+    public void onEmpty() {
+        noGamesInDatabase = true;
     }
 }

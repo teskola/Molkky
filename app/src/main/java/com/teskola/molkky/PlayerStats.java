@@ -9,13 +9,8 @@ import java.util.Map;
 
 public class PlayerStats extends PlayerInfo {
 
-    private final Map<String, List<Long>> tosses;
-    private final int wins;
-    private int points = -1;
-    private int tossesCount= -1;
-    private int eliminations = -1;
-    private int excesses = -1;
-    private int winningChances = -1;
+    private Map<String, List<Long>> tosses;
+    private int wins;
 
     public PlayerStats(PlayerInfo player, int wins, Map<String, List<Long>> tosses) {
         super(player.getId(), player.getName());
@@ -32,6 +27,16 @@ public class PlayerStats extends PlayerInfo {
             }
         }
         return count;
+    }
+
+    public void addTosses (Map<String, List<Long>> tosses) {
+        if (this.tosses == null)
+            this.tosses = new HashMap<>();
+        this.tosses.putAll(tosses);
+    }
+
+    public void addWin () {
+        this.wins++;
     }
 
     public int getGamesCount() {
@@ -58,15 +63,12 @@ public class PlayerStats extends PlayerInfo {
         return wins;
     }
     public int getExcesses() {
-        if (excesses == -1) {
-            int count = 0;
-            for (String key : tosses.keySet()) {
-                Player player = new Player(tosses.get(key));
-                count += player.countExcesses();
-            }
-            excesses = count;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            count += player.countExcesses();
         }
-        return excesses;
+        return count;
     }
 
     public float getWinsPct() {
@@ -74,49 +76,38 @@ public class PlayerStats extends PlayerInfo {
     }
 
     public int getPoints() {
-        if (points == -1) {
-            int count = 0;
-            for (String key : tosses.keySet()) {
-                for (long i : tosses.get(key)) {
-                    count += i;
-                }
+
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            for (long i : tosses.get(key)) {
+                count += i;
             }
-            points = count;
         }
-        return points;
+        return count;
     }
     public int getTossesCount() {
-        if (tossesCount == -1) {
-            int count = 0;
-            for (String key : tosses.keySet()) {
-                count += tosses.get(key).size();
-            }
-            tossesCount = count;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            count += tosses.get(key).size();
         }
-        return tossesCount;
+        return count;
     }
 
     public int getEliminations() {
-        if (eliminations == -1) {
-            int count = 0;
-            for (String key : tosses.keySet()) {
-                Player player = new Player(tosses.get(key));
-                if (player.isEliminated()) count++;
-            }
-            eliminations = count;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            if (player.isEliminated()) count++;
         }
-        return eliminations;
+        return count;
     }
 
     public int getWinningChances() {
-        if (winningChances == -1) {
-            int count = 0;
-            for (String key : tosses.keySet()) {
-                Player player = new Player(tosses.get(key));
-                count += player.countWinningChances();
-            }
-            winningChances = count;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            count += player.countWinningChances();
         }
-        return winningChances;
+        return count;
     }
 }

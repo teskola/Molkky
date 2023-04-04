@@ -9,15 +9,9 @@ import java.util.Random;
 public class Game {
     private final List<Player> players;
     private String id;
-    private long timestamp;
 
     public Game(List<Player> players) {
         this.players = players;
-    }
-
-    public Game(List<Player> players, long timestamp) {
-        this.players = players;
-        this.timestamp = timestamp;
     }
 
     public Game() {
@@ -51,10 +45,6 @@ public class Game {
 
     public void setId (String id) {
         this.id = id;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
     }
 
     public List<Player> getPlayers() {

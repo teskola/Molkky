@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class MetaHandler implements FirebaseManager.MetaListener, FirebaseAuth.AuthStateListener {
+public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseManager.MetaPlayersListener, FirebaseAuth.AuthStateListener {
 
     private final DatabaseListener databaseListener;
     private final FirebaseManager firebaseManager;
@@ -27,7 +27,8 @@ public class MetaHandler implements FirebaseManager.MetaListener, FirebaseAuth.A
     public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
         if (firebaseAuth.getUid() != null) {
             getCreated();
-            firebaseManager.registerMetaListener(this);
+            firebaseManager.registerMetaGamesListener(this);
+            firebaseManager.registerMetaPlayersListener(this);
             FirebaseAuth.getInstance().removeAuthStateListener(this);
         }
     }
@@ -83,7 +84,8 @@ public class MetaHandler implements FirebaseManager.MetaListener, FirebaseAuth.A
             FirebaseAuth.getInstance().addAuthStateListener(this);
         }
         else {
-            firebaseManager.registerMetaListener(this);
+            firebaseManager.registerMetaGamesListener(this);
+            firebaseManager.registerMetaPlayersListener(this);
             getCreated();
         }
     }
@@ -95,7 +97,8 @@ public class MetaHandler implements FirebaseManager.MetaListener, FirebaseAuth.A
 
     public void close() {
         FirebaseAuth.getInstance().removeAuthStateListener(this);
-        firebaseManager.unregisterMetaListener();
+        firebaseManager.unRegisterMetaGamesListener(this);
+        firebaseManager.unregisterMetaPlayersListener();
     }
 
     private void sendPlayersData () {
@@ -135,11 +138,13 @@ public class MetaHandler implements FirebaseManager.MetaListener, FirebaseAuth.A
         firebaseManager.searchDatabaseId(newDatabaseId, databaseFound -> {
             if (databaseFound) {
                 databaseListener.onDatabaseEvent(Event.DATABASE_FOUND);
-                firebaseManager.unregisterMetaListener();
+                firebaseManager.unRegisterMetaGamesListener(this);
+                firebaseManager.unregisterMetaPlayersListener();
                 firebaseManager.removeUser(then -> firebaseManager.addUser
                         (newDatabaseId, next -> {
                             clear();
-                            firebaseManager.registerMetaListener(this);
+                            firebaseManager.registerMetaGamesListener(this);
+                            firebaseManager.registerMetaPlayersListener(this);
                             getCreated();
                                 } ,
                                 error -> databaseListener.onError(Error.UNKNOWN_ERROR)),

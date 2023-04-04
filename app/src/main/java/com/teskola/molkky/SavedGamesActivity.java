@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
@@ -19,8 +21,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
+public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, FirebaseManager.GamesListener, SavedGamesHandler.GamesChangedListener {
 
     private List<GameInfo> games = new ArrayList<>();
     private TextView titleTV;
@@ -29,11 +32,28 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     private ShapeableImageView playerImageView;
     private PlayerInfo playerInfo;
     private boolean showAll;
+    private FirebaseManager firebaseManager;
+    private SavedGamesHandler handler;
+
+    @Override
+    public void onGameReceived(GameInfo gameInfo) {
+        games.add(gameInfo);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyItemInserted(0);
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    @Override
+    public void onGamesChanged() {
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
+    }
 
     public static class GameInfo implements Comparable<GameInfo> {
+        private String dbid;
         private String gid;
         private String winner;
         private long timestamp;
+
+        public String getDbid() { return dbid;}
 
         public String getGid() {
             return gid;
@@ -49,7 +69,8 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
         public GameInfo() {}
 
-        public GameInfo (String gid, String winnerName, long timestamp) {
+        public GameInfo (String dbid, String gid, String winnerName, long timestamp) {
+            this.dbid = dbid;
             this.gid = gid;
             this.winner = winnerName;
             this.timestamp = timestamp;
@@ -71,6 +92,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saved_games);
+        firebaseManager = FirebaseManager.getInstance(this);
 
         titleTV = findViewById(R.id.titleTV);
         showAllBtn = findViewById(R.id.showAllButton);
@@ -79,7 +101,8 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         if (getIntent().getExtras() != null) {
             showAll = false;
             playerInfo = new PlayerInfo(getIntent().getStringExtra("PLAYER_ID"), getIntent().getStringExtra("PLAYER_NAME"));
-            games = MetaHandler.getInstance(this).getGames(playerInfo.getId());
+            firebaseManager.registerGamesListener(this);
+            firebaseManager.fetchGamesById(playerInfo.getId());
             String title = playerInfo.getName();
             titleTV.setText(title);
             if (getPreferences().getBoolean("SHOW_IMAGES", false))
@@ -92,10 +115,12 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
             showAll = true;
             titleTV.setText(getString(R.string.saved_games));
             playerImageView.setVisibility(View.GONE);
-            games = MetaHandler.getInstance(this).getGames();
+            handler = new SavedGamesHandler(this, games, this);
 
         }
         showAllBtn.setOnClickListener(view -> {
+
+            firebaseManager.unRegisterGamesListener(this);
             Intent intent = new Intent(this, SavedGamesActivity.class);
             startActivity(intent);
         });
@@ -108,6 +133,14 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (handler != null)
+            handler.close();
+        firebaseManager.unRegisterGamesListener(this);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         menu.findItem(R.id.saved_games).setVisible(false);
@@ -116,11 +149,17 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
 
     @Override
     public void onSelectClicked(int position) {
-        Intent intent = new Intent(getApplicationContext(), GameActivity.class);
-        String json = new Gson().toJson(games.get(position));
-        intent.putExtra("SAVED_STATE", json);
-        intent.putExtra("SAVED_GAME", true);
-        startActivity(intent);
+        if (handler == null)
+            handler = new SavedGamesHandler(this, games, null);
+        String dbid = games.get(position).getDbid();
+        String gid = games.get(position).getGid();
+        handler.getGame(dbid, gid, game -> {
+            String json = new Gson().toJson(game);
+            Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+            intent.putExtra("SAVED_STATE", json);
+            intent.putExtra("SAVED_GAME", true);
+            startActivity(intent);
+        });
     }
 
     @Override

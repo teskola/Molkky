@@ -18,10 +18,13 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-public class PlayerStatsActivity extends OptionsActivity {
+public class PlayerStatsActivity extends OptionsActivity implements StatsHandler.DataChangedListener {
     private int position;
-    private PlayerStats[] players;
+    private List<PlayerStats> players;
     private TextView playerNameTV;
     private TextView pointsTV;
     private TextView gamesTV;
@@ -34,6 +37,7 @@ public class PlayerStatsActivity extends OptionsActivity {
     private TextView winningChancesTV;
     private BarChart barChart;
     private ShapeableImageView playerImage;
+    private StatsHandler statsHandler;
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -68,7 +72,8 @@ public class PlayerStatsActivity extends OptionsActivity {
 
         if (getIntent().getStringExtra("STATS") != null) {
             String json = getIntent().getStringExtra("STATS");
-            players = new Gson().fromJson(json, PlayerStats[].class);
+            PlayerStats[] playersArray = new Gson().fromJson(json, PlayerStats[].class);
+            players = new ArrayList<>(Arrays.asList(playersArray));
         }
         else {
 
@@ -76,9 +81,11 @@ public class PlayerStatsActivity extends OptionsActivity {
 
             String json = getIntent().getStringExtra("PLAYERS");
             PlayerInfo[] playerInfos = new Gson().fromJson(json, PlayerInfo[].class);
-            players = new PlayerStats[playerInfos.length];
-            for (int i=0; i < playerInfos.length; i++)
-                players[i] = MetaHandler.getInstance(this).getPlayerStats(playerInfos[i]);
+            players = new ArrayList<>(playerInfos.length);
+            for (PlayerInfo playerInfo : playerInfos) {
+                players.add(new PlayerStats(playerInfo, 0, null));
+            }
+            statsHandler = new StatsHandler(this, players, this);
         }
 
         if (savedInstanceState != null)
@@ -86,27 +93,35 @@ public class PlayerStatsActivity extends OptionsActivity {
         else
             position = getIntent().getIntExtra("POSITION", 0);
 
+        if (statsHandler != null)
+            statsHandler.getPlayerStats(players.get(position));
         updateUI();
 
         // Listeners
 
-        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, photo -> playerImage.setImageBitmap(photo)));
+        playerImage.setOnClickListener(view -> onImageClicked(players.get(position), 0, photo -> playerImage.setImageBitmap(photo)));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
-            else position = players.length - 1;
-            updateUI();
+            else position = players.size() - 1;
+            if (statsHandler != null)
+                statsHandler.getPlayerStats(players.get(position));
+            else
+                updateUI();
         });
         nextIB.setOnClickListener(view -> {
-            if (position < players.length - 1) position++;
+            if (position < players.size() - 1) position++;
             else position = 0;
-            updateUI();
+            if (statsHandler != null)
+                statsHandler.getPlayerStats(players.get(position));
+            else
+                updateUI();
         });
 
         showGamesView.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), SavedGamesActivity.class);
-            intent.putExtra("PLAYER_ID", players[position].getId());
-            intent.putExtra("PLAYER_NAME", players[position].getName());
+            intent.putExtra("PLAYER_ID", players.get(position).getId());
+            intent.putExtra("PLAYER_NAME", players.get(position).getName());
             startActivity(intent);
         });
     }
@@ -118,7 +133,7 @@ public class PlayerStatsActivity extends OptionsActivity {
         ArrayList<BarEntry> entries = new ArrayList<>();
 
         for(int i = 0; i < 13; i++){
-            BarEntry barEntry = new BarEntry(i, players[position].getTosses(i));
+            BarEntry barEntry = new BarEntry(i, players.get(position).getTosses(i));
             entries.add(barEntry);
         }
 
@@ -151,22 +166,22 @@ public class PlayerStatsActivity extends OptionsActivity {
 
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-        setImage(playerImage, players[position].getId(), true);
+        setImage(playerImage, players.get(position).getId(), true);
 
-        String winsString = players[position].getWins() + " (" + Math.round(100 * players[position].getWinsPct()) + "%)";
-        String hitsString = String.valueOf(Math.round(100 *players[position].getHitsPct()));
-        String eliminationsString = players[position].getEliminations() + " (" + Math.round(100 * players[position].getEliminationsPct()) + "%)";
+        String winsString = players.get(position).getWins() + " (" + Math.round(100 * players.get(position).getWinsPct()) + "%)";
+        String hitsString = String.valueOf(Math.round(100 *players.get(position).getHitsPct()));
+        String eliminationsString = players.get(position).getEliminations() + " (" + Math.round(100 * players.get(position).getEliminationsPct()) + "%)";
 
-        playerNameTV.setText(players[position].getName());
-        pointsTV.setText(String.valueOf(players[position].getPoints()));
-        gamesTV.setText(String.valueOf(players[position].getGamesCount()));
+        playerNameTV.setText(players.get(position).getName());
+        pointsTV.setText(String.valueOf(players.get(position).getPoints()));
+        gamesTV.setText(String.valueOf(players.get(position).getGamesCount()));
         winsTV.setText(winsString);
-        tossesTV.setText(String.valueOf(players[position].getTossesCount()));
-        pptTV.setText(String.format("%.1f", players[position].getPointsPerToss()));
+        tossesTV.setText(String.valueOf(players.get(position).getTossesCount()));
+        pptTV.setText(String.format("%.1f", players.get(position).getPointsPerToss()));
         hitsTV.setText(hitsString);
         eliminationsTV.setText(eliminationsString);
-        excessTV.setText(String.valueOf(players[position].getExcesses()));
-        winningChancesTV.setText(String.valueOf(players[position].getWinningChances()));
+        excessTV.setText(String.valueOf(players.get(position).getExcesses()));
+        winningChancesTV.setText(String.valueOf(players.get(position).getWinningChances()));
         showBarChart();
     }
 
@@ -181,5 +196,10 @@ public class PlayerStatsActivity extends OptionsActivity {
         if (key.equals("SHOW_IMAGES")) {
             updateUI();
         }
+    }
+
+    @Override
+    public void onDataChanged() {
+        updateUI();
     }
 }

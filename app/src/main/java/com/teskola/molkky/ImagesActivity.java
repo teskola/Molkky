@@ -21,7 +21,7 @@ import android.widget.ImageView;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public abstract class ImagesActivity extends BaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+public abstract class ImagesActivity extends AppCompatActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int PERMISSIONS_REQUEST = 100;
     private OnImageAdded listener;
