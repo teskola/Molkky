@@ -44,7 +44,7 @@ public class FirebaseManager {
     private StatsListener statsListener;
     private GamesListener gamesListener;
     private NamesListener namesListener;
-    private List<MetaGamesListener> metaGamesListeners;
+    private List<MetaGamesListener> metaGamesListeners = new ArrayList<>();
     private MetaPlayersListener metaPlayersListener;
     private LiveGameListener liveGameListener;
 
@@ -81,12 +81,12 @@ public class FirebaseManager {
         @Override
         public void onChildAdded(@NonNull DataSnapshot ds, @Nullable String previousChildName) {
             userRefs.put(ds.getKey(), firebase.getReference("users").child(Objects.requireNonNull(ds.getKey())));
-            if (!metaGamesListeners.isEmpty())
-                Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(metaGamesListener(ds.getKey()));
+            if (metaGamesListeners != null && !metaGamesListeners.isEmpty())
+                Objects.requireNonNull(userRefs.get(ds.getKey())).child("games/meta").addValueEventListener(metaGamesListener(ds.getKey()));
             if (metaPlayersListener != null)
-                Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(metaPlayersListener(ds.getKey()));
+                Objects.requireNonNull(userRefs.get(ds.getKey())).child("players").addValueEventListener(metaPlayersListener(ds.getKey()));
             if (namesListener != null)
-                Objects.requireNonNull(userRefs.get(ds.getKey())).addValueEventListener(namesListener(ds.getKey()));
+                Objects.requireNonNull(userRefs.get(ds.getKey())).child("names").addValueEventListener(namesListener(ds.getKey()));
         }
 
         @Override
@@ -164,8 +164,7 @@ public class FirebaseManager {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Set<String> playerSet = new HashSet<>();
                 for (DataSnapshot player : snapshot.getChildren()) {
-                    String pid = player.getValue(String.class);
-                    playerSet.add(pid);
+                    playerSet.add(player.getKey());
                 }
                 Map<String, Set<String>> playerMap = new HashMap<>();
                 playerMap.put(key, playerSet);
@@ -230,7 +229,6 @@ public class FirebaseManager {
     }
 
     private FirebaseManager (Context context) {
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         uid = FirebaseAuth.getInstance().getUid();
         if (uid == null)
             signIn();
@@ -469,10 +467,10 @@ public class FirebaseManager {
         databaseRef = firebase.getReference("databases").child(database);
         databaseRef.child("users").addChildEventListener(usersListener);
         databaseRef.child("users/" + uid).setValue(true).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
+            if (task.isSuccessful() && onSuccessListener != null) {
                 onSuccessListener.onSuccess(null);
             }
-            else
+            else if (error != null)
                 error.onFailure(Objects.requireNonNull(task.getException()));
         });
     }

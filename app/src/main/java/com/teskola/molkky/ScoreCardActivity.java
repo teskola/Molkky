@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
 public class ScoreCardActivity extends OptionsActivity {
@@ -44,7 +45,7 @@ public class ScoreCardActivity extends OptionsActivity {
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
 
-        allTimeButton.setVisibility(MetaHandler.getInstance(this).isConnected() ? View.VISIBLE : View.INVISIBLE);
+        allTimeButton.setVisibility(FirebaseAuth.getInstance().getUid() != null ? View.VISIBLE : View.INVISIBLE);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));
@@ -80,37 +81,37 @@ public class ScoreCardActivity extends OptionsActivity {
             startActivity(intent);
         });
 
-        playerImage.setOnClickListener(view -> onImageClicked(players.get(position), 0, photo -> playerImage.setImageBitmap(photo)));
+        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, photo -> playerImage.setImageBitmap(photo)));
     }
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     public void updateUI() {
-        setImage(playerImage, players.get(position).getId(), true);
+        setImage(playerImage, players[position].getId(), true);
 
         // Stats table
 
-        String hits = players.get(position).hits() + "/" + players.get(position).getTosses().size();
+        String hits = players[position].hits() + "/" + players[position].getTosses().size();
         hitsTV.setText(hits);
-        String hitsPct = "(" + players.get(position).hitsPct() + "%)";
+        String hitsPct = "(" + players[position].hitsPct() + "%)";
         hitsPctTV.setText(hitsPct);
 
-        avgTV.setText(String.format("%.1f", players.get(position).mean()));
-        excessTV.setText(String.valueOf(players.get(position).countExcesses()));
-        eliminationTV.setText(players.get(position).isEliminated() ? getString(R.string.yes) : getString(R.string.no));
-        winningChanceTV.setText(String.valueOf(players.get(position).countWinningChances()));
+        avgTV.setText(String.format("%.1f", players[position].mean()));
+        excessTV.setText(String.valueOf(players[position].countExcesses()));
+        eliminationTV.setText(players[position].isEliminated() ? getString(R.string.yes) : getString(R.string.no));
+        winningChanceTV.setText(String.valueOf(players[position].countWinningChances()));
 
         // Tosses table
 
         tossesContainer.removeAllViews();
-        titleTV.setText(players.get(position).getName());
-        for (int i=0; i < players.get(position).getTosses().size(); i++) {
+        titleTV.setText(players[position].getName());
+        for (int i=0; i < players[position].getTosses().size(); i++) {
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View view = inflater.inflate(R.layout.scorecard_tosses, tossesContainer, false);
             TextView toss = view.findViewById(R.id.tossesNumberTV);
             TextView value = view.findViewById(R.id.tossesValueTV);
             TextView pointsTV = view.findViewById(R.id.tossesPointsTV);
-            long tossInt = players.get(position).getToss(i);
-            int points = players.get(position).count(i);
+            long tossInt = players[position].getToss(i);
+            int points = players[position].count(i);
             toss.setText(getString(R.string.scorecard_toss, i+1));
             value.setText(String.valueOf(tossInt));
             pointsTV.setText("(" + points + ")");
@@ -127,7 +128,7 @@ public class ScoreCardActivity extends OptionsActivity {
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES")) {
-            setImage(playerImage, players.get(position).getId(), true);
+            setImage(playerImage, players[position].getId(), true);
         }
     }
 }

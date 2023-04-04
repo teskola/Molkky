@@ -163,7 +163,6 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
             }
             allPlayers.add(foreignPlayer);
         }
-        Collections.sort(allPlayers, (playerInfo1, playerInfo2) -> playerInfo1.getName().compareTo(playerInfo2.getName()));
         return allPlayers;
     }
 

@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class StatsHandler implements FirebaseManager.StatsListener {
     private final FirebaseManager firebaseManager;
-    private List<PlayerStats> playerStats;
-    private DataChangedListener dataChangedListener;
+    private final List<PlayerStats> playerStats;
+    private final DataChangedListener dataChangedListener;
 
     public StatsHandler (Context context, List<PlayerStats> playerStats, DataChangedListener dataChangedListener) {
         this.playerStats = playerStats;

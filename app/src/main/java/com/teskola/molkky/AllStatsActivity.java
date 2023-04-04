@@ -17,14 +17,16 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
+public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, StatsHandler.DataChangedListener {
 
-    private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
+    private List<PlayerStats> playerStats;
     private int statID = 0;
     private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
+    private StatsHandler statsHandler;
 
     public static final int[] stats = {
             R.string.games,
@@ -54,11 +56,13 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         if (savedInstanceState != null)
             statID = savedInstanceState.getInt("STAT_ID");
 
-        ArrayList<PlayerInfo> players = (ArrayList<PlayerInfo>) MetaHandler.getInstance(this).getPlayers();
+        List<PlayerInfo> players = PlayerHandler.getInstance(this).getPlayers();
+        playerStats = new ArrayList<>(players.size());
         for (PlayerInfo player : players) {
-            playerStats.add(MetaHandler.getInstance(this).getPlayerStats(player));
+            playerStats.add(new PlayerStats(player, 0, null));
         }
-
+        statsHandler = new StatsHandler(this, playerStats, this);
+        for (PlayerInfo player : players) statsHandler.getPlayerStats(player);
         createRecyclerView();
         updateUI();
 
@@ -155,5 +159,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
             createRecyclerView();
             updateUI();
         }
+    }
+
+    @Override
+    public void onDataChanged() {
+        listAdapter.notifyDataSetChanged();
     }
 }

@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -38,11 +39,10 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private int draggedItemIndex;
     private PlayerHandler playerHandler;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         playerHandler = PlayerHandler.getInstance(this);
         playerHandler.setEmptyDatabaseListener(this);
         super.onCreate(savedInstanceState);
@@ -161,7 +161,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     protected void onPause () {
         super.onPause();
-        playerHandler.unRegisterOnPlayersAddedLister();
         // playerHandler.stop();
     }
 

@@ -40,6 +40,8 @@ public class PlayerStats extends PlayerInfo {
     }
 
     public int getGamesCount() {
+        if (tosses == null)
+            return 0;
         return tosses.size();
     }
 
