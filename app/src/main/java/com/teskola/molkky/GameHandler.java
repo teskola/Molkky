@@ -2,15 +2,14 @@ package com.teskola.molkky;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -24,13 +23,20 @@ public class GameHandler {
     private List<PlayerInfo> startingOrder;
 
     private final FirebaseManager.LiveGameListener liveGameListener = newTosses -> {
+        if (newTosses == null) {
+            while (tosses.size() > 0)
+                removeToss();
+            return;
+        }
         while (newTosses.size() > tosses.size()) {
-            addToss(newTosses.get(tosses.size()).getValue());
-            tosses.add(newTosses.get(tosses.size()));
+            HashMap<String, Long> tossMap = (HashMap<String, Long>) newTosses.get(tosses.size());
+            Gson gson = new Gson();
+            JsonElement jsonElement = gson.toJsonTree(tossMap);
+            Toss toss = gson.fromJson(jsonElement, Toss.class);
+            addToss(toss.getValue());
         }
         while (newTosses.size() < tosses.size()) {
             removeToss();
-            tosses.remove(tosses.size() - 1);
         }
     };
 
@@ -49,13 +55,11 @@ public class GameHandler {
 
     // New spectator
 
-    public GameHandler (Context context, String playersJson, String liveId) {
+    public GameHandler (Context context, List<Player> players, String liveId, GameListener gameListener) {
         this.firebaseManager = FirebaseManager.getInstance(context);
+        this.listener = gameListener;
         this.liveId = liveId;
-        Player[] players = new Gson().fromJson(playersJson, Player[].class);
-        ArrayList<Player> playersList = new ArrayList<>();
-        Collections.addAll(playersList, players);
-        this.game = new Game(playersList);
+        this.game = new Game(players);
         this.postTosses = false;
         startFetchingLiveData(liveId);
     }

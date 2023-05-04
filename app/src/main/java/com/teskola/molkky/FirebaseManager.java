@@ -129,7 +129,7 @@ public class FirebaseManager {
     private final ValueEventListener tossListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            liveGameListener.onTossesChanges((List<Toss>) snapshot.getValue());
+            liveGameListener.onTossesChanges((List<Object>) snapshot.getValue());
         }
 
         @Override
@@ -221,7 +221,7 @@ public class FirebaseManager {
     }
 
     public interface LiveGameListener {
-        void onTossesChanges (List<Toss> tosses);
+        void onTossesChanges (List<Object> tosses);
     }
 
     public static FirebaseManager getInstance(Context context) {

@@ -91,7 +91,10 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         spectateMode = true;
         savedGame = false;
         String liveId = getIntent().getStringExtra("SPECTATE_MODE");
-        handler = new GameHandler(this, playersJson, liveId);
+        Player[] players = new Gson().fromJson(playersJson, Player[].class);
+        ArrayList<Player> playersList = new ArrayList<>();
+        Collections.addAll(playersList, players);
+        handler = new GameHandler(this, playersList, liveId, this);
 
     }
 
