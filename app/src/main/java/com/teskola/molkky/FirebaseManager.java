@@ -472,6 +472,8 @@ public class FirebaseManager {
     }
 
     public void addUser(String database, OnSuccessListener<Void> onSuccessListener, OnFailureListener error) {
+        if (database.equals(""))
+            return;
         if (!database.equals(dbid))
             updateSharedPreferences(database);
         databaseRef = firebase.getReference("databases").child(database);

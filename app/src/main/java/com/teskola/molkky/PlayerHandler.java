@@ -75,7 +75,7 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     @Override
     public void onDatabaseRemoved(String key) {
         namesMap.remove(key);
-        if (namesMap.isEmpty())
+        if (noSavedPlayers())
             emptyDatabaseListener.onEmpty();
     }
 

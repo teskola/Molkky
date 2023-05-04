@@ -160,7 +160,7 @@ public class SettingsActivity extends AppCompatActivity implements MetaHandler.D
     public void onCreatedReceived(String date) {
         databaseStats.setVisibility(View.VISIBLE);
         createdTV.setText(date);
-        if (updatedTV.getText() == null)
+        if (updatedTV.getText().equals(""));
             updatedTV.setText(date);
     }
 }

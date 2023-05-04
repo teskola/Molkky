@@ -120,12 +120,12 @@ public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseM
                 games++;
             }
         }
-
         databaseListener.onGamesReceived(games);
         databaseListener.onTossesReceived(tossCount);
-
-        String updatedString = new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(timestamp);
-        databaseListener.onUpdatedReceived(updatedString);
+        if (timestamp != 0) {
+            String updatedString = new SimpleDateFormat("dd.MM.yy", Locale.getDefault()).format(timestamp);
+            databaseListener.onUpdatedReceived(updatedString);
+        }
     }
 
     public void changeDatabase(String newDatabaseId) {
