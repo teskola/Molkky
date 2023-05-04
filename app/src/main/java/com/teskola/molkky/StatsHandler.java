@@ -44,6 +44,7 @@ public class StatsHandler implements FirebaseManager.StatsListener {
                                     player.addTosses(tossesMap);
                                     if (game.getValue().equals(Boolean.TRUE))
                                         player.addWin();
+                                    dataChangedListener.onDataChanged();
                                     break;
                                 }
                             }
@@ -51,7 +52,6 @@ public class StatsHandler implements FirebaseManager.StatsListener {
                         }
                     });
                 }
-                dataChangedListener.onDataChanged();
             }
         }
     }

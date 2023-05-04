@@ -173,6 +173,6 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
 
     @Override
     public void onDataChanged() {
-        listAdapter.notifyDataSetChanged();
+        updateUI();
     }
 }
