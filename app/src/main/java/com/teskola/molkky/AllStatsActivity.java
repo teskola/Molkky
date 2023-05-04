@@ -16,6 +16,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,16 +54,23 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         recyclerView = findViewById(R.id.allStatsRW);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
-        if (savedInstanceState != null)
+        if (savedInstanceState != null) {
+            String json = savedInstanceState.getString("PLAYER_STATS");
+            PlayerStats[] playerStatsArray = new Gson().fromJson(json, PlayerStats[].class);
+            playerStats = Arrays.asList(playerStatsArray);
             statID = savedInstanceState.getInt("STAT_ID");
-
-        List<PlayerInfo> players = PlayerHandler.getInstance(this).getPlayers();
-        playerStats = new ArrayList<>(players.size());
-        for (PlayerInfo player : players) {
-            playerStats.add(new PlayerStats(player, 0, null));
+            statsHandler = new StatsHandler(this, playerStats, this);
         }
-        statsHandler = new StatsHandler(this, playerStats, this);
-        for (PlayerInfo player : players) statsHandler.getPlayerStats(player);
+        else {
+            List<PlayerInfo> players = PlayerHandler.getInstance(this).getPlayers();
+            playerStats = new ArrayList<>(players.size());
+            for (PlayerInfo player : players) {
+                playerStats.add(new PlayerStats(player, 0, null));
+            }
+            statsHandler = new StatsHandler(this, playerStats, this);
+            for (PlayerInfo player : players) statsHandler.getPlayerStats(player);
+        }
+
         createRecyclerView();
         updateUI();
 
@@ -150,6 +158,8 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
+        String json = new Gson().toJson(playerStats);
+        savedInstanceState.putString("PLAYER_STATS", json);
         savedInstanceState.putInt("STAT_ID", statID);
     }
 
