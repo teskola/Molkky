@@ -42,7 +42,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         playerHandler = PlayerHandler.getInstance(this);
         playerHandler.setEmptyDatabaseListener(this);
         super.onCreate(savedInstanceState);
