@@ -21,6 +21,7 @@ import java.util.Objects;
 public abstract class OptionsActivity extends ImagesActivity {
 
     public boolean noGamesInDatabase = false;
+    private AlertDialog dialog;
 
     public void showSpectateDialog () {
         AlertDialog.Builder spectateDialog = new AlertDialog.Builder(this);
@@ -46,6 +47,7 @@ public abstract class OptionsActivity extends ImagesActivity {
                         intent.putExtra("PLAYERS", json);
                         intent.putExtra("SPECTATE_MODE", gameId);
                         startActivity(intent);
+                        dialog.dismiss();
                     }, e -> {
                         if (Objects.equals(e.getMessage(), "game not found")) {
                             inputLayout.setError(getString(R.string.game_not_found));
@@ -67,11 +69,11 @@ public abstract class OptionsActivity extends ImagesActivity {
         spectateDialog.setTitle(R.string.spectate);
         spectateDialog.setMessage(R.string.set_code);
         spectateDialog.setView(inputView);
-
         spectateDialog.setNegativeButton(R.string.cancel, (dialog, which) -> {
 
         });
-        spectateDialog.show();
+        dialog = spectateDialog.create();
+        dialog.show();
     }
 
 
