@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, PlayerHandler.OnEmptyDatabaseListener {
+public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, PlayerHandler.OnEmptyDatabaseListener, PlayerHandler.OnPlayersAddedListener {
 
     private List<PlayerInfo> playersList = new ArrayList<>();
     private ListAdapter listAdapter;
@@ -151,10 +151,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         // playerHandler.start();
         if (playerHandler.noSavedPlayers()) {
             noGamesInDatabase = true;
-            playerHandler.registerOnPlayersAddedListener(() -> {
-                noGamesInDatabase = false;
-                playerHandler.unRegisterOnPlayersAddedLister();
-            });
+            playerHandler.registerOnPlayersAddedListener(this);
         }
     }
 
@@ -289,5 +286,11 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onEmpty() {
         noGamesInDatabase = true;
+    }
+
+    @Override
+    public void onAdded() {
+        noGamesInDatabase = false;
+        playerHandler.unRegisterOnPlayersAddedLister();
     }
 }

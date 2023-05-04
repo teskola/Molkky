@@ -67,7 +67,7 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
 
     @Override
     public void onPlayersReceived(Map<String, Set<PlayerInfo>> players) {
-        if (onPlayersAddedListener != null)
+        if (onPlayersAddedListener != null && !noSavedPlayers(players))
             onPlayersAddedListener.onAdded();
         namesMap.putAll(players);
     }
@@ -108,8 +108,24 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         }
     }
 
+    public boolean noSavedPlayers(Map<String, Set<PlayerInfo>> players) {
+        for (String db : players.keySet()) {
+            for (PlayerInfo player : Objects.requireNonNull(players.get(db))) {
+                if (player != null)
+                    return false;
+            }
+        }
+        return true;
+    }
+
     public boolean noSavedPlayers() {
-        return namesMap.isEmpty();
+        for (String db : namesMap.keySet()) {
+            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(db))) {
+                if (player != null)
+                    return false;
+            }
+        }
+        return true;
     }
 
     private void addAlterEgos (Set<PlayerInfo> players) {

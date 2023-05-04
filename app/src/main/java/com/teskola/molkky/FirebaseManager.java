@@ -3,6 +3,7 @@ package com.teskola.molkky;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -299,7 +300,7 @@ public class FirebaseManager {
 
     public String getShortId() {
         if (uid == null) {
-            return null;
+            return "";
         }
         return uid.substring(0, DATABASE_ID_LENGTH).toLowerCase();
     }
@@ -330,6 +331,7 @@ public class FirebaseManager {
         FirebaseAuth.getInstance().signInAnonymously().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 uid = FirebaseAuth.getInstance().getUid();
+                updateSharedPreferences(getShortId());
                 initializeDatabase();
             }
 
@@ -458,7 +460,15 @@ public class FirebaseManager {
     }
 
     private void initializeDatabase() {
-        firebase.getReference("databases/" + getShortId() + "/created").setValue(ServerValue.TIMESTAMP);
+        firebase.getReference("databases/" + getShortId() + "/created").setValue(ServerValue.TIMESTAMP).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful())
+                    addUser(getShortId(), null, null);
+                else
+                    Log.d("error", Objects.requireNonNull(task.getException()).getMessage());
+            }
+        });
     }
 
     public void addUser(String database, OnSuccessListener<Void> onSuccessListener, OnFailureListener error) {
