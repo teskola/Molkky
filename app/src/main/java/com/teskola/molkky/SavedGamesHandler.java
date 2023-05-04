@@ -58,7 +58,8 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
             for (FirebaseManager.MetaData metaData : Objects.requireNonNull(data.get(key))) {
                 String name = PlayerHandler.getInstance(context).getPlayerName(key, metaData.getWinner());
                 SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, metaData.getId(), name, metaData.getTimestamp());
-                games.add(gameInfo);
+                if (!games.contains(gameInfo))
+                    games.add(gameInfo);
             }
         }
         Collections.sort(games);

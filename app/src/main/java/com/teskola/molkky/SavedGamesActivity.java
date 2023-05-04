@@ -86,6 +86,14 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         public int compareTo(GameInfo gameInfo) {
             return Long.compare(gameInfo.timestamp, this.timestamp);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            GameInfo gameInfo = (GameInfo) o;
+            return gid.equals(gameInfo.gid);
+        }
     }
 
     @Override
