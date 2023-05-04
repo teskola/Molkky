@@ -47,12 +47,12 @@ public class SelectPlayersActivity extends ImagesActivity implements ListAdapter
                     allPlayers.add(player);
                     selected.add(true);
                 }
-                String other = getIntent().getStringExtra("OTHER_PLAYERS");
-                PlayerInfo[] otherPlayers = new Gson().fromJson(other, PlayerInfo[].class);
-                for (PlayerInfo player : otherPlayers) {
-                    allPlayers.add(player);
-                    selected.add(false);
-                }
+            }
+            String other = getIntent().getStringExtra("OTHER_PLAYERS");
+            PlayerInfo[] otherPlayers = new Gson().fromJson(other, PlayerInfo[].class);
+            for (PlayerInfo player : otherPlayers) {
+                allPlayers.add(player);
+                selected.add(false);
             }
         }
 
