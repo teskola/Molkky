@@ -169,7 +169,8 @@ public class FirebaseManager {
                 }
                 Map<String, Set<String>> playerMap = new HashMap<>();
                 playerMap.put(key, playerSet);
-                metaPlayersListener.onPlayersReceived(playerMap);
+                if (metaPlayersListener != null)
+                    metaPlayersListener.onPlayersReceived(playerMap);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -230,11 +231,11 @@ public class FirebaseManager {
     }
 
     private FirebaseManager (Context context) {
+        preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
+        alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
         uid = FirebaseAuth.getInstance().getUid();
         if (uid == null)
             signIn();
-        preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
         dbid = preferences.getString("DATABASE", getShortId());
         addUser(dbid, null, null);
     }
