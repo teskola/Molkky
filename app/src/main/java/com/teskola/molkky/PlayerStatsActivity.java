@@ -126,7 +126,12 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
         });
     }
 
-
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+        if (statsHandler != null)
+            statsHandler.close();
+    }
 
     private void showBarChart(){
 

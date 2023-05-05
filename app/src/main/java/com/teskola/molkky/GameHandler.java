@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -15,30 +16,63 @@ import java.util.Random;
 
 public class GameHandler {
     private GameListener listener;
-    private final Game game;
+    private Game game;
     private final FirebaseManager firebaseManager;
     private final boolean postTosses;
     private final List<Toss> tosses = new ArrayList<>();
     private String liveId;
-    private List<PlayerInfo> startingOrder;
+    private long liveGameTimestamp = 0;
 
-    private final FirebaseManager.LiveGameListener liveGameListener = newTosses -> {
+    public static class LiveGame {
+        private List<Player> players;
+        private long started;
+        private List<Toss> tosses;
+        public LiveGame () {
+        }
+
+        public List<Player> getPlayers() {
+            return players;
+        }
+
+        public long getStarted() {
+            return started;
+        }
+
+        public List<Toss> getTosses() {
+            return tosses;
+        }
+    }
+
+
+    private final FirebaseManager.LiveGameListener liveGameListener = liveGame -> {
+        if (liveGameTimestamp == 0)
+            liveGameTimestamp = liveGame.getStarted();
+        else if (liveGameTimestamp != liveGame.getStarted()) {
+            listener.onNewGameStarted(liveGame.getPlayers(), liveId);
+            return;
+        }
+        List<Toss> newTosses = liveGame.getTosses();
         if (newTosses == null) {
             while (tosses.size() > 0)
                 removeToss();
             return;
         }
         while (newTosses.size() > tosses.size()) {
-            HashMap<String, Long> tossMap = (HashMap<String, Long>) newTosses.get(tosses.size());
+            /*HashMap<String, Long> tossMap = (HashMap<String, Long>) newTosses.get(tosses.size());
             Gson gson = new Gson();
             JsonElement jsonElement = gson.toJsonTree(tossMap);
-            Toss toss = gson.fromJson(jsonElement, Toss.class);
+            Toss toss = gson.fromJson(jsonElement, Toss.class);*/
+            Toss toss = newTosses.get(tosses.size());
+            if (!toss.getPid().equals(current().getId()))
+                break;
             addToss(toss.getValue());
         }
         while (newTosses.size() < tosses.size()) {
             removeToss();
         }
     };
+
+
 
     // Saved state
 
@@ -76,7 +110,6 @@ public class GameHandler {
         Collections.addAll(playersList, players);
 
         this.game = new Game(playersList, random);
-        this.startingOrder = new ArrayList<>(game.getPlayers());
         if (FirebaseAuth.getInstance().getUid() != null) {  // TODO authstatelistener
             firebaseManager.addLiveGame(game);
             this.postTosses = true;
@@ -94,6 +127,10 @@ public class GameHandler {
         return game;
     }
 
+    public void setGame (Game game) {
+        this.game = game;
+    }
+
     public String getLiveId () {
         return liveId != null ? liveId : firebaseManager.getLiveGameId();
     }
@@ -101,6 +138,7 @@ public class GameHandler {
     public interface GameListener {
         void onTurnChanged(int points, int chanceToWin, boolean undo);
         void onGameStatusChanged(boolean gameEnded);
+        void onNewGameStarted(List<Player> players, String liveId);
     }
 
     public void startFetchingLiveData (String gameId) {

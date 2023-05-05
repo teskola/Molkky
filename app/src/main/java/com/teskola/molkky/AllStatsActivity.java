@@ -94,6 +94,13 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
 
     }
 
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+        if (statsHandler != null)
+            statsHandler.close();
+    }
+
     public void createRecyclerView() {
         listAdapter = new ListAdapter(this, playerStats, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);

@@ -41,7 +41,7 @@ public abstract class OptionsActivity extends ImagesActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s.length() == 4) {
                     String gameId = s.toString();
-                    FirebaseManager.getInstance(OptionsActivity.this).getLiveGamePlayers(gameId, playerInfos -> {
+                    FirebaseManager.getInstance(OptionsActivity.this).fetchLiveGamePlayers(gameId, playerInfos -> {
                         String json = new Gson().toJson(playerInfos);
                         Intent intent = new Intent(OptionsActivity.this, GameActivity.class);
                         intent.putExtra("PLAYERS", json);

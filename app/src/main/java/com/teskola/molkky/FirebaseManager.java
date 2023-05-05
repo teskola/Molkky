@@ -126,10 +126,10 @@ public class FirebaseManager {
         }
     };
 
-    private final ValueEventListener tossListener = new ValueEventListener() {
+    private final ValueEventListener liveGameEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            liveGameListener.onTossesChanges((List<Object>) snapshot.getValue());
+            liveGameListener.onLiveGameChange(snapshot.getValue(GameHandler.LiveGame.class));
         }
 
         @Override
@@ -221,7 +221,7 @@ public class FirebaseManager {
     }
 
     public interface LiveGameListener {
-        void onTossesChanges (List<Object> tosses);
+        void onLiveGameChange (GameHandler.LiveGame liveGame);
     }
 
     public static FirebaseManager getInstance(Context context) {
@@ -563,7 +563,21 @@ public class FirebaseManager {
         });
     }
 
-    public void getLiveGamePlayers (String gameId, OnSuccessListener<List<PlayerInfo>> response, OnFailureListener error) {
+    public void searchLiveGame (String gameId, OnSuccessListener<String> response, OnFailureListener error) {
+        liveRef.child(gameId).child("started").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                if (task.getResult().getValue() == null) {
+                    error.onFailure(new Exception("game not found"));
+                    return;
+                }
+                response.onSuccess(gameId);
+            }
+            else
+                error.onFailure(Objects.requireNonNull(task.getException()));
+        });
+    }
+
+    public void fetchLiveGamePlayers (String gameId, OnSuccessListener<List<PlayerInfo>> response, OnFailureListener error) {
         liveRef.child(gameId).child("players").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DataSnapshot ds = task.getResult();
@@ -638,12 +652,12 @@ public class FirebaseManager {
 
     public void setLiveGameListener (String id, LiveGameListener liveGameListener) {
         this.liveGameListener = liveGameListener;
-        liveRef.child(id).child("tosses").addValueEventListener(tossListener);
+        liveRef.child(id).addValueEventListener(liveGameEventListener);
     }
 
     public void removeLiveGameListener (String id) {
         this.liveGameListener = null;
-        liveRef.child(id).child("tosses").removeEventListener(tossListener);
+        liveRef.child(id).removeEventListener(liveGameEventListener);
     }
 
 

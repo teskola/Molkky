@@ -28,7 +28,9 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class GameActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, GameHandler.GameListener {
@@ -332,6 +334,12 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         updateUI();
         if (gameEnded)
             clearSavedState();
+    }
+
+    @Override
+    public void onNewGameStarted(List<Player> players, String liveId) {
+        handler = new GameHandler(this, players, liveId, this);
+        updateUI();
     }
 
     @Override

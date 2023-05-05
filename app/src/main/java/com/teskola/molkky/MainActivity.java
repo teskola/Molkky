@@ -18,7 +18,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -254,7 +253,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onSelectClicked(int position) {
         Toast.makeText(this, R.string.move_player_instructions, Toast.LENGTH_SHORT).show();
-    };
+    }
 
 
     @Override

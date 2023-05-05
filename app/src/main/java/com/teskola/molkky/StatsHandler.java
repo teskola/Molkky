@@ -21,6 +21,10 @@ public class StatsHandler implements FirebaseManager.StatsListener {
 
     }
 
+    public void close() {
+        firebaseManager.unRegisterStatsListener(this);
+    }
+
     public interface DataChangedListener {
         void onDataChanged();
     }

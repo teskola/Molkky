@@ -37,6 +37,7 @@ public class PlayerInfo {
         return (alterEgo != null ? alterEgo : name);
     }
 
+    @Exclude
     public String getNameInDatabase() {
         return name;
     }
