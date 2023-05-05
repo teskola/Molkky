@@ -95,7 +95,8 @@ public class GameHandler {
         this.listener = gameListener;
         this.liveId = liveId;
         Game savedGame = new Gson().fromJson(gameJson, Game.class);
-        this.liveTosses = getLiveTosses(savedGame);
+        if (gameListener != null) // saved state, not saved game
+            this.liveTosses = getLiveTosses(savedGame);
         this.game = savedGame;
         this.postTosses = liveId == null;
         if (liveId != null) {
