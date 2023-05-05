@@ -5,21 +5,17 @@ import android.content.Context;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 public class GameHandler {
     private GameListener listener;
     private Game game;
     private final FirebaseManager firebaseManager;
     private final boolean postTosses;
-    private final List<Toss> tosses = new ArrayList<>();
+    private List<Toss> liveTosses = new ArrayList<>();
     private String liveId;
     private long liveGameTimestamp = 0;
 
@@ -53,24 +49,42 @@ public class GameHandler {
         }
         List<Toss> newTosses = liveGame.getTosses();
         if (newTosses == null) {
-            while (tosses.size() > 0)
+            while (liveTosses.size() > 0)
                 removeToss();
             return;
         }
-        while (newTosses.size() > tosses.size()) {
-            /*HashMap<String, Long> tossMap = (HashMap<String, Long>) newTosses.get(tosses.size());
-            Gson gson = new Gson();
-            JsonElement jsonElement = gson.toJsonTree(tossMap);
-            Toss toss = gson.fromJson(jsonElement, Toss.class);*/
-            Toss toss = newTosses.get(tosses.size());
+        while (newTosses.size() > liveTosses.size()) {
+            Toss toss = newTosses.get(liveTosses.size());
             if (!toss.getPid().equals(current().getId()))
                 break;
             addToss(toss.getValue());
         }
-        while (newTosses.size() < tosses.size()) {
+        while (newTosses.size() < liveTosses.size()) {
             removeToss();
         }
     };
+
+    private List<Toss> getLiveTosses (Game game) {
+        int totalTosses = game.getTossesCount();
+        List<Toss> tosses = new ArrayList<>(game.getTossesCount());
+        while (game.getTossesCount() > 0) {
+            for (int i = 1; i < game.getPlayers().size(); i++) {
+                Player previous = game.getPlayer(game.getPlayers().size() - i);
+                Player current = game.getPlayer(0);
+                if ((previous.getTosses().size() > current.getTosses().size()) || !previous.isEliminated()) {
+                    previous.getUndoStack().push(previous.removeToss());
+                    game.setTurn(game.getPlayers().size() - i);
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i < totalTosses; i++) {
+            Toss toss = new Toss(game.getPlayer(0).getId(), game.getPlayer(0).getUndoStack().peek());
+            tosses.add(toss);
+            game.addToss(game.getPlayer(0).getUndoStack().pop());
+        }
+        return tosses;
+    }
 
 
 
@@ -80,7 +94,9 @@ public class GameHandler {
         this.firebaseManager = FirebaseManager.getInstance(context);
         this.listener = gameListener;
         this.liveId = liveId;
-        this.game = new Gson().fromJson(gameJson, Game.class);
+        Game savedGame = new Gson().fromJson(gameJson, Game.class);
+        this.liveTosses = getLiveTosses(savedGame);
+        this.game = savedGame;
         this.postTosses = liveId == null;
         if (liveId != null) {
             startFetchingLiveData(liveId);
@@ -199,9 +215,9 @@ public class GameHandler {
     }
 
     public void addToss(long points) {
-        tosses.add(new Toss(game.getPlayer(0).getId(), points));
+        liveTosses.add(new Toss(game.getPlayer(0).getId(), points));
         if (postTosses)
-            firebaseManager.postTosses(tosses);
+            firebaseManager.postTosses(liveTosses);
         if (!game.getPlayer(0).getUndoStack().empty())
             game.getPlayer(0).getUndoStack().pop();
         game.getPlayer(0).addToss(points);
@@ -222,7 +238,7 @@ public class GameHandler {
     }
 
     public boolean noTosses () {
-        return game.getPlayer(game.getPlayers().size() - 1).getTosses().size() == 0;
+        return game.getTossesCount() == 0;
     }
 
     public int last () {
@@ -230,9 +246,9 @@ public class GameHandler {
     }
 
     public void removeToss () {
-        tosses.remove(tosses.size() - 1);
+        liveTosses.remove(liveTosses.size() - 1);
         if (postTosses)
-            firebaseManager.postTosses(tosses);
+            firebaseManager.postTosses(liveTosses);
         if (game.getPlayer(0).countAll() == 50) {
             long removed = game.getPlayer(0).removeToss();
             game.getPlayer(0).getUndoStack().push(removed);

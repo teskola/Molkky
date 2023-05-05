@@ -622,9 +622,10 @@ public class FirebaseManager {
                 liveRef.child(id).updateChildren(timestamp);
             }
         });
-        List<Object> tosses = new ArrayList<>();
+        List<Toss> tosses = new ArrayList<>();
         for (int i = 0; i < tossesCount; i++) {
-            tosses.add(game.getPlayer(0).getUndoStack().peek());
+            Toss toss = new Toss(game.getPlayer(0).getId(), game.getPlayer(0).getUndoStack().peek());
+            tosses.add(toss);
             game.addToss(game.getPlayer(0).getUndoStack().pop());
         }
         if (tosses.size() > 0)

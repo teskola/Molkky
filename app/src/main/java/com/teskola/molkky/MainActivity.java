@@ -53,26 +53,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         ImageButton addButton = findViewById(R.id.addButton);
         ImageButton selectButton = findViewById(R.id.selectButton);
 
-        saved_state = getSharedPreferences("SAVED_STATE", Context.MODE_PRIVATE);
-        if (saved_state.getString("SAVED_SELECTION", null) != null) {
-            playersList = new ArrayList<>();
-            PlayerInfo[] players = new Gson().fromJson(saved_state.getString("SAVED_SELECTION", null), PlayerInfo[].class);
-            Collections.addAll(playersList, players);
-            randomCheckBox.setChecked(saved_state.getBoolean("RANDOM", false));
-            editor = saved_state.edit();
-            editor.remove("SAVED_SELECTION");
-            editor.apply();
-        }
-        if (saved_state.getString("SAVED_STATE", null) != null) {
-            Intent intent = new Intent(this, GameActivity.class);
-            intent.putExtra("SAVED_STATE", saved_state.getString("SAVED_STATE", null));
-            editor = saved_state.edit();
-            editor.remove("SAVED_STATE");
-            editor.apply();
-            startActivity(intent);
-            return;
-        }
-
         if (savedInstanceState != null) {
             playersList = new ArrayList<>();
             PlayerInfo[] players = new Gson().fromJson(savedInstanceState.getString("PLAYERS"), PlayerInfo[].class);
@@ -126,6 +106,26 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         createRecyclerView();
         selectButton.setOnClickListener(view -> selectPlayers());
         startButton.setOnClickListener(view -> startGame());
+
+        saved_state = getSharedPreferences("SAVED_STATE", Context.MODE_PRIVATE);
+        if (saved_state.getString("SAVED_SELECTION", null) != null) {
+            playersList = new ArrayList<>();
+            PlayerInfo[] players = new Gson().fromJson(saved_state.getString("SAVED_SELECTION", null), PlayerInfo[].class);
+            Collections.addAll(playersList, players);
+            randomCheckBox.setChecked(saved_state.getBoolean("RANDOM", false));
+            editor = saved_state.edit();
+            editor.remove("SAVED_SELECTION");
+            editor.apply();
+        }
+        if (saved_state.getString("SAVED_STATE", null) != null) {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("SAVED_STATE", saved_state.getString("SAVED_STATE", null));
+            editor = saved_state.edit();
+            editor.remove("SAVED_STATE");
+            editor.apply();
+            startActivity(intent);
+            return;
+        }
     }
 
     @Override
