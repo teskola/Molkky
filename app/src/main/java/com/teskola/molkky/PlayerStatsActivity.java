@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class PlayerStatsActivity extends OptionsActivity implements StatsHandler.DataChangedListener {
     private int position;
@@ -74,6 +73,7 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
             String json = getIntent().getStringExtra("STATS");
             PlayerStats[] playersArray = new Gson().fromJson(json, PlayerStats[].class);
             players = new ArrayList<>(Arrays.asList(playersArray));
+            updateUI();
         }
         else {
 
@@ -95,7 +95,6 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
 
         if (statsHandler != null)
             statsHandler.getPlayerStats(players.get(position));
-        updateUI();
 
         // Listeners
 
@@ -104,7 +103,7 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
             else position = players.size() - 1;
-            if (statsHandler != null)
+            if (statsHandler != null && players.get(position).noData())
                 statsHandler.getPlayerStats(players.get(position));
             else
                 updateUI();
@@ -112,7 +111,7 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
         nextIB.setOnClickListener(view -> {
             if (position < players.size() - 1) position++;
             else position = 0;
-            if (statsHandler != null)
+            if (statsHandler != null && players.get(position).noData())
                 statsHandler.getPlayerStats(players.get(position));
             else
                 updateUI();

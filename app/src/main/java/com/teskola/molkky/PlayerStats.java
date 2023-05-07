@@ -15,6 +15,10 @@ public class PlayerStats extends PlayerInfo {
         this.tosses = tosses;
     }
 
+    public boolean noData() {
+        return tosses == null;
+    }
+
     public int getTosses(int value) {
         int count = 0;
         for (String key : tosses.keySet()) {
