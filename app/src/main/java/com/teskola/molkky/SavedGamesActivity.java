@@ -38,7 +38,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     @Override
     public void onGameReceived(GameInfo gameInfo) {
         games.add(gameInfo);
-        Objects.requireNonNull(recyclerView.getAdapter()).notifyItemInserted(0);
+        Objects.requireNonNull(recyclerView.getAdapter()).notifyDataSetChanged();
     }
 
     @SuppressLint("NotifyDataSetChanged")
