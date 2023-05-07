@@ -195,7 +195,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (handler.gameEnded()) {
             listAdapter = new ListAdapter(handler.getPlayers(true), true, false, this);
         } else {
-            listAdapter = new ListAdapter(handler.getPlayers(false), false, true, null);
+            listAdapter = new ListAdapter(handler.getPlayers(false), false, true, spectateMode ? this : null);
         }
         recyclerView.setAdapter(listAdapter);
         recyclerView.setHasFixedSize(true);
@@ -243,8 +243,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         throwingPinView.setVisibility(handler.gameEnded() ? View.VISIBLE : View.INVISIBLE);
 
         //              GameId
-
-        gameIdTV.setText(handler.getLiveId());
+        if (!savedGame)
+            gameIdTV.setText(handler.getLiveId());
     }
 
     @Override

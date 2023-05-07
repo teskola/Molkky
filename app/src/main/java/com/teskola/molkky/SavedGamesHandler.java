@@ -42,7 +42,7 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
             allTosses.putAll(tossesMap);
             firebaseManager.fetchPlayersById(dbid, gid, pids -> {
                 for (String pid : pids) {
-                    String name = PlayerHandler.getInstance(context).getPlayerName(pid);
+                    String name = PlayerHandler.getInstance(context).getPlayerName(dbid, pid);
                     List<Long> tosses = (List<Long>) tossesMap.get(pid);
                     players.add(new Player(pid, name, tosses));
                 }
@@ -56,7 +56,7 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
     public void onGamesReceived(Map<String, Set<FirebaseManager.MetaData>> data) {
         for (String key : data.keySet()) {
             for (FirebaseManager.MetaData metaData : Objects.requireNonNull(data.get(key))) {
-                String name = PlayerHandler.getInstance(context).getPlayerName(metaData.getWinner());
+                String name = PlayerHandler.getInstance(context).getPlayerName(key, metaData.getWinner());
                 SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, metaData.getId(), name, metaData.getTimestamp());
                 if (!games.contains(gameInfo))
                     games.add(gameInfo);

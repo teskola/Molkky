@@ -274,8 +274,8 @@ public class GameHandler {
     }
 
     public void endGame () {
-
-        firebaseManager.addGameToDatabase(game);
+        if (postTosses)
+            firebaseManager.addGameToDatabase(game);
         listener.onGameStatusChanged(true);
     }
 }
