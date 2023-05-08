@@ -157,7 +157,15 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         List<PlayerInfo> allPlayers = new ArrayList<>(homePlayers);
         for (String dbid : namesMap.keySet()) {
             if  (!dbid.equals(uid)) {
-                foreignPlayers.addAll(Objects.requireNonNull(namesMap.get(dbid)));
+                for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
+                    boolean inHomePlayers = false;
+                    for (PlayerInfo homePlayer : homePlayers) {
+                        if (homePlayer.equals(player))
+                            inHomePlayers = true;
+                    }
+                    if (!inHomePlayers)
+                        foreignPlayers.add(player);
+                }
             }
         }
         addAlterEgos(foreignPlayers);

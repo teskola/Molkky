@@ -268,6 +268,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         String json = new Gson().toJson(handler.getPlayers(true));
         intent.putExtra("PLAYERS", json);
         intent.putExtra("POSITION", position);
+        intent.putExtra("SPECTATE", spectateMode);
         startActivity(intent);
     }
 

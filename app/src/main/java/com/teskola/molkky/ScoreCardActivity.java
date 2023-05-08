@@ -44,8 +44,10 @@ public class ScoreCardActivity extends OptionsActivity {
         titleBar = findViewById(R.id.titleBar);
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
-
-        allTimeButton.setVisibility(FirebaseAuth.getInstance().getUid() != null ? View.VISIBLE : View.INVISIBLE);
+        if (FirebaseAuth.getInstance().getUid() == null || getIntent().getBooleanExtra("SPECTATE", false))
+            allTimeButton.setVisibility(View.INVISIBLE);
+        else
+            allTimeButton.setVisibility(View.VISIBLE);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));
