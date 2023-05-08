@@ -268,7 +268,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         String json = new Gson().toJson(handler.getPlayers(true));
         intent.putExtra("PLAYERS", json);
         intent.putExtra("POSITION", position);
-        intent.putExtra("SPECTATE", spectateMode);
+        intent.putExtra("TIMESTAMP", handler.getLiveGameTimestamp());
+        intent.putExtra("SPECTATE_MODE", getIntent().getStringExtra("SPECTATE_MODE"));
         startActivity(intent);
     }
 
@@ -338,8 +339,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     }
 
     @Override
-    public void onNewGameStarted(List<Player> players, String liveId) {
-        handler = new GameHandler(this, players, liveId, this);
+    public void onNewGameStarted() {
         updateUI();
     }
 

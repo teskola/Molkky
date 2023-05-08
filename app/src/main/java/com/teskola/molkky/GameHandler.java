@@ -14,6 +14,7 @@ public class GameHandler {
     private GameListener listener;
     private Game game;
     private final FirebaseManager firebaseManager;
+    private final PlayerHandler playerHandler;
     private final boolean postTosses;
     private List<Toss> liveTosses = new ArrayList<>();
     private String liveId;
@@ -39,12 +40,19 @@ public class GameHandler {
         }
     }
 
+    public long getLiveGameTimestamp() {
+        return liveGameTimestamp;
+    }
 
     private final FirebaseManager.LiveGameListener liveGameListener = liveGame -> {
         if (liveGameTimestamp == 0)
             liveGameTimestamp = liveGame.getStarted();
         else if (liveGameTimestamp != liveGame.getStarted()) {
-            listener.onNewGameStarted(liveGame.getPlayers(), liveId);
+            getPlayerNames(liveGame.getPlayers());
+            game = new Game(liveGame.getPlayers());
+            liveGameTimestamp = liveGame.getStarted();
+            liveTosses.clear();
+            listener.onNewGameStarted();
             return;
         }
         List<Toss> newTosses = liveGame.getTosses();
@@ -92,6 +100,7 @@ public class GameHandler {
 
     public GameHandler (Context context, String gameJson, String liveId, GameListener gameListener) {
         this.firebaseManager = FirebaseManager.getInstance(context);
+        this.playerHandler = PlayerHandler.getInstance(context);
         this.listener = gameListener;
         this.liveId = liveId;
         Game savedGame = new Gson().fromJson(gameJson, Game.class);
@@ -108,11 +117,10 @@ public class GameHandler {
 
     public GameHandler (Context context, List<Player> players, String liveId, GameListener gameListener) {
         this.firebaseManager = FirebaseManager.getInstance(context);
+        this.playerHandler = PlayerHandler.getInstance(context);
         this.listener = gameListener;
         this.liveId = liveId;
-        for (Player player : players) {
-            player.setAlterEgo(PlayerHandler.getInstance(context).getPlayerName(player.getId()));
-        }
+        getPlayerNames(players);
         this.game = new Game(players);
         this.postTosses = false;
         startFetchingLiveData(liveId);
@@ -123,6 +131,7 @@ public class GameHandler {
 
     public GameHandler (Context context, String playersJson, boolean random, GameListener gameListener) {
         this.firebaseManager = FirebaseManager.getInstance(context);
+        this.playerHandler = PlayerHandler.getInstance(context);
         this.listener = gameListener;
 
         Player[] players = new Gson().fromJson(playersJson, Player[].class);
@@ -143,6 +152,12 @@ public class GameHandler {
             firebaseManager.removeLiveGameListener(liveId, liveGameListener);
     }
 
+    public void getPlayerNames(List<Player> players) {
+        for (Player player : players) {
+            player.setAlterEgo(playerHandler.getPlayerName(player.getId()));
+        }
+    }
+
     public Game getGame () {
         return game;
     }
@@ -158,7 +173,7 @@ public class GameHandler {
     public interface GameListener {
         void onTurnChanged(int points, int chanceToWin, boolean undo);
         void onGameStatusChanged(boolean gameEnded);
-        void onNewGameStarted(List<Player> players, String liveId);
+        void onNewGameStarted();
     }
 
     public void startFetchingLiveData (String gameId) {

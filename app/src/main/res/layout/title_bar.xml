@@ -80,14 +80,14 @@
                 android:background="@color/white"
                 android:padding="2dp"
                 android:scaleType="center"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:shapeAppearanceOverlay="@style/roundedImageViewRounded"
                 app:srcCompat="@drawable/camera"
                 app:strokeColor="@color/black"
-                app:strokeWidth="1dp"
-                tools:visibility="gone" />
+                app:strokeWidth="1dp" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,7 +16,9 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
-public class ScoreCardActivity extends OptionsActivity {
+import java.util.List;
+
+public class ScoreCardActivity extends OptionsActivity implements FirebaseManager.LiveGameListener {
     private Player[] players;
     private int position;
     private TextView titleTV, hitsTV, hitsPctTV, avgTV, excessTV, winningChanceTV, eliminationTV;
@@ -44,10 +46,7 @@ public class ScoreCardActivity extends OptionsActivity {
         titleBar = findViewById(R.id.titleBar);
         previousIB = findViewById(R.id.previousIB);
         nextIB = findViewById(R.id.nextIB);
-        if (FirebaseAuth.getInstance().getUid() == null || getIntent().getBooleanExtra("SPECTATE", false))
-            allTimeButton.setVisibility(View.INVISIBLE);
-        else
-            allTimeButton.setVisibility(View.VISIBLE);
+        allTimeButton.setVisibility(FirebaseAuth.getInstance().getUid() == null ? View.INVISIBLE : View.VISIBLE);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));
@@ -65,6 +64,11 @@ public class ScoreCardActivity extends OptionsActivity {
         updateUI();
 
         // Listeners
+
+        if (getIntent().getLongExtra("TIMESTAMP", 0) != 0) {
+            allTimeButton.setVisibility(View.INVISIBLE);
+            FirebaseManager.getInstance(this).addLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+        }
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
@@ -84,6 +88,12 @@ public class ScoreCardActivity extends OptionsActivity {
         });
 
         playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, photo -> playerImage.setImageBitmap(photo)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
     }
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
@@ -131,6 +141,28 @@ public class ScoreCardActivity extends OptionsActivity {
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals("SHOW_IMAGES")) {
             setImage(playerImage, players[position].getId(), true);
+        }
+    }
+
+    @Override
+    public void onLiveGameChange(GameHandler.LiveGame liveGame) {
+        if (liveGame.getStarted() != getIntent().getLongExtra("TIMESTAMP", 0))
+            FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+        else {
+            List<Toss> tossList = liveGame.getTosses();
+            for (Player player : players)
+                player.getTosses().clear();
+            if (tossList != null) {
+                for (Toss toss : tossList) {
+                    for (Player player : players) {
+                        if (player.getId().equals(toss.getPid())) {
+                            player.addToss(toss.getValue());
+                            break;
+                        }
+                    }
+                }
+            }
+            updateUI();
         }
     }
 }

@@ -24,7 +24,7 @@ public class ChartActivity extends FirebaseActivity {
     private Game game;
     private ViewGroup switchContainer;
     private LineChart chart;
-    private boolean[] checkedList;
+    private boolean[] checkedArray;
 
 
     @Override
@@ -39,10 +39,10 @@ public class ChartActivity extends FirebaseActivity {
             game = new Gson().fromJson(json, Game.class);
         }
 
-        checkedList = new boolean[game.getPlayers().size()];
+        checkedArray = new boolean[game.getPlayers().size()];
         int setTrue = min(game.getPlayers().size(), 7);
         for (int i=0; i < setTrue; i++) {
-            checkedList[i] = true;
+            checkedArray[i] = true;
         }
         addSwitchButtons();
         drawChart();
@@ -56,11 +56,11 @@ public class ChartActivity extends FirebaseActivity {
             switchContainer.addView(view);
             SwitchCompat switchCompat = findViewById(100 + i);
             switchCompat.setText(game.getPlayer(i).getName());
-            if (checkedList[i]) switchCompat.setChecked(true);
+            if (checkedArray[i]) switchCompat.setChecked(true);
 
             int index = i;
             switchCompat.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-                checkedList[index] = isChecked;
+                checkedArray[index] = isChecked;
                 drawChart();
             });
         }
@@ -68,8 +68,8 @@ public class ChartActivity extends FirebaseActivity {
 
     public void drawChart() {
         LineData lineData = new LineData();
-        for (int i=0; i < checkedList.length; i++) {
-            if (checkedList[i]) {
+        for (int i = 0; i < checkedArray.length; i++) {
+            if (checkedArray[i]) {
                 List<Entry> entries = new ArrayList<>();
                 for (int j=0; j < game.getPlayer(i).getTosses().size(); j++) {
                     entries.add(new Entry(j+1, game.getPlayer(i).count(j)));

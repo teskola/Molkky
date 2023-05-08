@@ -669,6 +669,8 @@ public class FirebaseManager {
     }
 
     public void removeLiveGameListener (String id, LiveGameListener liveGameListener) {
+        if (id == null)
+            return;
         liveGameListeners.remove(liveGameListener);
         liveRef.child(id).removeEventListener(liveGameEventListener);
     }
