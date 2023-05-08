@@ -92,7 +92,6 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
             }
             else {
                 player.setAlterEgo(player.getName());
-                player.setName(databaseName);
                 player.setId(alterEgoId);
                 return true;
             }

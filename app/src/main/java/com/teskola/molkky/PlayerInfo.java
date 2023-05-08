@@ -43,7 +43,7 @@ public class PlayerInfo {
     }
 
     public void setName(String name) {
-        this.alterEgo = name;
+        this.name = name;
     }
 
     public String getId() {
