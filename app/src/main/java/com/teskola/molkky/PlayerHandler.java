@@ -251,6 +251,14 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         return null;
     }
 
+    public String getPlayerName (String id) {
+        String alterEgo = alterEgos.getString(id, null);
+        if (alterEgo != null)
+            return alterEgo;
+        else
+            return findPlayerName(id);
+    }
+
     private String findPlayerName (String id) {
         for (String dbid : namesMap.keySet()) {
             for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {

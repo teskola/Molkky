@@ -47,7 +47,7 @@ public class FirebaseManager {
     private NamesListener namesListener;
     private List<MetaGamesListener> metaGamesListeners = new ArrayList<>();
     private MetaPlayersListener metaPlayersListener;
-    private LiveGameListener liveGameListener;
+    private List<LiveGameListener> liveGameListeners = new ArrayList<>();
 
     private final SharedPreferences preferences;
     private final SharedPreferences alterEgos;
@@ -129,7 +129,8 @@ public class FirebaseManager {
     private final ValueEventListener liveGameEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot snapshot) {
-            liveGameListener.onLiveGameChange(snapshot.getValue(GameHandler.LiveGame.class));
+            for (LiveGameListener liveGameListener : liveGameListeners)
+                liveGameListener.onLiveGameChange(snapshot.getValue(GameHandler.LiveGame.class));
         }
 
         @Override
@@ -662,16 +663,15 @@ public class FirebaseManager {
         });
     }
 
-    public void setLiveGameListener (String id, LiveGameListener liveGameListener) {
-        this.liveGameListener = liveGameListener;
+    public void addLiveGameListener(String id, LiveGameListener liveGameListener) {
+        liveGameListeners.add(liveGameListener);
         liveRef.child(id).addValueEventListener(liveGameEventListener);
     }
 
-    public void removeLiveGameListener (String id) {
+    public void removeLiveGameListener (String id, LiveGameListener liveGameListener) {
+        liveGameListeners.remove(liveGameListener);
         liveRef.child(id).removeEventListener(liveGameEventListener);
-        this.liveGameListener = null;
     }
-
 
 }
 

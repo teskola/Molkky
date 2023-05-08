@@ -110,6 +110,9 @@ public class GameHandler {
         this.firebaseManager = FirebaseManager.getInstance(context);
         this.listener = gameListener;
         this.liveId = liveId;
+        for (Player player : players) {
+            player.setAlterEgo(PlayerHandler.getInstance(context).getPlayerName(player.getId()));
+        }
         this.game = new Game(players);
         this.postTosses = false;
         startFetchingLiveData(liveId);
@@ -137,7 +140,7 @@ public class GameHandler {
 
     public void close() {
         if (liveId != null)
-            firebaseManager.removeLiveGameListener(liveId);
+            firebaseManager.removeLiveGameListener(liveId, liveGameListener);
     }
 
     public Game getGame () {
@@ -159,7 +162,7 @@ public class GameHandler {
     }
 
     public void startFetchingLiveData (String gameId) {
-        firebaseManager.setLiveGameListener(gameId, liveGameListener);
+        firebaseManager.addLiveGameListener(gameId, liveGameListener);
     }
 
     public int getColor () { return Colors.selectBackground(game.getPlayer(0), false);}

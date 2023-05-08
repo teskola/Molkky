@@ -86,6 +86,9 @@ public abstract class OptionsActivity extends ImagesActivity {
     @SuppressLint("NonConstantResourceId")
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
             case R.id.spectate:
                 showSpectateDialog();
                 return true;
