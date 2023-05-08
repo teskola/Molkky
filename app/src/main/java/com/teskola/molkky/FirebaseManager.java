@@ -639,6 +639,17 @@ public class FirebaseManager {
                     }
                 }
             });
+        else
+            liveRef.child(id + "/tosses/").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Map<String, Object> timestamp = new HashMap<>();
+                        timestamp.put("updated", ServerValue.TIMESTAMP);
+                        liveRef.child(id).updateChildren(timestamp);
+                    }
+                }
+            });
     }
 
     public void postTosses (List<Toss> tosses) {
@@ -657,8 +668,8 @@ public class FirebaseManager {
     }
 
     public void removeLiveGameListener (String id) {
-        this.liveGameListener = null;
         liveRef.child(id).removeEventListener(liveGameEventListener);
+        this.liveGameListener = null;
     }
 
 
