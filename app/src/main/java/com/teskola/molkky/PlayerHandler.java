@@ -159,8 +159,10 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
                 for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
                     boolean inHomePlayers = false;
                     for (PlayerInfo homePlayer : homePlayers) {
-                        if (homePlayer.equals(player))
+                        if (homePlayer.equals(player)) {
                             inHomePlayers = true;
+                            break;
+                        }
                     }
                     if (!inHomePlayers)
                         foreignPlayers.add(player);
@@ -204,7 +206,14 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         for (String dbid : namesMap.keySet()) {
             if  (!dbid.equals(uid)) {
                 for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
-                    if (!excludedPlayers.contains(player))
+                    boolean inHomePlayers = false;
+                    for (PlayerInfo homePlayer : homePlayers) {
+                        if (homePlayer.equals(player)) {
+                            inHomePlayers = true;
+                            break;
+                        }
+                    }
+                    if (!excludedPlayers.contains(player) && !inHomePlayers)
                         foreignPlayers.add(player);
                 }
             }
