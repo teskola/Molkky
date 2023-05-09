@@ -259,6 +259,8 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
         Intent intent = new Intent(this, ChartActivity.class);
         String json = new Gson().toJson(handler.getGame());
         intent.putExtra("json", json);
+        intent.putExtra("SPECTATE_MODE", getIntent().getStringExtra("SPECTATE_MODE"));
+        intent.putExtra("TIMESTAMP", handler.getLiveGameTimestamp());
         startActivity(intent);
     }
 

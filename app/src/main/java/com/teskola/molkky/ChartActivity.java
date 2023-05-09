@@ -20,7 +20,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChartActivity extends FirebaseActivity {
+public class ChartActivity extends FirebaseActivity implements FirebaseManager.LiveGameListener {
     private Game game;
     private ViewGroup switchContainer;
     private LineChart chart;
@@ -39,6 +39,10 @@ public class ChartActivity extends FirebaseActivity {
             game = new Gson().fromJson(json, Game.class);
         }
 
+        if (getIntent().getStringExtra("SPECTATE_MODE") != null) {
+            FirebaseManager.getInstance(this).addLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+        }
+
         checkedArray = new boolean[game.getPlayers().size()];
         int setTrue = min(game.getPlayers().size(), 7);
         for (int i=0; i < setTrue; i++) {
@@ -48,6 +52,13 @@ public class ChartActivity extends FirebaseActivity {
         drawChart();
 
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+    }
+
     public void addSwitchButtons() {
         for (int i = 0 ; i < game.getPlayers().size(); i ++) {
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -103,8 +114,27 @@ public class ChartActivity extends FirebaseActivity {
     };
 
 
-
-
+    @Override
+    public void onLiveGameChange(GameHandler.LiveGame liveGame) {
+        if (liveGame.getStarted() != getIntent().getLongExtra("TIMESTAMP", 0))
+            FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+        else {
+            List<Toss> tossList = liveGame.getTosses();
+            for (Player player : game.getPlayers())
+                player.getTosses().clear();
+            if (tossList != null) {
+                for (Toss toss : tossList) {
+                    for (Player player : game.getPlayers()) {
+                        if (player.getId().equals(toss.getPid())) {
+                            player.addToss(toss.getValue());
+                            break;
+                        }
+                    }
+                }
+            }
+            drawChart();
+        }
+    }
 }
 
 

@@ -614,15 +614,8 @@ public class FirebaseManager {
             }
         }
         String id = getLiveGameId();
-        Map<String, Object> players = new HashMap<>();
-        players.put("players", game.getPlayers());
-        liveRef.child(id).updateChildren(players).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Map<String, Object> timestamp = new HashMap<>();
-                timestamp.put("started", ServerValue.TIMESTAMP);
-                liveRef.child(id).updateChildren(timestamp);
-            }
-        });
+        Map<String, Object> data = new HashMap<>();
+        data.put("players", game.getPlayers());
         List<Toss> tosses = new ArrayList<>();
         for (int i = 0; i < tossesCount; i++) {
             Toss toss = new Toss(game.getPlayer(0).getId(), game.getPlayer(0).getUndoStack().peek());
@@ -630,27 +623,10 @@ public class FirebaseManager {
             game.addToss(game.getPlayer(0).getUndoStack().pop());
         }
         if (tosses.size() > 0)
-            liveRef.child(id + "/tosses/").setValue(tosses).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Map<String, Object> timestamp = new HashMap<>();
-                        timestamp.put("updated", ServerValue.TIMESTAMP);
-                        liveRef.child(id).updateChildren(timestamp);
-                    }
-                }
-            });
-        else
-            liveRef.child(id + "/tosses/").removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Map<String, Object> timestamp = new HashMap<>();
-                        timestamp.put("updated", ServerValue.TIMESTAMP);
-                        liveRef.child(id).updateChildren(timestamp);
-                    }
-                }
-            });
+            data.put("tosses", tosses);
+        data.put("started", ServerValue.TIMESTAMP);
+        data.put("updated", ServerValue.TIMESTAMP);
+        liveRef.child(id).setValue(data);
     }
 
     public void postTosses (List<Toss> tosses) {
