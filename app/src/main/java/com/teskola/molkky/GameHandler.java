@@ -154,7 +154,8 @@ public class GameHandler {
 
     public void getPlayerNames(List<Player> players) {
         for (Player player : players) {
-            player.setAlterEgo(playerHandler.getPlayerName(player.getId()));
+            if (playerHandler.getPlayerName(player.getId()) != null)
+                player.setName(playerHandler.getPlayerName(player.getId()));
         }
     }
 

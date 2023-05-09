@@ -265,7 +265,7 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     public void openScorecard(int position) {
 
         Intent intent = new Intent(this, ScoreCardActivity.class);
-        String json = new Gson().toJson(handler.getPlayers(true));
+        String json = new Gson().toJson(handler.getPlayers(handler.gameEnded()));
         intent.putExtra("PLAYERS", json);
         intent.putExtra("POSITION", position);
         intent.putExtra("TIMESTAMP", handler.getLiveGameTimestamp());

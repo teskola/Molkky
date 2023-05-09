@@ -672,7 +672,8 @@ public class FirebaseManager {
         if (id == null)
             return;
         liveGameListeners.remove(liveGameListener);
-        liveRef.child(id).removeEventListener(liveGameEventListener);
+        if (liveGameListeners.isEmpty())
+            liveRef.child(id).removeEventListener(liveGameEventListener);
     }
 
 }
