@@ -290,8 +290,9 @@ public class GameActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.findItem(R.id.stats).setVisible(handler.gameEnded());
-        menu.findItem(R.id.saved_games).setVisible(handler.gameEnded());
+        menu.findItem(R.id.stats).setVisible(handler.gameEnded() || spectateMode);
+        menu.findItem(R.id.saved_games).setVisible(handler.gameEnded() || spectateMode);
+        menu.findItem(R.id.spectate).setVisible(handler.gameEnded());
         return true;
     }
 

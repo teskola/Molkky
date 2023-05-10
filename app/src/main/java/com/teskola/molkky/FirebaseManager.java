@@ -229,6 +229,8 @@ public class FirebaseManager {
     public static FirebaseManager getInstance(Context context) {
         if (instance == null)
             instance = new FirebaseManager(context.getApplicationContext());
+        else if (FirebaseAuth.getInstance().getUid() == null)
+            FirebaseManager.instance.signIn();
         return instance;
     }
 
@@ -349,23 +351,12 @@ public class FirebaseManager {
         });
     }
 
-    public void fetchPlayersById (String dbid, String gid, OnSuccessListener<List<String>> onSuccessListener) {
-        userRefs.get(dbid).child("games/players/" + gid).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                List<String> players = (List<String>) task.getResult().getValue();
-                onSuccessListener.onSuccess(players);
-            }
-        });
+    public void fetchPlayersById (String dbid, String gid, ValueEventListener listener) {
+        userRefs.get(dbid).child("games/players/" + gid).addListenerForSingleValueEvent(listener);
     }
 
-    public void fetchTossesById (String dbid, String gid, OnSuccessListener<Map<String, Object>> onSuccessListener) {
-        userRefs.get(dbid).child("tosses/" + gid).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                Map<String, Object> tosses = (Map<String, Object>) task.getResult().getValue();
-                onSuccessListener.onSuccess(tosses);
-            }
-        });
+    public void fetchTossesById (String dbid, String gid, ValueEventListener listener) {
+        userRefs.get(dbid).child("tosses/" + gid).addListenerForSingleValueEvent(listener);
     }
 
     public void fetchGamesAndWins () {
@@ -562,41 +553,6 @@ public class FirebaseManager {
         for (Player player : game.getPlayers())
             homeRef.child("tosses").child(game.getId()).child(player.getId()).setValue(player.getTosses());
 
-    }
-
-    public void getLiveGames (OnSuccessListener<HashMap<String, Game>> response, OnFailureListener error) {
-        liveRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                HashMap<String, Game> games = new HashMap<>();
-                Collection<DataSnapshot> gamesDs = (Collection<DataSnapshot>) task.getResult().getChildren();
-                for (DataSnapshot dsGame : gamesDs) {
-                    Player[] players = (Player[]) dsGame.child("players").getValue(PlayerInfo[].class);
-                    Game game = new Game(Arrays.asList(players));
-                    if (dsGame.hasChild("tosses")) {
-                        int tossesSize = (int) dsGame.child("tosses").getChildrenCount() - 1; // -1 for timestamp
-                        for (int i=0; i < tossesSize; i++)
-                            game.addToss((int) dsGame.child("tosses").child(String.valueOf(i)).getValue());
-                    }
-                    games.put(dsGame.getKey(), game);
-                }
-                response.onSuccess(games);
-            } else
-                error.onFailure(Objects.requireNonNull(task.getException()));
-        });
-    }
-
-    public void searchLiveGame (String gameId, OnSuccessListener<String> response, OnFailureListener error) {
-        liveRef.child(gameId).child("started").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                if (task.getResult().getValue() == null) {
-                    error.onFailure(new Exception("game not found"));
-                    return;
-                }
-                response.onSuccess(gameId);
-            }
-            else
-                error.onFailure(Objects.requireNonNull(task.getException()));
-        });
     }
 
     public void fetchLiveGamePlayers (String gameId, OnSuccessListener<List<PlayerInfo>> response, OnFailureListener error) {

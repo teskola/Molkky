@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
 import java.util.Objects;
@@ -90,7 +91,10 @@ public abstract class OptionsActivity extends ImagesActivity {
                 onBackPressed();
                 return true;
             case R.id.spectate:
-                showSpectateDialog();
+                if (FirebaseAuth.getInstance().getUid() != null)
+                    showSpectateDialog();
+                else
+                    Toast.makeText(this, getString(R.string.database_connection_failed), Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.stats:
                 if (noGamesInDatabase) {

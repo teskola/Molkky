@@ -6,18 +6,18 @@
         android:id="@+id/spectate"
         android:title="@string/spectate"
         android:icon="@drawable/spectate"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
     />
     <item
         android:id="@+id/stats"
         android:title="@string/stats"
         android:icon="@drawable/show_chart"
         app:iconTint="@color/white"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         />
     <item
         android:id="@+id/saved_games"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         android:icon="@drawable/saved_games"
         android:title="@string/saved_games">
     </item>
@@ -26,7 +26,7 @@
         android:title="@string/settings"
         android:icon="@drawable/settings"
         app:iconTint="@color/white"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         />
     <item
         android:id="@+id/rules"

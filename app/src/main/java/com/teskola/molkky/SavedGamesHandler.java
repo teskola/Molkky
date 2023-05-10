@@ -2,9 +2,15 @@ package com.teskola.molkky;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +23,44 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
     private final GamesChangedListener gamesChangedListener;
     private final Context context;
     private final FirebaseManager firebaseManager;
+
+    private ValueEventListener tossesListener(String dbid, List<String> pids, OnSuccessListener<Game> response) {
+        return new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Player[] players = new Player[pids.size()];
+                for (DataSnapshot ds : snapshot.getChildren()) {
+                    String name = PlayerHandler.getInstance(context).getPlayerName(dbid, ds.getKey());
+                    List<Long> tosses = (List<Long>) ds.getValue();
+                    int index = pids.indexOf(ds.getKey());
+                    players[index] = new Player(ds.getKey(), name, tosses);
+
+                }
+                Game game = new Game(Arrays.asList(players));
+                response.onSuccess(game);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+    }
+
+    private ValueEventListener playersListener(OnSuccessListener<List<String>> response) {
+        return new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                response.onSuccess((List<String>) snapshot.getValue());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+    }
+
 
     public SavedGamesHandler (Context context, List<SavedGamesActivity.GameInfo> games, GamesChangedListener gamesChangedListener) {
         this.context = context;
@@ -35,21 +79,11 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
         void onGamesChanged();
     }
 
+
     public void getGame(String dbid, String gid, OnSuccessListener<Game> onSuccessListener) {
-        Map<String, Object> allTosses = new HashMap<>();
-        List<Player> players = new ArrayList<>();
-        firebaseManager.fetchTossesById(dbid, gid, tossesMap -> {
-            allTosses.putAll(tossesMap);
-            firebaseManager.fetchPlayersById(dbid, gid, pids -> {
-                for (String pid : pids) {
-                    String name = PlayerHandler.getInstance(context).getPlayerName(dbid, pid);
-                    List<Long> tosses = (List<Long>) tossesMap.get(pid);
-                    players.add(new Player(pid, name, tosses));
-                }
-                Game game = new Game(players);
-                onSuccessListener.onSuccess(game);
-            });
-        });
+        firebaseManager.fetchPlayersById(dbid, gid,
+                playersListener(pids -> firebaseManager.fetchTossesById(dbid, gid,
+                        tossesListener(dbid, pids, onSuccessListener))));
     }
 
     @Override
