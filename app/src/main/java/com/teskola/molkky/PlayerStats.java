@@ -1,22 +1,27 @@
 package com.teskola.molkky;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PlayerStats extends PlayerInfo {
 
     private Map<String, List<Long>> tosses;
-    private int wins;
+    private final Set<String> wins;
 
-    public PlayerStats(PlayerInfo player, int wins, Map<String, List<Long>> tosses) {
+    public PlayerStats(PlayerInfo player, Set<String> wins, Map<String, List<Long>> tosses) {
         super(player.getId(), player.getName());
-        this.wins = wins;
+        if (wins == null)
+            this.wins = new HashSet<>();
+        else
+            this.wins = wins;
         this.tosses = tosses;
     }
 
     public boolean noData() {
-        return tosses == null;
+        return tosses == null || tosses.size() == 0;
     }
 
     public int getTosses(int value) {
@@ -36,8 +41,8 @@ public class PlayerStats extends PlayerInfo {
         this.tosses.putAll(tosses);
     }
 
-    public void addWin () {
-        this.wins++;
+    public void addWin (String gid) {
+        this.wins.add(gid);
     }
 
     public int getGamesCount() {
@@ -63,7 +68,7 @@ public class PlayerStats extends PlayerInfo {
     }
 
     public int getWins() {
-        return wins;
+        return wins.size();
     }
     public int getExcesses() {
         int count = 0;
@@ -75,7 +80,7 @@ public class PlayerStats extends PlayerInfo {
     }
 
     public float getWinsPct() {
-        return wins / (float) tosses.size();
+        return wins.size() / (float) tosses.size();
     }
 
     public int getPoints() {

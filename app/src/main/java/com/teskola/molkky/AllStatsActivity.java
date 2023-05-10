@@ -15,14 +15,12 @@ import android.widget.TextView;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, StatsHandler.DataChangedListener {
+public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, StatsHandler.StatsReceivedListener {
 
-    private List<PlayerStats> playerStats;
     private int statID = 0;
     private RecyclerView recyclerView;
     private TextView statTv;
@@ -57,18 +55,12 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
         if (savedInstanceState != null) {
             String json = savedInstanceState.getString("PLAYER_STATS");
             PlayerStats[] playerStatsArray = new Gson().fromJson(json, PlayerStats[].class);
-            playerStats = Arrays.asList(playerStatsArray);
+            List<PlayerStats> playerStats = Arrays.asList(playerStatsArray);
             statID = savedInstanceState.getInt("STAT_ID");
             statsHandler = new StatsHandler(this, playerStats, this);
         }
         else {
-            List<PlayerInfo> players = PlayerHandler.getInstance(this).getPlayers();
-            playerStats = new ArrayList<>(players.size());
-            for (PlayerInfo player : players) {
-                playerStats.add(new PlayerStats(player, 0, null));
-            }
-            statsHandler = new StatsHandler(this, playerStats, this);
-            for (PlayerInfo player : players) statsHandler.getPlayerStats(player);
+            statsHandler = new StatsHandler(this, this);
         }
 
         createRecyclerView();
@@ -79,7 +71,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
                 statID--;
             else
                 statID = stats.length - 1;
-            updateUI();
+            if (statID > 1)
+                statsHandler.getAllStats();
+            else
+                updateUI();
         });
 
         nextIB.setOnClickListener(view -> {
@@ -87,8 +82,10 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
                 statID++;
             else
                 statID = 0;
-            updateUI();
-
+            if (statID > 1)
+                statsHandler.getAllStats();
+            else
+                updateUI();
         });
 
 
@@ -102,7 +99,7 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(this, playerStats, getPreferences().getBoolean("SHOW_IMAGES", false), this);
+        listAdapter = new ListAdapter(this, statsHandler.getPlayers(), getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -114,31 +111,31 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
 
         switch (stats[statID]) {
             case R.string.games:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
                 break;
             case R.string.wins:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getWins(), b.getWins()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWins(), b.getWins()));
                 break;
             case R.string.points:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
                 break;
             case R.string.tosses:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
                 break;
             case R.string.points_per_toss:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
                 break;
             case R.string.hits_percentage:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
                 break;
             case R.string.elimination_percentage:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
                 break;
             case R.string.excesses_per_game:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
                 break;
             case R.string.winning_chances:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
                 break;
         }
         listAdapter.setStatID(stats[statID]);
@@ -155,8 +152,7 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     @Override
     public void onSelectClicked(int position) {
         Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-
-        String json = new Gson().toJson(playerStats);
+        String json = new Gson().toJson(statsHandler.getPlayers());
         intent.putExtra("STATS", json);
         intent.putExtra("POSITION", position);
         startActivity(intent);
@@ -165,7 +161,7 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        String json = new Gson().toJson(playerStats);
+        String json = new Gson().toJson(statsHandler.getPlayers());
         savedInstanceState.putString("PLAYER_STATS", json);
         savedInstanceState.putInt("STAT_ID", statID);
     }
@@ -179,7 +175,9 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     }
 
     @Override
-    public void onDataChanged() {
+    public void onDataReceived() {
         updateUI();
     }
+
+
 }

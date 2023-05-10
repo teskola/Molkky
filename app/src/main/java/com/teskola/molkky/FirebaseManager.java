@@ -218,7 +218,8 @@ public class FirebaseManager {
     }
 
     public interface StatsListener {
-        void onGamesReceived(Map<String, Map<String, Map<String, Boolean>>> data);
+        void onGamesReceived(String dbid, PlayerStats player, DataSnapshot data);
+        void onPlayersReceived(DataSnapshot data);
     }
 
     public interface LiveGameListener {
@@ -367,22 +368,26 @@ public class FirebaseManager {
         });
     }
 
-    public void fetchGamesAndWins (String pid) {
+    public void fetchGamesAndWins () {
         for (String key : userRefs.keySet()) {
-            userRefs.get(key).child("players/" + pid).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            userRefs.get(key).child("players/").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<DataSnapshot> task) {
                     if (task.isSuccessful()) {
-                        if (task.getResult().exists()) {
-                            Map<String, Map<String, Map<String, Boolean>>> data = new HashMap<>();
-                            Map<String, Map<String, Boolean>> allGames = new HashMap<>();
-                            Map<String, Boolean> games = new HashMap<>();
-                            for (DataSnapshot gameId : task.getResult().getChildren())
-                                games.put(gameId.getKey(), gameId.getValue(Boolean.class));
-                            allGames.put(pid, games);
-                            data.put(key, allGames);
-                            statsListener.onGamesReceived(data);
-                        }
+                        statsListener.onPlayersReceived(task.getResult());
+                    }
+                }
+            });
+        }
+    }
+
+    public void fetchGamesAndWins (PlayerStats player) {
+        for (String dbid : userRefs.keySet()) {
+            userRefs.get(dbid).child("players/" + player.getId()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        statsListener.onGamesReceived(dbid, player, task.getResult());
                     }
                 }
             });
@@ -396,6 +401,22 @@ public class FirebaseManager {
                 onSuccessListener.onSuccess(tosses);
             }
         });
+    }
+
+    public void fetchTosses (OnSuccessListener<Set<DataSnapshot>> onSuccessListener) {
+        Set<String> databases = userRefs.keySet();
+        Set<String> fetchedDatabases = new HashSet<>();
+        Set<DataSnapshot> result = new HashSet<>();
+        for (String key : userRefs.keySet()) {
+            userRefs.get(key).child("tosses/").get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    fetchedDatabases.add(key);
+                    result.add(task.getResult());
+                    if (fetchedDatabases.equals(databases))
+                        onSuccessListener.onSuccess(result);
+                }
+            });
+        }
     }
 
 
