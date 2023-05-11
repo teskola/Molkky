@@ -1,6 +1,8 @@
 package com.teskola.molkky;
 
 import android.app.Application;
+
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class FirebaseApp extends Application {

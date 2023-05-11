@@ -36,7 +36,7 @@ public class FirebaseManager {
 
     public static final int DATABASE_ID_LENGTH = 6;     // only even numbers allowed
     public static final int LIVEGAME_ID_LENGTH = 4;
-
+    private boolean signingIn = false;
     private static FirebaseManager instance;
     private final FirebaseDatabase firebase = FirebaseDatabase.getInstance("https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/");
     private DatabaseReference databaseRef;
@@ -229,7 +229,7 @@ public class FirebaseManager {
     public static FirebaseManager getInstance(Context context) {
         if (instance == null)
             instance = new FirebaseManager(context.getApplicationContext());
-        else if (FirebaseAuth.getInstance().getUid() == null)
+        if (FirebaseAuth.getInstance().getUid() == null)
             FirebaseManager.instance.signIn();
         return instance;
     }
@@ -238,8 +238,6 @@ public class FirebaseManager {
         preferences = context.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
         uid = FirebaseAuth.getInstance().getUid();
-        if (uid == null)
-            signIn();
         dbid = preferences.getString("DATABASE", getShortId());
         addUser(dbid, null, null);
     }
@@ -333,7 +331,11 @@ public class FirebaseManager {
     }
 
     public void signIn() {
+        if (signingIn)
+            return;
+        signingIn = true;
         FirebaseAuth.getInstance().signInAnonymously().addOnCompleteListener(task -> {
+            signingIn = false;
             if (task.isSuccessful()) {
                 uid = FirebaseAuth.getInstance().getUid();
                 updateSharedPreferences(getShortId());
@@ -344,15 +346,31 @@ public class FirebaseManager {
     }
 
     public void fetchName (String dbid, String pid, OnSuccessListener<String> onSuccessListener) {
-        userRefs.get(dbid).child("names/" + pid).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                onSuccessListener.onSuccess(task.getResult().getValue(String.class));
+        userRefs.get(dbid).child("names/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                onSuccessListener.onSuccess(snapshot.getValue(String.class));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
     }
 
-    public void fetchPlayersById (String dbid, String gid, ValueEventListener listener) {
-        userRefs.get(dbid).child("games/players/" + gid).addListenerForSingleValueEvent(listener);
+    public void fetchPlayersById (String dbid, String gid, OnSuccessListener<List<String>> listener) {
+        userRefs.get(dbid).child("games/players/" + gid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                listener.onSuccess((List<String>) snapshot.getValue());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
     public void fetchTossesById (String dbid, String gid, ValueEventListener listener) {
@@ -361,12 +379,15 @@ public class FirebaseManager {
 
     public void fetchGamesAndWins () {
         for (String key : userRefs.keySet()) {
-            userRefs.get(key).child("players/").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            userRefs.get(key).child("players/").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        statsListener.onPlayersReceived(task.getResult());
-                    }
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    statsListener.onPlayersReceived(snapshot);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
                 }
             });
         }
@@ -374,22 +395,31 @@ public class FirebaseManager {
 
     public void fetchGamesAndWins (PlayerStats player) {
         for (String dbid : userRefs.keySet()) {
-            userRefs.get(dbid).child("players/" + player.getId()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            userRefs.get(dbid).child("players/" + player.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        statsListener.onGamesReceived(dbid, player, task.getResult());
-                    }
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    statsListener.onGamesReceived(dbid, player, snapshot);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
                 }
             });
         }
     }
 
     public void fetchTosses (String dbid, String gid, String pid, OnSuccessListener<List<Long>> onSuccessListener) {
-        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                List<Long> tosses = (List<Long>) task.getResult().getValue();
+        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Long> tosses = (List<Long>) snapshot.getValue();
                 onSuccessListener.onSuccess(tosses);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
     }
@@ -399,12 +429,18 @@ public class FirebaseManager {
         Set<String> fetchedDatabases = new HashSet<>();
         Set<DataSnapshot> result = new HashSet<>();
         for (String key : userRefs.keySet()) {
-            userRefs.get(key).child("tosses/").get().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
+            userRefs.get(key).child("tosses/").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
                     fetchedDatabases.add(key);
-                    result.add(task.getResult());
+                    result.add(snapshot);
                     if (fetchedDatabases.equals(databases))
                         onSuccessListener.onSuccess(result);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
                 }
             });
         }
@@ -413,23 +449,39 @@ public class FirebaseManager {
 
     public void fetchGamesById (String pid) {
         for (String key : userRefs.keySet()) {
-            Objects.requireNonNull(userRefs.get(key)).child("players/" + pid).get().addOnCompleteListener(idTask -> {
-                if (idTask.isSuccessful()) {
-                    for (DataSnapshot ds : idTask.getResult().getChildren()) {
-                        userRefs.get(key).child("games/meta/" + ds.getKey()).get().addOnCompleteListener(gameTask -> {
-                            MetaData metaData = gameTask.getResult().getValue(MetaData.class);
-                            if (alterEgos.contains(Objects.requireNonNull(metaData).getWinner())) {
-                                SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), alterEgos.getString(metaData.getWinner(), null), metaData.getTimestamp());
-                                gamesListener.onGameReceived(gameInfo);
-                            }
-                            else {
-                                fetchName(key, metaData.getWinner(), name -> {
-                                    SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), name, metaData.getTimestamp());
+            Objects.requireNonNull(userRefs.get(key)).child("players/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot ds : snapshot.getChildren()) {
+                        Objects.requireNonNull(userRefs.get(key)).child("games/meta/" + ds.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                MetaData metaData = snapshot.getValue(MetaData.class);
+                                if (alterEgos.contains(Objects.requireNonNull(metaData).getWinner())) {
+                                    SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), alterEgos.getString(metaData.getWinner(), null), metaData.getTimestamp());
                                     gamesListener.onGameReceived(gameInfo);
-                                });
+                                } else {
+                                    fetchName(key, metaData.getWinner(), new OnSuccessListener<String>() {
+                                        @Override
+                                        public void onSuccess(String name) {
+                                            SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), name, metaData.getTimestamp());
+                                            gamesListener.onGameReceived(gameInfo);
+                                        }
+                                    });
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
                             }
                         });
                     }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
                 }
             });
         }

@@ -3,6 +3,8 @@ package com.teskola.molkky;
 import android.content.Context;
 
 
+import androidx.annotation.NonNull;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
@@ -15,7 +17,7 @@ public class GameHandler {
     private Game game;
     private final FirebaseManager firebaseManager;
     private final PlayerHandler playerHandler;
-    private final boolean postTosses;
+    private boolean postTosses;
     private List<Toss> liveTosses = new ArrayList<>();
     private String liveId;
     private long liveGameTimestamp = 0;
@@ -139,12 +141,22 @@ public class GameHandler {
         Collections.addAll(playersList, players);
 
         this.game = new Game(playersList, random);
-        if (FirebaseAuth.getInstance().getUid() != null) {  // TODO authstatelistener
+        if (FirebaseAuth.getInstance().getUid() != null) {
             firebaseManager.addLiveGame(game);
             this.postTosses = true;
         }
-        else
+        else {
             this.postTosses = false;
+            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (firebaseAuth.getUid() != null) {
+                        postTosses = true;
+                        FirebaseAuth.getInstance().removeAuthStateListener(this);
+                    }
+                }
+            });
+        }
     }
 
     public void close() {
@@ -293,6 +305,18 @@ public class GameHandler {
     }
 
     public void endGame () {
+        if (FirebaseAuth.getInstance().getUid() == null) {
+            firebaseManager.signIn();
+            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    if (firebaseAuth.getUid() != null) {
+                        firebaseManager.addGameToDatabase(game);
+                        FirebaseAuth.getInstance().removeAuthStateListener(this);
+                    }
+                }
+            });
+        }
         if (postTosses)
             firebaseManager.addGameToDatabase(game);
         listener.onGameStatusChanged(true);

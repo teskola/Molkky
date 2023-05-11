@@ -1,6 +1,7 @@
 package com.teskola.molkky;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -42,25 +43,10 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Log.d("error", error.getMessage());
             }
         };
     }
-
-    private ValueEventListener playersListener(OnSuccessListener<List<String>> response) {
-        return new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                response.onSuccess((List<String>) snapshot.getValue());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        };
-    }
-
 
     public SavedGamesHandler (Context context, List<SavedGamesActivity.GameInfo> games, GamesChangedListener gamesChangedListener) {
         this.context = context;
@@ -81,9 +67,12 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
 
 
     public void getGame(String dbid, String gid, OnSuccessListener<Game> onSuccessListener) {
-        firebaseManager.fetchPlayersById(dbid, gid,
-                playersListener(pids -> firebaseManager.fetchTossesById(dbid, gid,
-                        tossesListener(dbid, pids, onSuccessListener))));
+        firebaseManager.fetchPlayersById(dbid, gid, new OnSuccessListener<List<String>>() {
+            @Override
+            public void onSuccess(List<String> pids) {
+                firebaseManager.fetchTossesById(dbid, gid, tossesListener(dbid, pids, onSuccessListener));
+            }
+        });
     }
 
     @Override
