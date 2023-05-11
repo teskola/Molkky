@@ -34,7 +34,7 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         namesMap = new HashMap<>();
         firebaseManager = FirebaseManager.getInstance(context);
         alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
-        start();
+        firebaseManager.registerNamesListener(this);
     }
 
     public interface OnPlayersAddedListener {
@@ -57,14 +57,6 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         this.onPlayersAddedListener = null;
     }
 
-    public void start() {
-        firebaseManager.registerNamesListener(this);
-    }
-
-    public void stop() {
-        firebaseManager.unRegisterNamesListener();
-    }
-
     @Override
     public void onPlayersReceived(Map<String, Set<PlayerInfo>> players) {
         if (onPlayersAddedListener != null && !noSavedPlayers(players))
@@ -77,6 +69,31 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         namesMap.remove(key);
         if (noSavedPlayers())
             emptyDatabaseListener.onEmpty();
+    }
+
+    public boolean nameInDatabase (String name) {
+        for (String db : namesMap.keySet()) {
+            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(db))) {
+                if (player.getName().equals(name))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public void changeName (PlayerInfo player, String newName) {
+        String alterEgoId = findAlterEgoId(newName);
+        SharedPreferences.Editor editor = alterEgos.edit();
+
+        if (alterEgoId != null) {
+            editor.remove(alterEgoId);
+            editor.apply();
+        }
+        PlayerInfo namesMapPlayer = findPlayer(findPlayerId(player.getName()));
+        player.setAlterEgo(newName);
+        Objects.requireNonNull(namesMapPlayer).setAlterEgo(newName);
+        editor.putString(player.getId(), newName);
+
     }
 
     public boolean addPlayer(PlayerInfo player) {

@@ -78,5 +78,8 @@
     <string name="game_not_found">Peliä ei löytynyt</string>
     <string name="signin_failed">Kirjautuminen palvelimelle epäonnistui. Pelien tallennus ei ole käytössä.</string>
     <string name="livegame_eror">Pelin seuraaminen ei käytössä.</string>
+    <string name="change_name">Vaihda nimi</string>
+    <string name="save">Tallenna</string>
+    <string name="name_already_in_database">Nimi on käytössä</string>
 
 </resources>

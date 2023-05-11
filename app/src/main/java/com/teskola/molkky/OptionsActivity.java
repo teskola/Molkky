@@ -70,9 +70,7 @@ public abstract class OptionsActivity extends ImagesActivity {
         spectateDialog.setTitle(R.string.spectate);
         spectateDialog.setMessage(R.string.set_code);
         spectateDialog.setView(inputView);
-        spectateDialog.setNegativeButton(R.string.cancel, (dialog, which) -> {
-
-        });
+        spectateDialog.setNegativeButton(R.string.cancel, null);
         dialog = spectateDialog.create();
         dialog.show();
     }

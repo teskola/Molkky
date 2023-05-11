@@ -5,11 +5,17 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -18,6 +24,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -37,6 +44,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private SharedPreferences.Editor editor;
     private int draggedItemIndex;
     private PlayerHandler playerHandler;
+    private AlertDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,7 +132,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             editor.remove("SAVED_STATE");
             editor.apply();
             startActivity(intent);
-            return;
         }
     }
 
@@ -153,11 +160,57 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         }
     }
 
-    @Override
-    protected void onPause () {
-        super.onPause();
-        // playerHandler.stop();
+    public void showNameChangeDialog (PlayerInfo player, int position) {
+        AlertDialog.Builder nameChangeDialog = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View inputView = inflater.inflate(R.layout.name_change_view, null);
+        TextInputLayout inputLayout = inputView.findViewById(R.id.nameChangeInput);
+        EditText editText = inputLayout.getEditText();
+        editText.setText(player.getName());
+        editText.setSelection(editText.getText().length());         // cursor to the end of text field
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.length() == 0 || charSequence.equals(player.getName())) {
+                    inputLayout.setError(null);
+                    return;
+                }
+                if (playerHandler.nameInDatabase(charSequence.toString())) {
+                    inputLayout.setError(getResources().getString(R.string.name_already_in_database));
+                    return;
+                }
+                inputLayout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        nameChangeDialog.setTitle(player.getName());
+        nameChangeDialog.setMessage(R.string.change_name);
+        nameChangeDialog.setView(inputView);
+        nameChangeDialog.setNegativeButton(R.string.cancel, null);
+        nameChangeDialog.setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String newName = editText.getText().toString();
+                if (newName.length() == 0 || playerHandler.nameInDatabase(newName))
+                    return;
+                playerHandler.changeName(player, newName);
+                listAdapter.notifyItemChanged(position);
+
+            }
+        });
+        dialog = nameChangeDialog.create();
+        dialog.show();
     }
+
 
     public void createRecyclerView () {
         listAdapter = new ListAdapter(this, playersList, getPreferences().getBoolean("SHOW_IMAGES", false), this);
@@ -253,6 +306,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     @Override
     public void onSelectClicked(int position) {
         Toast.makeText(this, R.string.move_player_instructions, Toast.LENGTH_SHORT).show();
+        showNameChangeDialog(playersList.get(position), position);
     }
 
 
