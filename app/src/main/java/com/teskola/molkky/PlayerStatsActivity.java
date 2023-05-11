@@ -95,7 +95,8 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
 
         // Listeners
 
-        playerImage.setOnClickListener(view -> onImageClicked(statsHandler.getPlayers().get(position), 0, photo -> playerImage.setImageBitmap(photo)));
+        playerImage.setOnClickListener(view -> onImageClicked(statsHandler.getPlayers().get(position), 0,
+                () -> setImage(playerImage, statsHandler.getPlayers().get(position).getId(), true)));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;

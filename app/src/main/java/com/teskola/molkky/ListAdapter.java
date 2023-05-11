@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.List;
@@ -140,10 +141,12 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
            if (ImageHandler.getInstance(context).hasImage(players.get(position).getId())) {
-               Glide
+               GlideApp
                        .with(context)
                        .load(ImageHandler.getInstance(context).getStorageReference(players.get(position).getId()))
+                       .signature(new ObjectKey(ImageHandler.getInstance(context).getTimestamp(players.get(position).getId())))
                        .centerCrop()
+                       .placeholder(R.color.gray)
                        .into(Objects.requireNonNull(defaultViewHolder).playerImageView);
            }
            else {
@@ -167,7 +170,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void onDeleteClicked(int position);
 
-        void onImageClicked(PlayerInfo playerInfo, int position, ImagesActivity.OnImageAdded listener);
+        void onImageClicked(PlayerInfo playerInfo, int position, ImageHandler.OnImageAdded listener);
     }
 
     @SuppressWarnings("unchecked")
@@ -271,10 +274,9 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 playerImageView.setOnClickListener(view -> {
                     int position = DefaultViewHolder.this.getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        onItemClickListener.onImageClicked(players.get(position), position, new ImagesActivity.OnImageAdded() {
+                        onItemClickListener.onImageClicked(players.get(position), position, new ImageHandler.OnImageAdded() {
                             @Override
-                            public void onSuccess(Bitmap photo) {
-                                playerImageView.setImageBitmap(photo);
+                            public void onSuccess() {
                                 notifyItemChanged(position);
                             }
                         });

@@ -350,7 +350,7 @@ public class FirebaseManager {
     }
 
     public void addImage (String pid, OnSuccessListener<String> onSuccessListener, OnFailureListener onFailureListener) {
-        firebase.getReference("images/" + pid).setValue(true).addOnCompleteListener(task -> {
+        firebase.getReference("images/" + pid).setValue(ServerValue.TIMESTAMP).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 onSuccessListener.onSuccess(pid);
             }

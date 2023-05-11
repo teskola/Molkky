@@ -87,7 +87,7 @@ public class ScoreCardActivity extends OptionsActivity implements FirebaseManage
             startActivity(intent);
         });
 
-        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, photo -> playerImage.setImageBitmap(photo)));
+        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, () -> setImage(playerImage, players[position].getId(), true)));
     }
 
     @Override

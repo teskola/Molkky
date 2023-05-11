@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import java.util.Objects;
 public abstract class ImagesActivity extends FirebaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final int PERMISSIONS_REQUEST = 100;
-    private OnImageAdded listener;
+    private ImageHandler.OnImageAdded listener;
     private SharedPreferences preferences;
     private ActivityResultLauncher<Intent> launcher;
     private String id, name;
@@ -51,8 +52,7 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                ImageHandler.getInstance(ImagesActivity.this).upload(photo, id);
-                if (listener != null) listener.onSuccess(photo);
+                ImageHandler.getInstance(ImagesActivity.this).upload(photo, id, listener);
             }
         });
     }
@@ -61,10 +61,6 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
     protected void onDestroy() {
         super.onDestroy();
         preferences.unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    public interface OnImageAdded {
-        void onSuccess (Bitmap photo);
     }
 
     public SharedPreferences getPreferences () {
@@ -77,10 +73,12 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
             view.setVisibility(View.VISIBLE);
             if (ImageHandler.getInstance(this).hasImage(id)) {
-                Glide
+                GlideApp
                         .with(this)
                         .load(ImageHandler.getInstance(this).getStorageReference(id))
+                        .signature(new ObjectKey(ImageHandler.getInstance(this).getTimestamp(id)))
                         .centerCrop()
+                        .placeholder(R.color.gray)
                         .into(view);
             }
             else {
@@ -109,7 +107,7 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
     }
 
     @Override
-    public void onImageClicked(PlayerInfo playerInfo, int position, OnImageAdded listener) {
+    public void onImageClicked(PlayerInfo playerInfo, int position, ImageHandler.OnImageAdded listener) {
         id = playerInfo.getId();
         name = playerInfo.getName();
         this.listener = listener;

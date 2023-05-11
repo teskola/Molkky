@@ -37,8 +37,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -47,20 +49,24 @@ public class ImageHandler {
     private final FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
     private final StorageReference storageReference = firebaseStorage.getReference();
     private final FirebaseManager firebaseManager;
-    private final PlayerHandler playerHandler;
-    private final File filesDir;
-    private final Set<String> images;
+    private final Map<String, Long> images;
     public static final String PATH = "/Mölkky";
+
+    public interface OnImageAdded {
+        void onSuccess();
+    }
 
     private final ChildEventListener imagesListener = new ChildEventListener() {
         @Override
         public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-            images.add(snapshot.getKey());
+            String pid = snapshot.getKey();
+            Long timestamp = snapshot.getValue(Long.class);
+            images.put(pid, timestamp);
         }
 
         @Override
         public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+            images.put(snapshot.getKey(), snapshot.getValue(Long.class));
         }
 
         @Override
@@ -88,9 +94,7 @@ public class ImageHandler {
     private ImageHandler(Context context) {
         firebaseManager = FirebaseManager.getInstance(context);
         firebaseManager.registerImagesListener(imagesListener);
-        playerHandler = PlayerHandler.getInstance(context);
-        filesDir = context.getFilesDir();
-        images = new HashSet<>();
+        images = new HashMap<>();
     }
 
     public StorageReference getStorageReference(String id) {
@@ -98,7 +102,11 @@ public class ImageHandler {
     }
 
     public boolean hasImage  (String id) {
-        return images.contains(id);
+        return images.containsKey(id);
+    }
+
+    public Long getTimestamp (String id) {
+        return images.get(id);
     }
 
     /*
@@ -118,7 +126,7 @@ public class ImageHandler {
         saveToExternal(context, photo, name);
     }
 
-    public void upload (Bitmap photo, String id) {
+    public void upload (Bitmap photo, String id, OnImageAdded listener) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         photo.compress(Bitmap.CompressFormat.JPEG, 80, baos);
         byte[] data = baos.toByteArray();
@@ -127,33 +135,16 @@ public class ImageHandler {
                 .setContentType("image/jpg")
                 .setCustomMetadata("uid", FirebaseAuth.getInstance().getUid())
                 .build();
-        imageRef.putBytes(data, metadata).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                if (task.isComplete()) {
-                    firebaseManager.addImage(id, new OnSuccessListener<String>() {
-                        @Override
-                        public void onSuccess(String s) {
+        imageRef.putBytes(data, metadata).addOnCompleteListener(task -> {
+            if (task.isComplete()) {
+                firebaseManager.addImage(id, s -> {
+                    if (listener != null)
+                        listener.onSuccess();
+                }, e -> {
 
-                        }
-                    }, new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-
-                        }
-                    });
-                }
+                });
             }
         });
-    }
-
-    public Bitmap getPhoto (String id) {
-        File file = new File(filesDir, id + ".jpg");
-        if (file.exists()) {
-            String path = file.getAbsolutePath();
-            return BitmapFactory.decodeFile(path);
-        }
-        return null;
     }
 
     // https://stackoverflow.com/questions/63243403/android-picture-was-not-added-to-gallery-but-onscancompletedlistener-is-called
