@@ -10,7 +10,6 @@
         android:id="@+id/databaseStatsView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -130,32 +129,22 @@
         android:id="@+id/imageSwitch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
         android:padding="16dp"
         android:text="@string/show_images"
-        app:layout_constraintEnd_toEndOf="@+id/useCloudSwitch"
-        app:layout_constraintStart_toStartOf="@+id/useCloudSwitch"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/useCloudSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:padding="16dp"
-        android:text="@string/use_cloud_database"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageSwitch" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/databaseInputLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="32dp"
         android:hint="@string/database_id"
-        app:expandedHintEnabled="false"
         app:boxStrokeColor="@color/teal"
         app:counterEnabled="true"
         app:counterMaxLength="6"
@@ -163,10 +152,11 @@
         app:endIconMode="custom"
         app:endIconTint="@color/checkmark_tint"
         app:errorIconDrawable="@drawable/error"
+        app:expandedHintEnabled="false"
         app:hintTextColor="@color/teal"
-        app:layout_constraintEnd_toEndOf="@+id/useCloudSwitch"
-        app:layout_constraintStart_toStartOf="@+id/useCloudSwitch"
-        app:layout_constraintTop_toBottomOf="@+id/useCloudSwitch"
+        app:layout_constraintEnd_toEndOf="@+id/imageSwitch"
+        app:layout_constraintStart_toStartOf="@+id/imageSwitch"
+        app:layout_constraintTop_toBottomOf="@+id/imageSwitch"
         app:startIconDrawable="@drawable/info_button"
         app:startIconTint="@color/info_tint">
 

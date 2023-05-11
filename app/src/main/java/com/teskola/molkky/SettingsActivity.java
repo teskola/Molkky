@@ -20,12 +20,11 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
     private MetaHandler databaseHandler;
 
     private SwitchCompat imageSwitch;
-    private SwitchCompat useCloudSwitch;
     private TextView gamesTV, playersTV, tossesTV, createdTV, updatedTV;
     private ViewGroup databaseStats;
     private EditText editTV;
     private TextInputLayout inputLayout;
-    private boolean showImages, useCloud;
+    private boolean showImages;
     private SharedPreferences preferences;
 
     @Override
@@ -35,7 +34,6 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
         setContentView(R.layout.activity_settings);
 
         imageSwitch = findViewById(R.id.imageSwitch);
-        useCloudSwitch = findViewById(R.id.useCloudSwitch);
         inputLayout = findViewById(R.id.databaseInputLayout);
         editTV = inputLayout.getEditText();
         databaseStats = findViewById(R.id.databaseStatsView);
@@ -48,7 +46,6 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
         showImages = preferences.getBoolean("SHOW_IMAGES", false);
-        useCloud = preferences.getBoolean("USE_CLOUD", true);
         String dbid = preferences.getString("DATABASE", null);
         editTV.setText(dbid);
         editTV.setSelection(editTV.getText().length());         // cursor to the end of text field
@@ -60,17 +57,7 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
             editor.apply();
         });
 
-        useCloudSwitch.setChecked(useCloud);
-        useCloudSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            inputLayout.setEnabled(isChecked);
-            databaseStats.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean("USE_CLOUD", isChecked);
-            editor.apply();
-        });
 
-        databaseStats.setVisibility(useCloud ? View.VISIBLE : View.INVISIBLE);
-        inputLayout.setEnabled(useCloud);
         inputLayout.setStartIconOnClickListener(v -> Toast.makeText(SettingsActivity.this, SettingsActivity.this.getResources().getString(R.string.database_instruction), Toast.LENGTH_LONG).show());
         editTV.addTextChangedListener(new TextWatcher() {
             @Override
