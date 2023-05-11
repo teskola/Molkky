@@ -40,14 +40,14 @@ public class FirebaseManager {
     private static FirebaseManager instance;
     private final FirebaseDatabase firebase = FirebaseDatabase.getInstance("https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app/");
     private DatabaseReference databaseRef;
-    private final Map<String, DatabaseReference> userRefs = new HashMap<>(1);
+    private final Map<String, DatabaseReference> userRefs = new HashMap<>();
     private final DatabaseReference liveRef = firebase.getReference("livegames");
     private StatsListener statsListener;
     private GamesListener gamesListener;
     private NamesListener namesListener;
-    private List<MetaGamesListener> metaGamesListeners = new ArrayList<>();
+    private final List<MetaGamesListener> metaGamesListeners = new ArrayList<>();
     private MetaPlayersListener metaPlayersListener;
-    private List<LiveGameListener> liveGameListeners = new ArrayList<>();
+    private final List<LiveGameListener> liveGameListeners = new ArrayList<>();
 
     private final SharedPreferences preferences;
     private final SharedPreferences alterEgos;
@@ -249,6 +249,10 @@ public class FirebaseManager {
         editor.apply();
     }
 
+    public void registerImagesListener (ChildEventListener listener) {
+        firebase.getReference("images/").addChildEventListener(listener);
+    }
+
     public void registerStatsListener (StatsListener statsListener) {
         this.statsListener = statsListener;
     }
@@ -342,6 +346,17 @@ public class FirebaseManager {
                 initializeDatabase();
             }
 
+        });
+    }
+
+    public void addImage (String pid, OnSuccessListener<String> onSuccessListener, OnFailureListener onFailureListener) {
+        firebase.getReference("images/" + pid).setValue(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                onSuccessListener.onSuccess(pid);
+            }
+            else {
+                onFailureListener.onFailure(Objects.requireNonNull(task.getException()));
+            }
         });
     }
 

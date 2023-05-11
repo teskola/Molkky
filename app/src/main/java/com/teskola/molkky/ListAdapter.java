@@ -16,10 +16,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -138,32 +139,18 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // Add images
 
         if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
-           /* defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
-            defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);*/
+           if (ImageHandler.getInstance(context).hasImage(players.get(position).getId())) {
+               Glide
+                       .with(context)
+                       .load(ImageHandler.getInstance(context).getStorageReference(players.get(position).getId()))
+                       .centerCrop()
+                       .into(Objects.requireNonNull(defaultViewHolder).playerImageView);
+           }
+           else {
+               defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+               defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
+           }
 
-            Bitmap photo = ImageHandler.getInstance(context).getPhoto(players.get(position).getId());
-
-            if (photo != null) {
-                defaultViewHolder.playerImageView.setImageBitmap(photo);
-                defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
-                DefaultViewHolder finalDefaultViewHolder = defaultViewHolder;
-                ImageHandler.getInstance(context).downloadFromFirestorage(context, players.get(position), new ImageHandler.ImageListener() {
-                    @Override
-                    public void onSuccess(Bitmap bitmap) {
-                        finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        finalDefaultViewHolder.playerImageView.setImageBitmap(bitmap);
-                    }
-
-                    @Override
-                    public void onFailure() {
-                        finalDefaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
-                        finalDefaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
-
-                    }
-                });
-            }
         }
     }
 

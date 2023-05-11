@@ -259,6 +259,16 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
             return findPlayerName(id);
     }
 
+    private PlayerInfo findPlayer (String id) {
+        for (String dbid : namesMap.keySet()) {
+            for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {
+                if (playerInfo.getId().equals(id))
+                    return playerInfo;
+            }
+        }
+        return null;
+    }
+
     private String findPlayerName (String id) {
         for (String dbid : namesMap.keySet()) {
             for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {

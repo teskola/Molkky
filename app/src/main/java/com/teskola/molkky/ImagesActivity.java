@@ -18,8 +18,11 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public abstract class ImagesActivity extends FirebaseActivity implements ListAdapter.OnItemClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -42,7 +45,7 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
                     id = onSavedInstanceState.getString("id");
                     name = onSavedInstanceState.getString("name");
                 }
-                Bitmap photo = (Bitmap) data.getExtras().get("data");
+                Bitmap photo = (Bitmap) Objects.requireNonNull(data).getExtras().get("data");
                 try {
                     ImageHandler.getInstance(ImagesActivity.this).save(ImagesActivity.this, photo, id, name);
                 } catch (IOException e) {
@@ -73,19 +76,21 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
             return;
         if (preferences.getBoolean("SHOW_IMAGES", false)) {
             view.setVisibility(View.VISIBLE);
-            Bitmap photo = ImageHandler.getInstance(this).getPhoto(id);
-            if (photo != null) {
-                view.setImageBitmap(photo);
-                view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            if (ImageHandler.getInstance(this).hasImage(id)) {
+                Glide
+                        .with(this)
+                        .load(ImageHandler.getInstance(this).getStorageReference(id))
+                        .centerCrop()
+                        .into(view);
             }
-            else
-            {
+            else {
                 if (showCamera) {
-                    view.setImageResource(R.drawable.camera);
                     view.setScaleType(ImageView.ScaleType.CENTER);
+                    view.setImageResource(R.drawable.camera);
                 }
                 else
                     view.setVisibility(View.GONE);
+
             }
         }
         else

@@ -6,21 +6,11 @@ public class PlayerInfo {
     private String id;
     private String name;
     @Exclude
-    private boolean image = false;
-    @Exclude
     private String alterEgo;
 
     public PlayerInfo(String id, String name) {
         this.id = id;
         this.name = name;
-    }
-    @Exclude
-    public boolean hasImage() {
-        return image;
-    }
-
-    public void setImage(boolean image) {
-        this.image = image;
     }
 
     public void setAlterEgo (String alterEgo) {
