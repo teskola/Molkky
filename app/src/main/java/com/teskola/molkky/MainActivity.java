@@ -44,7 +44,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     private SharedPreferences.Editor editor;
     private int draggedItemIndex;
     private PlayerHandler playerHandler;
-    private AlertDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -207,7 +206,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
             }
         });
-        dialog = nameChangeDialog.create();
+        AlertDialog dialog = nameChangeDialog.create();
         dialog.show();
     }
 

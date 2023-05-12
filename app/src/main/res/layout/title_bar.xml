@@ -87,7 +87,8 @@
                 app:shapeAppearanceOverlay="@style/roundedImageViewRounded"
                 app:srcCompat="@drawable/camera"
                 app:strokeColor="@color/black"
-                app:strokeWidth="1dp" />
+                app:strokeWidth="1dp"
+                tools:visibility="visible" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

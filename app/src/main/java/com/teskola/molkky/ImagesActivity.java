@@ -3,11 +3,13 @@ package com.teskola.molkky;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,11 +17,14 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.signature.ObjectKey;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,6 +66,24 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
     protected void onDestroy() {
         super.onDestroy();
         preferences.unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    public void showImageDialog () {
+        AlertDialog.Builder imageDialog = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.image_change_view, null);
+        ImageView imageView = dialogView.findViewById(R.id.dialog_playerIW);
+
+        GlideApp
+                .with(this)
+                .load(ImageHandler.getInstance(this).getStorageReference(id))
+                .signature(new ObjectKey(ImageHandler.getInstance(this).getTimestamp(id)))
+                .into(imageView);
+        imageDialog.setTitle(name);
+        imageDialog.setView(dialogView);
+        imageDialog.setNegativeButton(R.string.cancel, null);
+        imageDialog.setPositiveButton(R.string.new_picture, (dialogInterface, i) -> takePicture());
+        imageDialog.create().show();
     }
 
     public SharedPreferences getPreferences () {
@@ -111,6 +134,13 @@ public abstract class ImagesActivity extends FirebaseActivity implements ListAda
         id = playerInfo.getId();
         name = playerInfo.getName();
         this.listener = listener;
+        if (ImageHandler.getInstance(this).hasImage(id))
+            showImageDialog();
+        else
+            takePicture();
+    }
+
+    public void takePicture() {
         if (requestPermissions()) return;
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         launcher.launch(intent);
