@@ -72,7 +72,7 @@ public class StatsHandler implements FirebaseManager.StatsListener {
         firebaseManager.fetchTosses(data -> {
             for (DataSnapshot ds : data) {
                 if (!ds.exists())
-                    return;
+                    break;
                 for (DataSnapshot gameDS : ds.getChildren()) {
                     for (DataSnapshot playerDS : gameDS.getChildren()) {
                         int index = 0;
