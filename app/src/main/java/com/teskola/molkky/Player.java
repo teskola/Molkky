@@ -13,8 +13,8 @@ public class Player extends PlayerInfo implements Comparable<Player> {
     @Exclude
     private Stack<Long> undoStack;
 
-    public Player(String id, String name, List<Long> tosses) {
-        super(id, name);
+    public Player(PlayerInfo playerInfo, List<Long> tosses) {
+        super(playerInfo);
         this.tosses = tosses;
         this.undoStack = new Stack<>();
     }

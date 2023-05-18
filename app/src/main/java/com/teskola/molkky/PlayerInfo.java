@@ -13,6 +13,12 @@ public class PlayerInfo {
         this.name = name;
     }
 
+    public PlayerInfo(PlayerInfo playerInfo) {
+        this.id = playerInfo.id;
+        this.name = playerInfo.name;
+        this.alterEgo = playerInfo.alterEgo;
+    }
+
     public void setAlterEgo (String alterEgo) {
         this.alterEgo = alterEgo;
     }

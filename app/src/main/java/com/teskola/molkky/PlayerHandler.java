@@ -17,11 +17,8 @@ import java.util.UUID;
 
 public class PlayerHandler implements FirebaseManager.NamesListener {
 
-    private final Map<String, Set<PlayerInfo>> namesMap;
-    private final FirebaseManager firebaseManager;
+    private final Map<String, Set<PlayerInfo>> playersMap;
     private final SharedPreferences alterEgos;
-    private OnEmptyDatabaseListener emptyDatabaseListener;
-    private OnPlayersAddedListener onPlayersAddedListener;
     private static PlayerHandler instance;
 
     public static PlayerHandler getInstance(Context context) {
@@ -31,49 +28,28 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     }
 
     private PlayerHandler (Context context) {
-        namesMap = new HashMap<>();
-        firebaseManager = FirebaseManager.getInstance(context);
+        playersMap = new HashMap<>();
         alterEgos = context.getSharedPreferences("ALTER_EGOS", Context.MODE_PRIVATE);
-        firebaseManager.registerNamesListener(this);
-    }
-
-    public interface OnPlayersAddedListener {
-        void onAdded ();
-    }
-
-    public interface OnEmptyDatabaseListener {
-        void onEmpty ();
-    }
-
-    public void setEmptyDatabaseListener (OnEmptyDatabaseListener onEmptyDatabaseListener) {
-        this.emptyDatabaseListener = onEmptyDatabaseListener;
-    }
-
-    public void registerOnPlayersAddedListener(OnPlayersAddedListener onPlayersAddedListener) {
-        this.onPlayersAddedListener = onPlayersAddedListener;
-    }
-
-    public void unRegisterOnPlayersAddedLister() {
-        this.onPlayersAddedListener = null;
+        FirebaseManager.getInstance(context).registerNamesListener(this);
     }
 
     @Override
     public void onPlayersReceived(Map<String, Set<PlayerInfo>> players) {
-        if (onPlayersAddedListener != null && !noSavedPlayers(players))
-            onPlayersAddedListener.onAdded();
-        namesMap.putAll(players);
+        playersMap.putAll(players);
     }
 
     @Override
     public void onDatabaseRemoved(String key) {
-        namesMap.remove(key);
-        if (noSavedPlayers())
-            emptyDatabaseListener.onEmpty();
+        playersMap.remove(key);
+    }
+
+    public void clear() {
+        playersMap.clear();
     }
 
     public boolean nameInDatabase (String name) {
-        for (String db : namesMap.keySet()) {
-            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(db))) {
+        for (String db : playersMap.keySet()) {
+            for (PlayerInfo player : Objects.requireNonNull(playersMap.get(db))) {
                 if (player.getName().equals(name))
                     return true;
             }
@@ -91,8 +67,10 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         }
         PlayerInfo namesMapPlayer = findPlayer(findPlayerId(player.getName()));
         player.setAlterEgo(newName);
-        Objects.requireNonNull(namesMapPlayer).setAlterEgo(newName);
+        if (namesMapPlayer != null)
+            namesMapPlayer.setAlterEgo(newName);
         editor.putString(player.getId(), newName);
+        editor.apply();
 
     }
 
@@ -109,6 +87,7 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
             }
             else {
                 player.setAlterEgo(player.getName());
+                player.setName(databaseName);
                 player.setId(alterEgoId);
                 return true;
             }
@@ -135,8 +114,8 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     }
 
     public boolean noSavedPlayers() {
-        for (String db : namesMap.keySet()) {
-            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(db))) {
+        for (String db : playersMap.keySet()) {
+            for (PlayerInfo player : Objects.requireNonNull(playersMap.get(db))) {
                 if (player != null)
                     return false;
             }
@@ -163,17 +142,17 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
 
         // Add players from own database
 
-        if (namesMap.containsKey(uid)) {
-            homePlayers.addAll(Objects.requireNonNull(namesMap.get(uid)));
+        if (playersMap.containsKey(uid)) {
+            homePlayers.addAll(Objects.requireNonNull(playersMap.get(uid)));
         }
         addAlterEgos(homePlayers);
 
         // Select players from foreign databases. This removes duplicate ids.
 
         List<PlayerInfo> allPlayers = new ArrayList<>(homePlayers);
-        for (String dbid : namesMap.keySet()) {
+        for (String dbid : playersMap.keySet()) {
             if  (!dbid.equals(uid)) {
-                for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
+                for (PlayerInfo player : Objects.requireNonNull(playersMap.get(dbid))) {
                     boolean inHomePlayers = false;
                     for (PlayerInfo homePlayer : homePlayers) {
                         if (homePlayer.equals(player)) {
@@ -212,17 +191,17 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         String uid = FirebaseAuth.getInstance().getUid();
         Set<PlayerInfo> homePlayers = new HashSet<>();
         Set<PlayerInfo> foreignPlayers = new HashSet<>();
-        if (namesMap.containsKey(uid)) {
-            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(uid))) {
+        if (playersMap.containsKey(uid)) {
+            for (PlayerInfo player : Objects.requireNonNull(playersMap.get(uid))) {
                 if (!excludedPlayers.contains(player))
                     homePlayers.add(player);
             }
         }
         addAlterEgos(homePlayers);
         List<PlayerInfo> allPlayers = new ArrayList<>(homePlayers);
-        for (String dbid : namesMap.keySet()) {
+        for (String dbid : playersMap.keySet()) {
             if  (!dbid.equals(uid)) {
-                for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
+                for (PlayerInfo player : Objects.requireNonNull(playersMap.get(dbid))) {
                     boolean inHomePlayers = false;
                     for (PlayerInfo homePlayer : homePlayers) {
                         if (homePlayer.equals(player)) {
@@ -256,14 +235,26 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         return allPlayers;
     }
 
+    public PlayerInfo getPlayer (String dbid, String pid) {
+        for (PlayerInfo playerInfo : Objects.requireNonNull(playersMap.get(dbid))) {
+            if (playerInfo.getId().equals(pid)) {
+                String alterEgo = alterEgos.getString(pid, null);
+                if (alterEgo != null)
+                    playerInfo.setAlterEgo(alterEgo);
+                return playerInfo;
+            }
+        }
+        return null;
+    }
+
 
     public String getPlayerName (String dbid, String id) {
         String alterEgo = alterEgos.getString(id, null);
         if (alterEgo != null)
             return alterEgo;
-        for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {
+        for (PlayerInfo playerInfo : Objects.requireNonNull(playersMap.get(dbid))) {
             if (playerInfo.getId().equals(id))
-                return  playerInfo.getName();
+                return  playerInfo.getNameInDatabase();
         }
         return null;
     }
@@ -277,8 +268,8 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     }
 
     private PlayerInfo findPlayer (String id) {
-        for (String dbid : namesMap.keySet()) {
-            for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {
+        for (String dbid : playersMap.keySet()) {
+            for (PlayerInfo playerInfo : Objects.requireNonNull(playersMap.get(dbid))) {
                 if (playerInfo.getId().equals(id))
                     return playerInfo;
             }
@@ -287,8 +278,8 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
     }
 
     private String findPlayerName (String id) {
-        for (String dbid : namesMap.keySet()) {
-            for (PlayerInfo playerInfo : Objects.requireNonNull(namesMap.get(dbid))) {
+        for (String dbid : playersMap.keySet()) {
+            for (PlayerInfo playerInfo : Objects.requireNonNull(playersMap.get(dbid))) {
                 if (playerInfo.getId().equals(id))
                     return playerInfo.getName();
             }
@@ -310,15 +301,15 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid == null)
             return null;
-        if (namesMap.containsKey(uid)) {
-            for (PlayerInfo player : Objects.requireNonNull(namesMap.get(uid))) {
+        if (playersMap.containsKey(uid)) {
+            for (PlayerInfo player : Objects.requireNonNull(playersMap.get(uid))) {
                 if (player.getName().equals(name))
                     return player.getId();
             }
         }
-        for (String dbid : namesMap.keySet()) {
+        for (String dbid : playersMap.keySet()) {
             if (!dbid.equals(uid)) {
-                for (PlayerInfo player : Objects.requireNonNull(namesMap.get(dbid))) {
+                for (PlayerInfo player : Objects.requireNonNull(playersMap.get(dbid))) {
                     if (player.getName().equals(name))
                         return player.getId();
                 }

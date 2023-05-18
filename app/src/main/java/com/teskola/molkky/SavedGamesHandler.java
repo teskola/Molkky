@@ -25,29 +25,6 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
     private final Context context;
     private final FirebaseManager firebaseManager;
 
-    private ValueEventListener tossesListener(String dbid, List<String> pids, OnSuccessListener<Game> response) {
-        return new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Player[] players = new Player[pids.size()];
-                for (DataSnapshot ds : snapshot.getChildren()) {
-                    String name = PlayerHandler.getInstance(context).getPlayerName(dbid, ds.getKey());
-                    List<Long> tosses = (List<Long>) ds.getValue();
-                    int index = pids.indexOf(ds.getKey());
-                    players[index] = new Player(ds.getKey(), name, tosses);
-
-                }
-                Game game = new Game(Arrays.asList(players));
-                response.onSuccess(game);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.d("error", error.getMessage());
-            }
-        };
-    }
-
     public SavedGamesHandler (Context context, List<SavedGamesActivity.GameInfo> games, GamesChangedListener gamesChangedListener) {
         this.context = context;
         this.gamesChangedListener = gamesChangedListener;
@@ -70,7 +47,17 @@ public class SavedGamesHandler implements FirebaseManager.MetaGamesListener {
         firebaseManager.fetchPlayersById(dbid, gid, new OnSuccessListener<List<String>>() {
             @Override
             public void onSuccess(List<String> pids) {
-                firebaseManager.fetchTossesById(dbid, gid, tossesListener(dbid, pids, onSuccessListener));
+                firebaseManager.fetchTossesById(dbid, gid, tosses -> {
+                    Player[] players = new Player[pids.size()];
+                    for (String pid : tosses.keySet()) {
+                        PlayerInfo player = PlayerHandler.getInstance(context).getPlayer(dbid, pid);
+                        List<Long> tossesList = tosses.get(pid);
+                        int index = pids.indexOf(pid);
+                        players[index] = new Player(player, tossesList);
+                    }
+                    Game game = new Game(Arrays.asList(players));
+                    onSuccessListener.onSuccess(game);
+                });
             }
         });
     }

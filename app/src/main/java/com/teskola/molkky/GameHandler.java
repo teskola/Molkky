@@ -147,15 +147,8 @@ public class GameHandler {
         }
         else {
             this.postTosses = false;
-            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-                @Override
-                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    if (firebaseAuth.getUid() != null) {
-                        postTosses = true;
-                        FirebaseAuth.getInstance().removeAuthStateListener(this);
-                    }
-                }
-            });
+            firebaseManager.signIn();
+            firebaseManager.registerSignInListener(() -> postTosses = true);
         }
     }
 
@@ -307,15 +300,7 @@ public class GameHandler {
     public void endGame () {
         if (FirebaseAuth.getInstance().getUid() == null) {
             firebaseManager.signIn();
-            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-                @Override
-                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    if (firebaseAuth.getUid() != null) {
-                        firebaseManager.addGameToDatabase(game);
-                        FirebaseAuth.getInstance().removeAuthStateListener(this);
-                    }
-                }
-            });
+            firebaseManager.registerSignInListener(() -> firebaseManager.addGameToDatabase(game));
         }
         if (postTosses)
             firebaseManager.addGameToDatabase(game);

@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -95,8 +97,18 @@ public class PlayerStatsActivity extends OptionsActivity implements StatsHandler
 
         // Listeners
 
-        playerImage.setOnClickListener(view -> onImageClicked(statsHandler.getPlayers().get(position), 0,
-                () -> setImage(playerImage, statsHandler.getPlayers().get(position).getId(), true)));
+        playerImage.setOnClickListener(view -> onImageClicked(statsHandler.getPlayers().get(position), 0, new ImageHandler.OnImageAdded() {
+            @Override
+            public void onSuccess() {
+                setImage(playerImage, statsHandler.getPlayers().get(position).getId(), true);
+            }
+
+            @Override
+            public void onError() {
+                Toast.makeText(getBaseContext(), R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+            }
+        }
+        ));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;

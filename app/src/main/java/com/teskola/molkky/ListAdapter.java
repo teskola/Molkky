@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -277,8 +278,19 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         onItemClickListener.onImageClicked(players.get(position), position, new ImageHandler.OnImageAdded() {
                             @Override
                             public void onSuccess() {
-                                notifyItemChanged(position);
+                                GlideApp
+                                        .with(context)
+                                        .load(ImageHandler.getInstance(context).getStorageReference(players.get(position).getId()))
+                                        .signature(new ObjectKey(ImageHandler.getInstance(context).getTimestamp(players.get(position).getId())))
+                                        .centerCrop()
+                                        .placeholder(R.color.gray)
+                                        .into(playerImageView);
                             }
+
+                            @Override
+                            public void onError() {
+                                Toast.makeText(context, R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+                            };
                         });
                 });
             } else playerImageView.setVisibility(View.GONE);

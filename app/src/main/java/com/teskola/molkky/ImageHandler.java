@@ -54,6 +54,7 @@ public class ImageHandler {
 
     public interface OnImageAdded {
         void onSuccess();
+        void onError();
     }
 
     private final ChildEventListener imagesListener = new ChildEventListener() {
@@ -136,13 +137,18 @@ public class ImageHandler {
                 .setCustomMetadata("uid", FirebaseAuth.getInstance().getUid())
                 .build();
         imageRef.putBytes(data, metadata).addOnCompleteListener(task -> {
-            if (task.isComplete()) {
+            if (task.isSuccessful()) {
                 firebaseManager.addImage(id, s -> {
                     if (listener != null)
                         listener.onSuccess();
                 }, e -> {
-
+                    if (listener != null)
+                        listener.onError();
                 });
+            }
+            else {
+                if (listener != null)
+                    listener.onError();
             }
         });
     }

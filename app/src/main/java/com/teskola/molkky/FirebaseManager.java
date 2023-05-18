@@ -22,8 +22,6 @@ import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +44,7 @@ public class FirebaseManager {
     private GamesListener gamesListener;
     private NamesListener namesListener;
     private final List<MetaGamesListener> metaGamesListeners = new ArrayList<>();
+    private final List<SignInListener> signInListeners = new ArrayList<>();
     private MetaPlayersListener metaPlayersListener;
     private final List<LiveGameListener> liveGameListeners = new ArrayList<>();
 
@@ -82,7 +81,7 @@ public class FirebaseManager {
         @Override
         public void onChildAdded(@NonNull DataSnapshot ds, @Nullable String previousChildName) {
             userRefs.put(ds.getKey(), firebase.getReference("users").child(Objects.requireNonNull(ds.getKey())));
-            if (metaGamesListeners != null && !metaGamesListeners.isEmpty())
+            if (!metaGamesListeners.isEmpty())
                 Objects.requireNonNull(userRefs.get(ds.getKey())).child("games/meta").addValueEventListener(metaGamesListener(ds.getKey()));
             if (metaPlayersListener != null)
                 Objects.requireNonNull(userRefs.get(ds.getKey())).child("players").addValueEventListener(metaPlayersListener(ds.getKey()));
@@ -202,6 +201,10 @@ public class FirebaseManager {
         void onDatabaseRemoved(String id);
     }
 
+    public interface SignInListener {
+        void onSignInCompleted();
+    }
+
     public interface MetaGamesListener {
         void onGamesReceived(Map<String, Set<MetaData>> data);
         void onDatabaseRemoved(String id);
@@ -274,10 +277,8 @@ public class FirebaseManager {
         fetchNames();
     }
 
-    public void unRegisterNamesListener() {
-        for (String key : userRefs.keySet())
-            Objects.requireNonNull(userRefs.get(key)).removeEventListener(namesListener(key));
-        this.namesListener = null;
+    public void registerSignInListener(SignInListener signInListener) {
+        signInListeners.add(signInListener);
     }
 
     public void registerMetaGamesListener(MetaGamesListener metaGamesListener) {
@@ -343,7 +344,10 @@ public class FirebaseManager {
             if (task.isSuccessful()) {
                 uid = FirebaseAuth.getInstance().getUid();
                 updateSharedPreferences(getShortId());
-                initializeDatabase();
+                initializeDatabase(onSuccess -> {
+                    for (SignInListener signInListener : signInListeners)
+                        signInListener.onSignInCompleted();
+                });
             }
 
         });
@@ -378,7 +382,28 @@ public class FirebaseManager {
         userRefs.get(dbid).child("games/players/" + gid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                listener.onSuccess((List<String>) snapshot.getValue());
+                if (snapshot.exists()) {
+                    listener.onSuccess((List<String>) snapshot.getValue());
+                    Objects.requireNonNull(userRefs.get(dbid)).child("games/players/" + gid).removeEventListener(this);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Objects.requireNonNull(userRefs.get(dbid)).child("games/players/" + gid).removeEventListener(this);
+
+            }
+        });
+    }
+
+    public void fetchTossesById (String dbid, String gid, OnSuccessListener<Map<String, List<Long>>> listener) {
+        userRefs.get(dbid).child("tosses/" + gid).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    listener.onSuccess((Map<String, List<Long>>) snapshot.getValue());
+                    userRefs.get(dbid).child("tosses/ + gid").removeEventListener(this);
+                }
             }
 
             @Override
@@ -386,10 +411,6 @@ public class FirebaseManager {
 
             }
         });
-    }
-
-    public void fetchTossesById (String dbid, String gid, ValueEventListener listener) {
-        userRefs.get(dbid).child("tosses/" + gid).addListenerForSingleValueEvent(listener);
     }
 
     public void fetchGamesAndWins () {
@@ -425,7 +446,7 @@ public class FirebaseManager {
     }
 
     public void fetchTosses (String dbid, String gid, String pid, OnSuccessListener<List<Long>> onSuccessListener) {
-        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).addValueEventListener(new ValueEventListener() {
+        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Long> tosses = (List<Long>) snapshot.getValue();
@@ -503,6 +524,10 @@ public class FirebaseManager {
     }
 
     public void fetchCreated(OnSuccessListener<Long> response, OnFailureListener failureListener) {
+        if (databaseRef == null) {
+            failureListener.onFailure(new Exception("Database not initialized"));
+            return;
+        }
         databaseRef.child("created").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 if (task.getResult().getValue() == null)
@@ -540,12 +565,17 @@ public class FirebaseManager {
         });
     }
 
-    private void initializeDatabase() {
+    private void initializeDatabase(OnSuccessListener<Void> listener) {
         firebase.getReference("databases/" + getShortId() + "/created").setValue(ServerValue.TIMESTAMP).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful())
+                {
                     addUser(getShortId(), null, null);
+                    if (listener != null)
+                        listener.onSuccess(null);
+                }
+
                 else
                     Log.d("error", Objects.requireNonNull(task.getException()).getMessage());
             }

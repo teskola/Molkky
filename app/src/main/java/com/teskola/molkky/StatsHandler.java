@@ -96,8 +96,7 @@ public class StatsHandler implements FirebaseManager.StatsListener {
 
     @Override
     public void onGamesReceived(String dbid, PlayerStats player, DataSnapshot data) {
-        if (!data.exists())
-            return;
+
         Set<String> games = new HashSet<>((int) data.getChildrenCount());
         Set<String> gamesReceived = new HashSet<>((int) data.getChildrenCount());
         for (DataSnapshot ds : data.getChildren()) {
@@ -120,8 +119,6 @@ public class StatsHandler implements FirebaseManager.StatsListener {
 
     @Override
     public void onPlayersReceived(DataSnapshot data) {
-        if (!data.exists())
-            return;
         for (DataSnapshot playerDS : data.getChildren()) {
             int index = 0;
             while (!playerStats.get(index).getId().equals(playerDS.getKey()))

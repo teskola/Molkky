@@ -82,5 +82,6 @@
     <string name="save">Tallenna</string>
     <string name="name_already_in_database">Nimi on käytössä</string>
     <string name="new_picture">Uusi kuva</string>
+    <string name="picture_upload_failed">Kuvan lisääminen epäonnistui.</string>
 
 </resources>

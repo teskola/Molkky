@@ -2,6 +2,8 @@ package com.teskola.molkky;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -21,7 +23,6 @@ import java.util.Objects;
 
 public abstract class OptionsActivity extends ImagesActivity {
 
-    public boolean noGamesInDatabase = false;
     private AlertDialog dialog;
 
     public void showSpectateDialog () {
@@ -32,7 +33,7 @@ public abstract class OptionsActivity extends ImagesActivity {
         EditText editText = inputLayout.getEditText();
 
         inputLayout.setStartIconOnClickListener(v -> Toast.makeText(OptionsActivity.this, R.string.spectate_instructions, Toast.LENGTH_SHORT).show());
-        editText.addTextChangedListener(new TextWatcher() {
+        Objects.requireNonNull(editText).addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -95,14 +96,14 @@ public abstract class OptionsActivity extends ImagesActivity {
                     Toast.makeText(this, getString(R.string.database_connection_failed), Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.stats:
-                if (noGamesInDatabase) {
+                if (PlayerHandler.getInstance(this).noSavedPlayers()) {
                     Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
                     return true;
                 }
                 startActivity(new Intent(this, AllStatsActivity.class));
                 return true;
             case R.id.saved_games:
-                if (noGamesInDatabase) {
+                if (PlayerHandler.getInstance(this).noSavedPlayers()) {
                     Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
                     return true;
                 }
@@ -117,5 +118,4 @@ public abstract class OptionsActivity extends ImagesActivity {
         }
         return false;
     }
-
 }

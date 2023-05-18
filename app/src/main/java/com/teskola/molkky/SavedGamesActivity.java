@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.imageview.ShapeableImageView;
@@ -137,7 +138,17 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         ListAdapter listAdapter = new ListAdapter(this, games, getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        playerImageView.setOnClickListener(view -> onImageClicked(playerInfo, 0, () -> setImage(playerImageView, playerInfo.getId(), true)));
+        playerImageView.setOnClickListener(view -> onImageClicked(playerInfo, 0, new ImageHandler.OnImageAdded() {
+            @Override
+            public void onSuccess() {
+                setImage(playerImageView, playerInfo.getId(), true);
+            }
+
+            @Override
+            public void onError() {
+                Toast.makeText(getBaseContext(), R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+            }
+        }));
     }
 
     @Override

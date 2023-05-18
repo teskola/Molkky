@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, PlayerHandler.OnEmptyDatabaseListener, PlayerHandler.OnPlayersAddedListener {
+public class MainActivity extends OptionsActivity implements ListAdapter.OnItemClickListener {
 
     private List<PlayerInfo> playersList = new ArrayList<>();
     private ListAdapter listAdapter;
@@ -49,7 +49,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onCreate(Bundle savedInstanceState) {
 
         playerHandler = PlayerHandler.getInstance(this);
-        playerHandler.setEmptyDatabaseListener(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
@@ -152,11 +151,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
     protected void onResume () {
         super.onResume();
         startButton.setEnabled(playersList.size() > 1);
-        // playerHandler.start();
-        if (playerHandler.noSavedPlayers()) {
-            noGamesInDatabase = true;
-            playerHandler.registerOnPlayersAddedListener(this);
-        }
     }
 
     public void showNameChangeDialog (PlayerInfo player, int position) {
@@ -191,7 +185,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
 
             }
         });
-        nameChangeDialog.setTitle(player.getName());
+        nameChangeDialog.setTitle(player.getNameInDatabase());
         nameChangeDialog.setMessage(R.string.change_name);
         nameChangeDialog.setView(inputView);
         nameChangeDialog.setNegativeButton(R.string.cancel, null);
@@ -332,16 +326,5 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         if (key.equals("SHOW_IMAGES")) {
             createRecyclerView();
         }
-    }
-
-    @Override
-    public void onEmpty() {
-        noGamesInDatabase = true;
-    }
-
-    @Override
-    public void onAdded() {
-        noGamesInDatabase = false;
-        playerHandler.unRegisterOnPlayersAddedLister();
     }
 }

@@ -16,22 +16,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseManager.MetaPlayersListener, FirebaseAuth.AuthStateListener {
+public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseManager.MetaPlayersListener, FirebaseManager.SignInListener {
 
     private final DatabaseListener databaseListener;
     private final FirebaseManager firebaseManager;
+    private final PlayerHandler playerHandler;
     private Map<String, Set<FirebaseManager.MetaData>> allGames;
     private Map<String, Set<String>> allPlayers;
-
-    @Override
-    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-        if (firebaseAuth.getUid() != null) {
-            getCreated();
-            firebaseManager.registerMetaGamesListener(this);
-            firebaseManager.registerMetaPlayersListener(this);
-            FirebaseAuth.getInstance().removeAuthStateListener(this);
-        }
-    }
 
     @Override
     public void onGamesReceived(Map<String, Set<FirebaseManager.MetaData>> data) {
@@ -51,6 +42,13 @@ public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseM
         sendGamesData();
         allPlayers.remove(key);
         sendPlayersData();
+    }
+
+    @Override
+    public void onSignInCompleted() {
+        firebaseManager.registerMetaGamesListener(this);
+        firebaseManager.registerMetaPlayersListener(this);
+        getCreated();
     }
 
     public interface DatabaseListener {
@@ -79,9 +77,11 @@ public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseM
         clear();
         this.databaseListener = databaseListener;
         firebaseManager = FirebaseManager.getInstance(context);
+        playerHandler = PlayerHandler.getInstance(context);
         if (FirebaseAuth.getInstance().getUid() == null) {
+            firebaseManager.registerSignInListener(this);
+            firebaseManager.signIn();
             databaseListener.onError(Error.NETWORK_ERROR);
-            FirebaseAuth.getInstance().addAuthStateListener(this);
         }
         else {
             firebaseManager.registerMetaGamesListener(this);
@@ -96,7 +96,6 @@ public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseM
     }
 
     public void close() {
-        FirebaseAuth.getInstance().removeAuthStateListener(this);
         firebaseManager.unRegisterMetaGamesListener(this);
         firebaseManager.unregisterMetaPlayersListener();
     }
@@ -140,14 +139,17 @@ public class MetaHandler implements FirebaseManager.MetaGamesListener, FirebaseM
                 databaseListener.onDatabaseEvent(Event.DATABASE_FOUND);
                 firebaseManager.unRegisterMetaGamesListener(this);
                 firebaseManager.unregisterMetaPlayersListener();
-                firebaseManager.removeUser(then -> firebaseManager.addUser
-                        (newDatabaseId, next -> {
-                            clear();
-                            firebaseManager.registerMetaGamesListener(this);
-                            firebaseManager.registerMetaPlayersListener(this);
-                            getCreated();
-                                } ,
-                                error -> databaseListener.onError(Error.UNKNOWN_ERROR)),
+                firebaseManager.removeUser(then -> {
+                            playerHandler.clear();
+                            firebaseManager.addUser
+                                    (newDatabaseId, next -> {
+                                                clear();
+                                                firebaseManager.registerMetaGamesListener(this);
+                                                firebaseManager.registerMetaPlayersListener(this);
+                                                getCreated();
+                                            },
+                                            error -> databaseListener.onError(Error.UNKNOWN_ERROR));
+                        },
                         error -> databaseListener.onError(Error.UNKNOWN_ERROR));
             }
             else

@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -87,7 +89,17 @@ public class ScoreCardActivity extends OptionsActivity implements FirebaseManage
             startActivity(intent);
         });
 
-        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, () -> setImage(playerImage, players[position].getId(), true)));
+        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, new ImageHandler.OnImageAdded() {
+            @Override
+            public void onSuccess() {
+                setImage(playerImage, players[position].getId(), true);
+            }
+
+            @Override
+            public void onError() {
+                Toast.makeText(getBaseContext(), R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+            }
+        }));
     }
 
     @Override
