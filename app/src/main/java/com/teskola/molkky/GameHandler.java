@@ -1,13 +1,8 @@
 package com.teskola.molkky;
 
 import android.content.Context;
-
-
-import androidx.annotation.NonNull;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

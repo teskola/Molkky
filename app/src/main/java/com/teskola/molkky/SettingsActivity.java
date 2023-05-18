@@ -16,15 +16,14 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.Objects;
+
 public class SettingsActivity extends FirebaseActivity implements MetaHandler.DatabaseListener {
     private MetaHandler databaseHandler;
 
-    private SwitchCompat imageSwitch;
     private TextView gamesTV, playersTV, tossesTV, createdTV, updatedTV;
     private ViewGroup databaseStats;
-    private EditText editTV;
     private TextInputLayout inputLayout;
-    private boolean showImages;
     private SharedPreferences preferences;
 
     @Override
@@ -33,9 +32,9 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
         databaseHandler = new MetaHandler(this, this);
         setContentView(R.layout.activity_settings);
 
-        imageSwitch = findViewById(R.id.imageSwitch);
+        SwitchCompat imageSwitch = findViewById(R.id.imageSwitch);
         inputLayout = findViewById(R.id.databaseInputLayout);
-        editTV = inputLayout.getEditText();
+        EditText editTV = inputLayout.getEditText();
         databaseStats = findViewById(R.id.databaseStatsView);
 
         gamesTV = findViewById(R.id.settings_gamesTV);
@@ -45,9 +44,9 @@ public class SettingsActivity extends FirebaseActivity implements MetaHandler.Da
         updatedTV = findViewById(R.id.settings_updatedTV);
 
         preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        showImages = preferences.getBoolean("SHOW_IMAGES", false);
+        boolean showImages = preferences.getBoolean("SHOW_IMAGES", false);
         String dbid = preferences.getString("DATABASE", null);
-        editTV.setText(dbid);
+        Objects.requireNonNull(editTV).setText(dbid);
         editTV.setSelection(editTV.getText().length());         // cursor to the end of text field
 
         imageSwitch.setChecked(showImages);

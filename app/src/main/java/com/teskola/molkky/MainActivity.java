@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -159,7 +158,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         View inputView = inflater.inflate(R.layout.name_change_view, null);
         TextInputLayout inputLayout = inputView.findViewById(R.id.nameChangeInput);
         EditText editText = inputLayout.getEditText();
-        editText.setText(player.getName());
+        Objects.requireNonNull(editText).setText(player.getName());
         editText.setSelection(editText.getText().length());         // cursor to the end of text field
         editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -189,16 +188,13 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         nameChangeDialog.setMessage(R.string.change_name);
         nameChangeDialog.setView(inputView);
         nameChangeDialog.setNegativeButton(R.string.cancel, null);
-        nameChangeDialog.setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                String newName = editText.getText().toString();
-                if (newName.length() == 0 || playerHandler.nameInDatabase(newName))
-                    return;
-                playerHandler.changeName(player, newName);
-                listAdapter.notifyItemChanged(position);
+        nameChangeDialog.setPositiveButton(R.string.save, (dialogInterface, i) -> {
+            String newName = editText.getText().toString();
+            if (newName.length() == 0 || playerHandler.nameInDatabase(newName))
+                return;
+            playerHandler.changeName(player, newName);
+            listAdapter.notifyItemChanged(position);
 
-            }
         });
         AlertDialog dialog = nameChangeDialog.create();
         dialog.show();

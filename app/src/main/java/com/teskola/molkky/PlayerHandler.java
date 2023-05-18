@@ -103,16 +103,6 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
         }
     }
 
-    public boolean noSavedPlayers(Map<String, Set<PlayerInfo>> players) {
-        for (String db : players.keySet()) {
-            for (PlayerInfo player : Objects.requireNonNull(players.get(db))) {
-                if (player != null)
-                    return false;
-            }
-        }
-        return true;
-    }
-
     public boolean noSavedPlayers() {
         for (String db : playersMap.keySet()) {
             for (PlayerInfo player : Objects.requireNonNull(playersMap.get(db))) {
@@ -231,6 +221,7 @@ public class PlayerHandler implements FirebaseManager.NamesListener {
             }
             allPlayers.add(foreignPlayer);
         }
+        //noinspection ComparatorCombinators
         Collections.sort(allPlayers, (playerInfo1, playerInfo2) -> playerInfo1.getName().compareTo(playerInfo2.getName()));
         return allPlayers;
     }

@@ -24,10 +24,8 @@ public class ScoreCardActivity extends OptionsActivity implements FirebaseManage
     private Player[] players;
     private int position;
     private TextView titleTV, hitsTV, hitsPctTV, avgTV, excessTV, winningChanceTV, eliminationTV;
-    private Button allTimeButton;
-    private ImageButton previousIB, nextIB;
     private ShapeableImageView playerImage;
-    private ViewGroup tossesContainer, titleBar;
+    private ViewGroup tossesContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +42,10 @@ public class ScoreCardActivity extends OptionsActivity implements FirebaseManage
         playerImage = findViewById(R.id.titleBar_playerImageView);
         titleTV = findViewById(R.id.titleTV);
         tossesContainer = findViewById(R.id.tossesContainer);
-        allTimeButton = findViewById(R.id.allTimeButton);
-        titleBar = findViewById(R.id.titleBar);
-        previousIB = findViewById(R.id.previousIB);
-        nextIB = findViewById(R.id.nextIB);
+        Button allTimeButton = findViewById(R.id.allTimeButton);
+        ViewGroup titleBar = findViewById(R.id.titleBar);
+        ImageButton previousIB = findViewById(R.id.previousIB);
+        ImageButton nextIB = findViewById(R.id.nextIB);
         allTimeButton.setVisibility(FirebaseAuth.getInstance().getUid() == null ? View.INVISIBLE : View.VISIBLE);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);

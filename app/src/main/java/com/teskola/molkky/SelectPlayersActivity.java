@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class SelectPlayersActivity extends ImagesActivity implements ListAdapter.OnItemClickListener {
-    private List<Boolean> selected = new ArrayList<>(); // muuta arrayksi
+    private List<Boolean> selected = new ArrayList<>();
     private List<PlayerInfo> allPlayers = new ArrayList<>();
     private RecyclerView recyclerView;
 

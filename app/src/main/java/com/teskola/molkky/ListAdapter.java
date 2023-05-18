@@ -2,8 +2,6 @@ package com.teskola.molkky;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -12,15 +10,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.imageview.ShapeableImageView;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -62,7 +55,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return new DefaultViewHolder(view);
     }
 
-    @SuppressLint("DefaultLocale")
+    @SuppressLint({"DefaultLocale", "NonConstantResourceId"})
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
@@ -151,7 +144,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                        .into(Objects.requireNonNull(defaultViewHolder).playerImageView);
            }
            else {
-               defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+               Objects.requireNonNull(defaultViewHolder).playerImageView.setScaleType(ImageView.ScaleType.CENTER);
                defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
            }
 
@@ -174,7 +167,6 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onImageClicked(PlayerInfo playerInfo, int position, ImageHandler.OnImageAdded listener);
     }
 
-    @SuppressWarnings("unchecked")
     public ListAdapter(Context context, List<?> data, boolean showImages, OnItemClickListener listener) {
         this.onItemClickListener = listener;
         this.context = context;
@@ -290,7 +282,7 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             @Override
                             public void onError() {
                                 Toast.makeText(context, R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
-                            };
+                            }
                         });
                 });
             } else playerImageView.setVisibility(View.GONE);

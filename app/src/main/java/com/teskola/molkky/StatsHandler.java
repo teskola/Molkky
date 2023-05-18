@@ -1,13 +1,7 @@
 package com.teskola.molkky;
 
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class PlayerStats extends PlayerInfo {
@@ -27,7 +28,7 @@ public class PlayerStats extends PlayerInfo {
     public int getTosses(int value) {
         int count = 0;
         for (String key : tosses.keySet()) {
-            for (long i : tosses.get(key)) {
+            for (long i : Objects.requireNonNull(tosses.get(key))) {
                 if (i == value)
                     count++;
             }
@@ -87,7 +88,7 @@ public class PlayerStats extends PlayerInfo {
 
         int count = 0;
         for (String key : tosses.keySet()) {
-            for (long i : tosses.get(key)) {
+            for (long i : Objects.requireNonNull(tosses.get(key))) {
                 count += i;
             }
         }
@@ -96,7 +97,7 @@ public class PlayerStats extends PlayerInfo {
     public int getTossesCount() {
         int count = 0;
         for (String key : tosses.keySet()) {
-            count += tosses.get(key).size();
+            count += Objects.requireNonNull(tosses.get(key)).size();
         }
         return count;
     }

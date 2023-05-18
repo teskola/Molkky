@@ -3,7 +3,6 @@ package com.teskola.molkky;
 import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 

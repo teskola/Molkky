@@ -365,7 +365,7 @@ public class FirebaseManager {
     }
 
     public void fetchName (String dbid, String pid, OnSuccessListener<String> onSuccessListener) {
-        userRefs.get(dbid).child("names/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
+        Objects.requireNonNull(userRefs.get(dbid)).child("names/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 onSuccessListener.onSuccess(snapshot.getValue(String.class));
@@ -379,7 +379,7 @@ public class FirebaseManager {
     }
 
     public void fetchPlayersById (String dbid, String gid, OnSuccessListener<List<String>> listener) {
-        userRefs.get(dbid).child("games/players/" + gid).addListenerForSingleValueEvent(new ValueEventListener() {
+        Objects.requireNonNull(userRefs.get(dbid)).child("games/players/" + gid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -397,12 +397,12 @@ public class FirebaseManager {
     }
 
     public void fetchTossesById (String dbid, String gid, OnSuccessListener<Map<String, List<Long>>> listener) {
-        userRefs.get(dbid).child("tosses/" + gid).addValueEventListener(new ValueEventListener() {
+        Objects.requireNonNull(userRefs.get(dbid)).child("tosses/" + gid).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     listener.onSuccess((Map<String, List<Long>>) snapshot.getValue());
-                    userRefs.get(dbid).child("tosses/ + gid").removeEventListener(this);
+                    Objects.requireNonNull(userRefs.get(dbid)).child("tosses/ + gid").removeEventListener(this);
                 }
             }
 
@@ -415,7 +415,7 @@ public class FirebaseManager {
 
     public void fetchGamesAndWins () {
         for (String key : userRefs.keySet()) {
-            userRefs.get(key).child("players/").addListenerForSingleValueEvent(new ValueEventListener() {
+            Objects.requireNonNull(userRefs.get(key)).child("players/").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     statsListener.onPlayersReceived(snapshot);
@@ -431,26 +431,26 @@ public class FirebaseManager {
 
     public void fetchGamesAndWins (PlayerStats player) {
         for (String dbid : userRefs.keySet()) {
-            userRefs.get(dbid).child("players/" + player.getId()).addValueEventListener(new ValueEventListener() {
+            Objects.requireNonNull(userRefs.get(dbid)).child("players/" + player.getId()).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
                         if (statsListener != null)
                             statsListener.onGamesReceived(dbid, player, snapshot);
-                        userRefs.get(dbid).child("players/" + player.getId()).removeEventListener(this);
+                        Objects.requireNonNull(userRefs.get(dbid)).child("players/" + player.getId()).removeEventListener(this);
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    userRefs.get(dbid).child("players/" + player.getId()).removeEventListener(this);
+                    Objects.requireNonNull(userRefs.get(dbid)).child("players/" + player.getId()).removeEventListener(this);
                 }
             });
         }
     }
 
     public void fetchTosses (String dbid, String gid, String pid, OnSuccessListener<List<Long>> onSuccessListener) {
-        userRefs.get(dbid).child("tosses/" + gid + "/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
+        Objects.requireNonNull(userRefs.get(dbid)).child("tosses/" + gid + "/" + pid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Long> tosses = (List<Long>) snapshot.getValue();
@@ -469,7 +469,7 @@ public class FirebaseManager {
         Set<String> fetchedDatabases = new HashSet<>();
         Set<DataSnapshot> result = new HashSet<>();
         for (String key : userRefs.keySet()) {
-            userRefs.get(key).child("tosses/").addListenerForSingleValueEvent(new ValueEventListener() {
+            Objects.requireNonNull(userRefs.get(key)).child("tosses/").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     fetchedDatabases.add(key);
@@ -501,12 +501,9 @@ public class FirebaseManager {
                                     SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), alterEgos.getString(metaData.getWinner(), null), metaData.getTimestamp());
                                     gamesListener.onGameReceived(gameInfo);
                                 } else {
-                                    fetchName(key, metaData.getWinner(), new OnSuccessListener<String>() {
-                                        @Override
-                                        public void onSuccess(String name) {
-                                            SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), name, metaData.getTimestamp());
-                                            gamesListener.onGameReceived(gameInfo);
-                                        }
+                                    fetchName(key, metaData.getWinner(), name -> {
+                                        SavedGamesActivity.GameInfo gameInfo = new SavedGamesActivity.GameInfo(key, ds.getKey(), name, metaData.getTimestamp());
+                                        gamesListener.onGameReceived(gameInfo);
                                     });
                                 }
                             }
@@ -570,19 +567,16 @@ public class FirebaseManager {
     }
 
     private void initializeDatabase(OnSuccessListener<Void> listener) {
-        firebase.getReference("databases/" + getShortId() + "/created").setValue(ServerValue.TIMESTAMP).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful())
-                {
-                    addUser(getShortId(), null, null);
-                    if (listener != null)
-                        listener.onSuccess(null);
-                }
-
-                else
-                    Log.d("error", Objects.requireNonNull(task.getException()).getMessage());
+        firebase.getReference("databases/" + getShortId() + "/created").setValue(ServerValue.TIMESTAMP).addOnCompleteListener(task -> {
+            if (task.isSuccessful())
+            {
+                addUser(getShortId(), null, null);
+                if (listener != null)
+                    listener.onSuccess(null);
             }
+
+            else
+                Log.d("error", Objects.requireNonNull(task.getException()).getMessage());
         });
     }
 

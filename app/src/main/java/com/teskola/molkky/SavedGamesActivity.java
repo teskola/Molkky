@@ -13,11 +13,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.gson.Gson;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +23,7 @@ import java.util.Objects;
 
 public class SavedGamesActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, FirebaseManager.GamesListener, SavedGamesHandler.GamesChangedListener {
 
-    private List<GameInfo> games = new ArrayList<>();
-    private TextView titleTV;
-    private Button showAllBtn;
+    private final List<GameInfo> games = new ArrayList<>();
     private RecyclerView recyclerView;
     private ShapeableImageView playerImageView;
     private PlayerInfo playerInfo;
@@ -36,6 +31,7 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
     private FirebaseManager firebaseManager;
     private SavedGamesHandler handler;
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onGameReceived(GameInfo gameInfo) {
         games.add(gameInfo);
@@ -103,8 +99,8 @@ public class SavedGamesActivity extends OptionsActivity implements ListAdapter.O
         setContentView(R.layout.activity_saved_games);
         firebaseManager = FirebaseManager.getInstance(this);
 
-        titleTV = findViewById(R.id.titleTV);
-        showAllBtn = findViewById(R.id.showAllButton);
+        TextView titleTV = findViewById(R.id.titleTV);
+        Button showAllBtn = findViewById(R.id.showAllButton);
         playerImageView = findViewById(R.id.titleBar_playerImageView);
 
         if (getIntent().getExtras() != null) {

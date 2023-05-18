@@ -2,12 +2,7 @@ package com.teskola.molkky;
 
 
 import android.content.Context;
-
-
-import androidx.annotation.NonNull;
-
 import com.google.firebase.auth.FirebaseAuth;
-
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;

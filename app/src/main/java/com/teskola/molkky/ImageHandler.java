@@ -7,20 +7,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -28,8 +21,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,11 +29,9 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class ImageHandler {
     private static ImageHandler instance;
@@ -57,35 +46,6 @@ public class ImageHandler {
         void onError();
     }
 
-    private final ChildEventListener imagesListener = new ChildEventListener() {
-        @Override
-        public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-            String pid = snapshot.getKey();
-            Long timestamp = snapshot.getValue(Long.class);
-            images.put(pid, timestamp);
-        }
-
-        @Override
-        public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-            images.put(snapshot.getKey(), snapshot.getValue(Long.class));
-        }
-
-        @Override
-        public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-            images.remove(snapshot.getKey());
-        }
-
-        @Override
-        public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError error) {
-
-        }
-    };
-
     public static ImageHandler getInstance(Context context) {
         if (instance == null)
             instance = new ImageHandler(context.getApplicationContext());
@@ -94,6 +54,34 @@ public class ImageHandler {
 
     private ImageHandler(Context context) {
         firebaseManager = FirebaseManager.getInstance(context);
+        ChildEventListener imagesListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                String pid = snapshot.getKey();
+                Long timestamp = snapshot.getValue(Long.class);
+                images.put(pid, timestamp);
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                images.put(snapshot.getKey(), snapshot.getValue(Long.class));
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                images.remove(snapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
         firebaseManager.registerImagesListener(imagesListener);
         images = new HashMap<>();
     }
@@ -182,6 +170,7 @@ public class ImageHandler {
            try {
                File dir = new File(fullPath);
                if (!dir.exists()) {
+                   //noinspection ResultOfMethodCallIgnored
                    dir.mkdirs();
                }
            }
