@@ -28,7 +28,6 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/start_button"
             android:enabled="false"
-            android:fontFamily="@font/josefin_sans"
             android:text="@string/start"
             android:textColor="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -39,8 +38,8 @@
             android:id="@+id/randomCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:fontFamily="@font/josefin_sans"
+            android:checked="true"
+            android:fontFamily="@font/josefin_sans_light"
             android:text="@string/random"
             android:textColor="@color/black"
             android:textSize="16sp"
@@ -48,19 +47,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/firstTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="@font/josefin_sans"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@+id/randomCheckBox"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -87,21 +73,22 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/select_button" />
+            app:srcCompat="@drawable/select_button"
+            android:contentDescription="@string/select_players" />
 
         <EditText
             android:id="@+id/editTextPlayerName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
             android:autofillHints="AUTOFILL_HINT_PERSON_NAME"
             android:background="@drawable/white_background"
             android:ems="10"
-            android:fontFamily="@font/josefin_sans"
+            android:fontFamily="@font/josefin_sans_light"
             android:hint="@string/insert_player"
             android:imeOptions="actionDone"
             android:inputType="textPersonName|textCapSentences"
+            android:maxLength="20"
             android:padding="15dp"
             android:textColor="@color/black"
             android:textColorHint="@color/black"
@@ -115,7 +102,6 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
             android:adjustViewBounds="true"
             android:background="@drawable/add_button_background"
             android:padding="10dp"
@@ -123,7 +109,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/selectButton"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/add_button" />
+            app:srcCompat="@drawable/add_button"
+            android:contentDescription="@string/add" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -131,7 +118,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:background="@color/light_gray"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout3"
         app:layout_constraintEnd_toEndOf="parent"

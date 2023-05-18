@@ -3,22 +3,34 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
 
     <item
-        android:id="@+id/new_game"
-        android:title="@string/new_game"
-        app:showAsAction="never" />
+        android:id="@+id/spectate"
+        android:title="@string/spectate"
+        android:icon="@drawable/spectate"
+        app:showAsAction="never"
+    />
     <item
         android:id="@+id/stats"
         android:title="@string/stats"
-        app:showAsAction="never" />
+        android:icon="@drawable/show_chart"
+        app:iconTint="@color/white"
+        app:showAsAction="never"
+        />
     <item
-        android:id="@+id/saved_games" app:showAsAction="never" android:title="@string/saved_games">
+        android:id="@+id/saved_games"
+        app:showAsAction="never"
+        android:icon="@drawable/saved_games"
+        android:title="@string/saved_games">
     </item>
     <item
-        android:id="@+id/images_switch"
-        android:title="@string/show_images"
-        app:showAsAction="never"/>
+        android:id="@+id/settings"
+        android:title="@string/settings"
+        android:icon="@drawable/settings"
+        app:iconTint="@color/white"
+        app:showAsAction="never"
+        />
     <item
         android:id="@+id/rules"
         android:title="@string/rules"
-        app:showAsAction="never"/>
+        app:showAsAction="never"
+        />
 </menu>

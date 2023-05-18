@@ -2,6 +2,6 @@
 <resources>
     <array name="preloaded_fonts" translatable="false">
         <item>@font/crimson_text_bold</item>
-        <item>@font/josefin_sans</item>
+        <item>@font/josefin_sans_light</item>
     </array>
 </resources>

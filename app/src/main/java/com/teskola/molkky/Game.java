@@ -1,21 +1,24 @@
 package com.teskola.molkky;
 
+
+import com.google.firebase.database.Exclude;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Game {
-    private final ArrayList<Player> players;
-    private int id;
-    private String timestamp;
+    private final List<Player> players;
+    private String id;
 
-    public Game(int gameId, ArrayList<Player> players) {
+    public Game(List<Player> players) {
         this.players = players;
-        this.id = gameId;
     }
 
-    public Game(ArrayList<Player> players, int turn, boolean random) {
-        this.id = 0;
-        this.timestamp ="";
+    public Game() {
+        players = new ArrayList<>();
+    }
+
+    public Game(List<Player> players, boolean random) {
         if (random) {
             ArrayList<Player> randomized = new ArrayList<>();
             while (!players.isEmpty()) {
@@ -28,11 +31,23 @@ public class Game {
         }
         else {
             this.players = players;
-            setTurn(turn);
         }
+
     }
 
-    public ArrayList<Player> getPlayers() {
+    @Exclude
+    public int getTossesCount () {
+        int count = 0;
+        for (Player player : players)
+            count += player.getTosses().size();
+        return count;
+    }
+
+    public void setId (String id) {
+        this.id = id;
+    }
+
+    public List<Player> getPlayers() {
         return players;
     }
 
@@ -51,6 +66,15 @@ public class Game {
         players.addAll(transferred);
     }
 
+    public void addToss (long points) {
+        players.get(0).addToss(points);
+        if (getPlayer(0).countAll() != 50) {
+            setTurn(1);
+            while (players.get(0).isEliminated())
+                setTurn(1);
+        }
+    }
+
     public boolean allDropped() {
         for (int i=1; i < players.size(); i++) {
             if (!players.get(i).isEliminated()) {
@@ -59,16 +83,9 @@ public class Game {
         }
         return true;
     }
-
-    public int getId() {
+    @Exclude
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
 }

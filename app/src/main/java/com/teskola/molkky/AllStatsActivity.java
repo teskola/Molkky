@@ -1,13 +1,11 @@
 package com.teskola.molkky;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -15,19 +13,19 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
-public class AllStatsActivity extends CommonOptions {
+public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnItemClickListener, StatsHandler.StatsReceivedListener {
 
-    private final ArrayList<PlayerStats> playerStats = new ArrayList<>();
-    private int statID;
+    private int statID = 0;
     private RecyclerView recyclerView;
     private TextView statTv;
     private ListAdapter listAdapter;
-    private SharedPreferences preferences;
-    private final ImageHandler imageHandler = new ImageHandler(this);
+    private StatsHandler statsHandler;
 
     public static final int[] stats = {
             R.string.games,
@@ -37,7 +35,8 @@ public class AllStatsActivity extends CommonOptions {
             R.string.points_per_toss,
             R.string.hits_percentage,
             R.string.elimination_percentage,
-            R.string.excesses_per_game
+            R.string.excesses_per_game,
+            R.string.winning_chances
     };
 
     @Override
@@ -53,24 +52,16 @@ public class AllStatsActivity extends CommonOptions {
         recyclerView = findViewById(R.id.allStatsRW);
         previousIB.setVisibility(View.VISIBLE);
         nextIB.setVisibility(View.VISIBLE);
-        statID = getIntent().getIntExtra("STAT_ID", 0);
-
-        ArrayList<PlayerInfo> players = DBHandler.getInstance(getApplicationContext()).getPlayers();
-        for (PlayerInfo player : players) {
-            playerStats.add(new PlayerStats(player, getApplicationContext()));
+        if (savedInstanceState != null) {
+            String json = savedInstanceState.getString("PLAYER_STATS");
+            PlayerStats[] playerStatsArray = new Gson().fromJson(json, PlayerStats[].class);
+            List<PlayerStats> playerStats = Arrays.asList(playerStatsArray);
+            statID = savedInstanceState.getInt("STAT_ID");
+            statsHandler = new StatsHandler(this, playerStats, this);
         }
-
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                invalidateOptionsMenu();
-                createRecyclerView();
-                updateUI();
-            }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
-
-
+        else {
+            statsHandler = new StatsHandler(this, this);
+        }
 
         createRecyclerView();
         updateUI();
@@ -80,7 +71,10 @@ public class AllStatsActivity extends CommonOptions {
                 statID--;
             else
                 statID = stats.length - 1;
-            updateUI();
+            if (statID > 1)
+                statsHandler.getAllStats();
+            else
+                updateUI();
         });
 
         nextIB.setOnClickListener(view -> {
@@ -88,78 +82,60 @@ public class AllStatsActivity extends CommonOptions {
                 statID++;
             else
                 statID = 0;
-            updateUI();
-
+            if (statID > 1)
+                statsHandler.getAllStats();
+            else
+                updateUI();
         });
 
 
+    }
+
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+        if (statsHandler != null)
+            statsHandler.close();
     }
 
     public void createRecyclerView() {
-        listAdapter = new ListAdapter(this, playerStats, preferences.getBoolean("SHOW_IMAGES", false), ListAdapter.STATS_ACTIVITY);
+        listAdapter = new ListAdapter(this, statsHandler.getPlayers(), getPreferences().getBoolean("SHOW_IMAGES", false), this);
         recyclerView.setAdapter(listAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        listAdapter.setOnItemClickListener(new ListAdapter.onItemClickListener() {
-            @Override
-            public void onSelectClicked(int position) {
-                int[] playerIds = new int[playerStats.size()];
-                for (int i = 0; i < playerStats.size(); i++) {
-                    playerIds[i] = playerStats.get(i).getId();
-                }
-                Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-                intent.putExtra("PLAYER_IDS", playerIds);
-                intent.putExtra("POSITION", position);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClicked(int position) {
-            }
-
-            @Override
-            public void onImageClicked(int position) {
-                imageHandler.takePicture(position);
-            }
-        });
     }
 
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playerStats.get(position).getName());
-            listAdapter.notifyItemChanged(position);
-        }
-    }
 
-    @SuppressLint({"NotifyDataSetChanged", "NonConstantResourceId"})
+
     public void updateUI() {
         statTv.setText(getString(stats[statID]));
 
         switch (stats[statID]) {
             case R.string.games:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
                 break;
             case R.string.wins:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getWins(), b.getWins()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWins(), b.getWins()));
                 break;
             case R.string.points:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
                 break;
             case R.string.tosses:
-                Collections.sort(playerStats, (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
                 break;
             case R.string.points_per_toss:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
                 break;
             case R.string.hits_percentage:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
                 break;
             case R.string.elimination_percentage:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
                 break;
             case R.string.excesses_per_game:
-                Collections.sort(playerStats, (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
+                break;
+            case R.string.winning_chances:
+                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
                 break;
         }
         listAdapter.setStatID(stats[statID]);
@@ -172,5 +148,36 @@ public class AllStatsActivity extends CommonOptions {
         menu.findItem(R.id.stats).setVisible(false);
         return true;
     }
+
+    @Override
+    public void onSelectClicked(int position) {
+        Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
+        String json = new Gson().toJson(statsHandler.getPlayers());
+        intent.putExtra("STATS", json);
+        intent.putExtra("POSITION", position);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        String json = new Gson().toJson(statsHandler.getPlayers());
+        savedInstanceState.putString("PLAYER_STATS", json);
+        savedInstanceState.putInt("STAT_ID", statID);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            createRecyclerView();
+            updateUI();
+        }
+    }
+
+    @Override
+    public void onDataReceived() {
+        updateUI();
+    }
+
 
 }

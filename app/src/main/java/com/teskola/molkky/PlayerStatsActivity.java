@@ -3,31 +3,28 @@ package com.teskola.molkky;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class PlayerStatsActivity extends CommonOptions {
-    private int[] playerIds;
+public class PlayerStatsActivity extends OptionsActivity implements StatsHandler.StatsReceivedListener {
     private int position;
-    private PlayerStats playerStats;
     private TextView playerNameTV;
     private TextView pointsTV;
     private TextView gamesTV;
@@ -37,11 +34,10 @@ public class PlayerStatsActivity extends CommonOptions {
     private TextView hitsTV;
     private TextView eliminationsTV;
     private TextView excessTV;
+    private TextView winningChancesTV;
     private BarChart barChart;
     private ShapeableImageView playerImage;
-    private SharedPreferences preferences;
-    private final ImageHandler imageHandler = new ImageHandler(this);
-
+    private StatsHandler statsHandler;
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -67,65 +63,83 @@ public class PlayerStatsActivity extends CommonOptions {
         hitsTV = findViewById(R.id.stats_hitsTV);
         eliminationsTV = findViewById(R.id.stats_elimTV);
         excessTV = findViewById(R.id.stats_excessesTV);
+        winningChancesTV = findViewById(R.id.stats_winningChancesTV);
+
         View showGamesView = findViewById(R.id.gamesTableRow);
         playerImage = findViewById(R.id.titleBar_playerImageView);
 
-        if (getIntent().getIntArrayExtra("PLAYER_IDS") != null) {
+        // Read data from intent, savedInstanceState
 
-            playerIds = getIntent().getIntArrayExtra("PLAYER_IDS");
-            position = getIntent().getIntExtra("POSITION", 0);
-
-        }
-
+        String json = null;
+        position = getIntent().getIntExtra("POSITION", 0);
         if (savedInstanceState != null) {
-            playerIds = savedInstanceState.getIntArray("PLAYER_IDS");
+            json = savedInstanceState.getString("STATS");
             position = savedInstanceState.getInt("POSITION");
         }
+        else if (getIntent().getStringExtra("STATS") != null) {
+            json = getIntent().getStringExtra("STATS");
+        }
 
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                invalidateOptionsMenu();
-                updateUI();
+        if (json != null) {
+            PlayerStats[] playersArray = new Gson().fromJson(json, PlayerStats[].class);
+            List<PlayerStats> players = new ArrayList<>(Arrays.asList(playersArray));
+            statsHandler = new StatsHandler(this, players, this);
+            updateUI();
+        }
+        else {
+            json = getIntent().getStringExtra("PLAYERS");
+            PlayerInfo[] playerInfos = new Gson().fromJson(json, PlayerInfo[].class);
+            statsHandler = new StatsHandler(this, playerInfos, this);
+        }
+
+        if (statsHandler.getPlayers().get(position).noData())
+            statsHandler.getPlayerStats(position);
+
+        // Listeners
+
+        playerImage.setOnClickListener(view -> onImageClicked(statsHandler.getPlayers().get(position), 0, new ImageHandler.OnImageAdded() {
+            @Override
+            public void onSuccess() {
+                setImage(playerImage, statsHandler.getPlayers().get(position).getId(), true);
             }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
 
-        playerImage.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
+            @Override
+            public void onError() {
+                Toast.makeText(getBaseContext(), R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+            }
+        }
+        ));
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
-            else position = playerIds.length - 1;
-            getPlayerData();
-            updateUI();
+            else position = statsHandler.getPlayers().size() - 1;
+            if (statsHandler.getPlayers().get(position).noData())
+                statsHandler.getPlayerStats(position);
+            else
+                updateUI();
         });
         nextIB.setOnClickListener(view -> {
-            if (position < playerIds.length - 1) position++;
+            if (position < statsHandler.getPlayers().size() - 1) position++;
             else position = 0;
-            getPlayerData();
-            updateUI();
+            if (statsHandler.getPlayers().get(position).noData())
+                statsHandler.getPlayerStats(position);
+            else
+                updateUI();
         });
 
         showGamesView.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), SavedGamesActivity.class);
-            intent.putExtra("PLAYER_ID", playerIds[position]);
+            intent.putExtra("PLAYER_ID", statsHandler.getPlayers().get(position).getId());
+            intent.putExtra("PLAYER_NAME", statsHandler.getPlayers().get(position).getName());
             startActivity(intent);
         });
-
-
-        getPlayerData();
-        updateUI();
-
-
     }
 
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, playerStats.getName());
-            updateImage();
-        }
+    @Override
+    protected void onDestroy () {
+        super.onDestroy();
+        if (statsHandler != null)
+            statsHandler.close();
     }
 
     private void showBarChart(){
@@ -133,7 +147,7 @@ public class PlayerStatsActivity extends CommonOptions {
         ArrayList<BarEntry> entries = new ArrayList<>();
 
         for(int i = 0; i < 13; i++){
-            BarEntry barEntry = new BarEntry(i, playerStats.getTosses(i));
+            BarEntry barEntry = new BarEntry(i, statsHandler.getPlayers().get(position).getTosses(i));
             entries.add(barEntry);
         }
 
@@ -164,51 +178,45 @@ public class PlayerStatsActivity extends CommonOptions {
 
     }
 
-    public void getPlayerData() {
-        String name = DBHandler.getInstance(getApplicationContext()).getPlayerName(playerIds[position]);
-        PlayerInfo player = new PlayerInfo(playerIds[position], name);
-        playerStats = new PlayerStats(player, getApplicationContext());
-    }
-
-    public void updateImage () {
-        if (preferences.getBoolean("SHOW_IMAGES", false)) {
-            String path = imageHandler.getImagePath(playerStats.getName());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                playerImage.setImageBitmap(bitmap);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
-                playerImage.setImageResource(R.drawable.camera);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER);
-            }
-            playerImage.setVisibility(View.VISIBLE);
-        }
-        else
-            playerImage.setVisibility(View.GONE);
-    }
-
     @SuppressLint("DefaultLocale")
     public  void  updateUI () {
-        updateImage();
-        playerNameTV.setText(playerStats.getName());
-        pointsTV.setText(String.valueOf(playerStats.getPoints()));
-        gamesTV.setText(String.valueOf(playerStats.getGamesCount()));
-        String winsString = playerStats.getWins() + " (" + Math.round(100 * playerStats.getWinsPct()) + "%)";
+        setImage(playerImage, statsHandler.getPlayers().get(position).getId(), true);
+
+        String winsString = statsHandler.getPlayers().get(position).getWins() + " (" + Math.round(100 * statsHandler.getPlayers().get(position).getWinsPct()) + "%)";
+        String hitsString = String.valueOf(Math.round(100 *statsHandler.getPlayers().get(position).getHitsPct()));
+        String eliminationsString = statsHandler.getPlayers().get(position).getEliminations() + " (" + Math.round(100 * statsHandler.getPlayers().get(position).getEliminationsPct()) + "%)";
+
+        playerNameTV.setText(statsHandler.getPlayers().get(position).getName());
+        pointsTV.setText(String.valueOf(statsHandler.getPlayers().get(position).getPoints()));
+        gamesTV.setText(String.valueOf(statsHandler.getPlayers().get(position).getGamesCount()));
         winsTV.setText(winsString);
-        tossesTV.setText(String.valueOf(playerStats.getTossesCount()));
-        pptTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
-        hitsTV.setText(String.valueOf(Math.round(100 *playerStats.getHitsPct())));
-        String eliminationsString = playerStats.getEliminations() + " (" + Math.round(100 * playerStats.getEliminationsPct()) + "%)";
+        tossesTV.setText(String.valueOf(statsHandler.getPlayers().get(position).getTossesCount()));
+        pptTV.setText(String.format("%.1f", statsHandler.getPlayers().get(position).getPointsPerToss()));
+        hitsTV.setText(hitsString);
         eliminationsTV.setText(eliminationsString);
-        excessTV.setText(String.valueOf(playerStats.getExcesses()));
+        excessTV.setText(String.valueOf(statsHandler.getPlayers().get(position).getExcesses()));
+        winningChancesTV.setText(String.valueOf(statsHandler.getPlayers().get(position).getWinningChances()));
         showBarChart();
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putIntArray("PLAYER_IDS", playerIds);
+        String json = new Gson().toJson(statsHandler.getPlayers());
+        savedInstanceState.putString("STATS", json);
         savedInstanceState.putInt("POSITION", position);
     }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            updateUI();
+        }
+    }
+
+    @Override
+    public void onDataReceived() {
+        updateUI();
+    }
+
 }

@@ -1,96 +1,121 @@
 package com.teskola.molkky;
 
-import android.content.Context;
-
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class PlayerStats extends PlayerInfo {
 
-    private final DBHandler db;
-    private final ArrayList<Integer> games;
-    private int wins = -1;
-    private int points = -1;
-    private int tossesCount= -1;
-    private int eliminations = -1;
-    private int excesses = -1;
+    private Map<String, List<Long>> tosses;
+    private final Set<String> wins;
 
-    public PlayerStats(PlayerInfo player, Context context) {
+    public PlayerStats(PlayerInfo player, Set<String> wins, Map<String, List<Long>> tosses) {
         super(player.getId(), player.getName());
-        db = DBHandler.getInstance(context);
-        this.games = db.getGameIds(getId());
+        if (wins == null)
+            this.wins = new HashSet<>();
+        else
+            this.wins = wins;
+        this.tosses = tosses;
+    }
+
+    public boolean noData() {
+        return tosses == null || tosses.size() == 0;
     }
 
     public int getTosses(int value) {
-        return db.countTosses(getId(), value);
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            for (long i : tosses.get(key)) {
+                if (i == value)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    public void addTosses (Map<String, List<Long>> tosses) {
+        if (this.tosses == null)
+            this.tosses = new HashMap<>();
+        this.tosses.putAll(tosses);
+    }
+
+    public void addWin (String gid) {
+        this.wins.add(gid);
     }
 
     public int getGamesCount() {
-        return games.size();
+        if (tosses == null)
+            return 0;
+        return tosses.size();
     }
 
     public float getPointsPerToss() {
-        if (points == -1) points = db.getTotalPoints(getId());
-        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
-        return this.points / (float) this.tossesCount;
+        return getPoints() / (float) getTossesCount();
     }
 
     public float getHitsPct() {
-        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
-        return (tossesCount - getTosses(0)) / (float) tossesCount;
-    }
-
-    public void calculateEliminations() {
-        int eliminations = 0;
-        ArrayList<Integer> games = db.getGameIds(getId());
-        for (int gameId : games) {
-            if (db.isEliminated(getId(), gameId)) eliminations++;
-        }
-        this.eliminations = eliminations;
+        return (getTossesCount() - getTosses(0)) / (float) getTossesCount();
     }
 
     public float getEliminationsPct() {
-        if (eliminations == -1) calculateEliminations();
-        return eliminations / (float) games.size();
+        return getEliminations() / (float) tosses.size();
     }
 
-    public void calculateExcesses() {
-        int excesses = 0;
-        for (int gameId : games) {
-            Player p = new Player(db.getTosses(gameId, getId()));
-            excesses = excesses + p.countExcesses();
-        }
-        this.excesses = excesses;
-    }
     public float getExcessesPerGame () {
-        if (excesses == -1) calculateExcesses();
-        return excesses / (float) games.size();
+        return getExcesses() / (float) tosses.size();
     }
 
     public int getWins() {
-        if (wins == -1) wins = db.getWins(getId());
-        return wins;
+        return wins.size();
     }
     public int getExcesses() {
-        if (excesses == -1) calculateExcesses();
-        return excesses;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            count += player.countExcesses();
+        }
+        return count;
     }
 
     public float getWinsPct() {
-        if (wins == -1) wins = db.getWins(getId());
-        return wins / (float) games.size();
+        return wins.size() / (float) tosses.size();
     }
 
     public int getPoints() {
-        if (points == -1) points = db.getTotalPoints(getId());
-        return points;
+
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            for (long i : tosses.get(key)) {
+                count += i;
+            }
+        }
+        return count;
     }
     public int getTossesCount() {
-        if (tossesCount == -1) tossesCount = db.getTotalTosses(getId());
-        return tossesCount;
-    }
-    public int getEliminations() {
-        if (eliminations == -1) calculateEliminations();
-        return eliminations;
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            count += tosses.get(key).size();
+        }
+        return count;
     }
 
+    public int getEliminations() {
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            if (player.isEliminated()) count++;
+        }
+        return count;
+    }
+
+    public int getWinningChances() {
+        int count = 0;
+        for (String key : tosses.keySet()) {
+            Player player = new Player(tosses.get(key));
+            count += player.countWinningChances();
+        }
+        return count;
+    }
 }

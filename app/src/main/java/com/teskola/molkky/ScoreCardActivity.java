@@ -1,207 +1,180 @@
 package com.teskola.molkky;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class ScoreCardActivity extends CommonOptions {
-    private Game game;
+public class ScoreCardActivity extends OptionsActivity implements FirebaseManager.LiveGameListener {
+    private Player[] players;
     private int position;
-    private TextView titleTV, tossesTV, statsTV;
+    private TextView titleTV, hitsTV, hitsPctTV, avgTV, excessTV, winningChanceTV, eliminationTV;
+    private Button allTimeButton;
+    private ImageButton previousIB, nextIB;
     private ShapeableImageView playerImage;
-    private SharedPreferences preferences;
-    private final ImageHandler imageHandler = new ImageHandler(this);
-
+    private ViewGroup tossesContainer, titleBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scorecard);
 
-        ConstraintLayout titleBar = findViewById(R.id.titleBar);
-        ImageButton previousIB = findViewById(R.id.previousIB);
-        ImageButton nextIB = findViewById(R.id.nextIB);
-        previousIB.setVisibility(View.VISIBLE);
-        nextIB.setVisibility(View.VISIBLE);
+        hitsTV = findViewById(R.id.scorecard_hitsTV);
+        hitsPctTV = findViewById(R.id.scorecard_hitsPctTV);
+        avgTV = findViewById(R.id.scorecard_avgTV);
+        excessTV = findViewById(R.id.scorecard_excessesTV);
+        winningChanceTV = findViewById(R.id.scorecard_winningChancesTV);
+        eliminationTV = findViewById(R.id.scorecard_eliminationTV);
+
         playerImage = findViewById(R.id.titleBar_playerImageView);
         titleTV = findViewById(R.id.titleTV);
-        tossesTV = findViewById(R.id.allTossesTV);
-        statsTV = findViewById(R.id.otherStatsTV);
-        Button allTimeButton = findViewById(R.id.allTimeButton);
+        tossesContainer = findViewById(R.id.tossesContainer);
+        allTimeButton = findViewById(R.id.allTimeButton);
+        titleBar = findViewById(R.id.titleBar);
+        previousIB = findViewById(R.id.previousIB);
+        nextIB = findViewById(R.id.nextIB);
+        allTimeButton.setVisibility(FirebaseAuth.getInstance().getUid() == null ? View.INVISIBLE : View.VISIBLE);
+        previousIB.setVisibility(View.VISIBLE);
+        nextIB.setVisibility(View.VISIBLE);
         titleBar.setBackgroundColor(getResources().getColor(R.color.white));
 
-        if (getIntent().getStringExtra("GAME") != null) {
-            String json = getIntent().getStringExtra("GAME");
-            position = getIntent().getIntExtra("POSITION", 0);
-            game = new Gson().fromJson(json, Game.class);
-        }
+        // Read data from intent, savedInstanceState
 
-        if (savedInstanceState != null) {
-            String json = savedInstanceState.getString("GAME");
+        String json = getIntent().getStringExtra("PLAYERS");
+        players = new Gson().fromJson(json, Player[].class);
+
+        if (savedInstanceState != null)
             position = savedInstanceState.getInt("POSITION");
-            game = new Gson().fromJson(json, Game.class);
+        else
+            position = getIntent().getIntExtra("POSITION", 0);
+
+        updateUI();
+
+        // Listeners
+
+        if (getIntent().getLongExtra("TIMESTAMP", 0) != 0) {
+            allTimeButton.setVisibility(View.INVISIBLE);
+            FirebaseManager.getInstance(this).addLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
         }
 
         previousIB.setOnClickListener(view -> {
             if (position > 0) position--;
-            else position = game.getPlayers().size() -1;
-            setImage();
+            else position = players.length -1;
             updateUI();
         });
         nextIB.setOnClickListener(view -> {
-            if (position < game.getPlayers().size() - 1) position++;
+            if (position < players.length - 1) position++;
             else position = 0;
-            setImage();
             updateUI();
         });
         allTimeButton.setOnClickListener(view -> {
-            int[] playerIds = new int[game.getPlayers().size()];
-            for (int i = 0 ; i < game.getPlayers().size(); i++) {
-                playerIds[i] = game.getPlayer(i).getId();
-            }
-            Intent intent = new Intent(getApplicationContext(), PlayerStatsActivity.class);
-            intent.putExtra("PLAYER_IDS", playerIds);
+            Intent intent = new Intent(this, PlayerStatsActivity.class);
+            intent.putExtra("PLAYERS", getIntent().getStringExtra("PLAYERS"));
             intent.putExtra("POSITION", position);
             startActivity(intent);
-
         });
 
-        preferences = this.getSharedPreferences("PREFERENCES", Context.MODE_PRIVATE);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, key) -> {
-            if (key.equals("SHOW_IMAGES")) {
-                setImage();
-                invalidateOptionsMenu();
+        playerImage.setOnClickListener(view -> onImageClicked(players[position], 0, new ImageHandler.OnImageAdded() {
+            @Override
+            public void onSuccess() {
+                setImage(playerImage, players[position].getId(), true);
             }
-        };
-        preferences.registerOnSharedPreferenceChangeListener(listener);
-        setImage();
-        updateUI();
-        playerImage.setOnClickListener(view -> imageHandler.takePicture(ImageHandler.TITLE_BAR));
+
+            @Override
+            public void onError() {
+                Toast.makeText(getBaseContext(), R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+            }
+        }));
     }
 
-    protected void onActivityResult(int position, int resultCode, Intent data) {
-        super.onActivityResult(position, resultCode, data);
-        if (data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            imageHandler.BitmapToJpg(photo, game.getPlayer(position).getName());
-            setImage();
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
     }
 
-    public void setImage() {
-        if (preferences.getBoolean("SHOW_IMAGES", false)) {
-            String path = imageHandler.getImagePath(game.getPlayer(position).getName());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                playerImage.setImageBitmap(bitmap);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
-                playerImage.setImageResource(R.drawable.camera);
-                playerImage.setScaleType(ImageView.ScaleType.CENTER);
-            }
-            playerImage.setVisibility(View.VISIBLE);
-        }
-        else
-            playerImage.setVisibility(View.GONE);
-    }
-
+    @SuppressLint({"SetTextI18n", "DefaultLocale"})
     public void updateUI() {
+        setImage(playerImage, players[position].getId(), true);
 
-        titleTV.setText(game.getPlayer(position).getName());
-        String tosses = buildTossesString();
-        String stats = buildStatsString();
-        tossesTV.setText(tosses);
-        statsTV.setText(stats);
-    }
+        // Stats table
 
-    public StringBuilder fillWithSpaces(StringBuilder line, int length) {
-        while(line.length() < length) line.append(" ");
-        return line;
-    }
+        String hits = players[position].hits() + "/" + players[position].getTosses().size();
+        hitsTV.setText(hits);
+        String hitsPct = "(" + players[position].hitsPct() + "%)";
+        hitsPctTV.setText(hitsPct);
 
-    @SuppressLint("DefaultLocale")
-    public String buildStatsString() {
+        avgTV.setText(String.format("%.1f", players[position].mean()));
+        excessTV.setText(String.valueOf(players[position].countExcesses()));
+        eliminationTV.setText(players[position].isEliminated() ? getString(R.string.yes) : getString(R.string.no));
+        winningChanceTV.setText(String.valueOf(players[position].countWinningChances()));
 
-        // hits
+        // Tosses table
 
-        int hits = 0;
-        for (int i : game.getPlayer(position).getTosses()) {
-            if (i != 0) hits++;
+        tossesContainer.removeAllViews();
+        titleTV.setText(players[position].getName());
+        for (int i=0; i < players[position].getTosses().size(); i++) {
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View view = inflater.inflate(R.layout.scorecard_tosses, tossesContainer, false);
+            TextView toss = view.findViewById(R.id.tossesNumberTV);
+            TextView value = view.findViewById(R.id.tossesValueTV);
+            TextView pointsTV = view.findViewById(R.id.tossesPointsTV);
+            long tossInt = players[position].getToss(i);
+            int points = players[position].count(i);
+            toss.setText(getString(R.string.scorecard_toss, i+1));
+            value.setText(String.valueOf(tossInt));
+            pointsTV.setText("(" + points + ")");
+            tossesContainer.addView(view);
         }
-        int percentage = Math.round(100 * (float) hits / (float) game.getPlayer(position).getTossesSize());
-        StringBuilder hitsSB = new StringBuilder();
-        hitsSB.append(getString(R.string.hits)).append(": ").append(hits).append("/").append(game.getPlayer(position).getTossesSize())
-                .append(" (").append(percentage).append("%)");
-        int length = hitsSB.length();
-
-        // average
-
-        StringBuilder avg = new StringBuilder();
-        avg.append(getString(R.string.mean)).append(": ").append(String.format("%.1f", game.getPlayer(position).mean()));
-        avg = fillWithSpaces(avg, length);
-
-        // excesses
-
-        StringBuilder exc = new StringBuilder();
-        exc.append(getString(R.string.excesses)).append(": ").append(game.getPlayer(position).countExcesses());
-        exc = fillWithSpaces(exc, length);
-
-        // elimination
-
-        StringBuilder eli = new StringBuilder();
-        eli.append(getString(R.string.elimination)).append(": ").append(game.getPlayer(position).isEliminated() ? getString(R.string.yes) : getString(R.string.no));
-        eli = fillWithSpaces(eli, length);
-
-        return avg + "\n" + hitsSB + "\n" + exc + "\n" + eli + "\n";
-    }
-
-
-    public String buildTossesString() {
-
-        ArrayList<Integer> tosses = game.getPlayer(position).getTosses();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < tosses.size(); i++) {
-            StringBuilder line = new StringBuilder();
-            line.append(getString(R.string.toss));
-            if (i < 9) line.append("  ");
-            else line.append(" ");
-            line.append(i+1).append(": ");
-            if (tosses.get(i) < 10)
-                line.append(" ").append(tosses.get(i));
-            else
-                line.append(tosses.get(i));
-            int points = game.getPlayer(position).count(i);
-            if (points < 10) line.append(" ");
-            line.append(" (").append(points).append(")");
-            sb.append(line).append(" \n");
-        }
-        return sb.toString();
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        String json = new Gson().toJson(game);
-        savedInstanceState.putString("GAME", json);
         savedInstanceState.putInt("POSITION", position);
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("SHOW_IMAGES")) {
+            setImage(playerImage, players[position].getId(), true);
+        }
+    }
+
+    @Override
+    public void onLiveGameChange(GameHandler.LiveGame liveGame) {
+        if (liveGame.getStarted() != getIntent().getLongExtra("TIMESTAMP", 0))
+            FirebaseManager.getInstance(this).removeLiveGameListener(getIntent().getStringExtra("SPECTATE_MODE"), this);
+        else {
+            List<Toss> tossList = liveGame.getTosses();
+            for (Player player : players)
+                player.getTosses().clear();
+            if (tossList != null) {
+                for (Toss toss : tossList) {
+                    for (Player player : players) {
+                        if (player.getId().equals(toss.getPid())) {
+                            player.addToss(toss.getValue());
+                            break;
+                        }
+                    }
+                }
+            }
+            updateUI();
+        }
+    }
 }

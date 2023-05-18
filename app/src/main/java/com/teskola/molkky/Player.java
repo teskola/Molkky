@@ -1,64 +1,69 @@
 package com.teskola.molkky;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 public class Player extends PlayerInfo implements Comparable<Player> {
 
-    private final ArrayList<Integer> tosses;
-    private Stack<Integer> undoStack;
+    private List<Long> tosses;
+    @Exclude
+    private Stack<Long> undoStack;
 
-    public Player(int id, String name) {
-        super(id,name);
-        this.tosses = new ArrayList<>();
-        this.undoStack = new Stack<>();
-    }
-
-    public Player(int id, String name, ArrayList<Integer> tosses) {
-        super(id, name);
+    public Player(PlayerInfo playerInfo, List<Long> tosses) {
+        super(playerInfo);
         this.tosses = tosses;
         this.undoStack = new Stack<>();
     }
 
-    public Player(ArrayList<Integer> tosses) {
+    public Player(List<Long> tosses) {
         super();
         this.tosses = tosses;
 
     }
 
-    public Player(String name) {
-        super(name);
-        this.tosses = new ArrayList<>();
-        this.undoStack = new Stack<>();
+    public Player() {
+        tosses = new ArrayList<>();
     }
 
+
+
+    @Exclude
     public boolean isEliminated() {
         return tosses.size() > 2 && getToss(tosses.size() - 1) == 0
                 && getToss(tosses.size() - 2) == 0
                 && getToss(tosses.size() - 3) == 0;
     }
 
-    public Stack<Integer> getUndoStack() {
+
+    /*
+    * Initializes undoStack if not initialized and returns undoStack.
+    * */
+    @Exclude
+    public Stack<Long> getUndoStack() {
+        if (undoStack == null) {
+            undoStack = new Stack<>();
+        }
         return undoStack;
     }
 
-    public ArrayList<Integer> getTosses() {
+    public List<Long> getTosses() {
         return tosses;
     }
 
-    public int getTossesSize() { return tosses.size();}
+    public long getToss(int round) { return tosses.get(round);}
 
-    public int getToss(int position) { return tosses.get(position);}
-
-    public void addToss(int points) {
+    public void addToss(long points) {
         tosses.add(points);
     }
 /*
 * Removes player's last toss. Returns value of the removed toss.
 * */
-    public int removeToss() {
-        int removed_toss_points = tosses.get(tosses.size() -1);
+    public long removeToss() {
+        long removed_toss_points = tosses.get(tosses.size() -1);
         tosses.remove(tosses.size() - 1);
         return  removed_toss_points;
     }
@@ -74,7 +79,14 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         return sum;
     }
 
+    /*
+    * Returns players current points. Initializes tosses array if not initialized.
+    * */
+
     public int countAll() {
+        if (tosses == null) {
+            tosses = new ArrayList<>();
+        }
         return count (tosses.size() - 1);
     }
 
@@ -91,10 +103,15 @@ public class Player extends PlayerInfo implements Comparable<Player> {
             return 50 - total;
     }
 
+    public boolean winningChance(int round) {
+        int total = count(round);
+        return (total > 37);
+    }
+
     @Override
     public int compareTo(Player player) {
         if (Boolean.compare(this.isEliminated(), player.isEliminated()) == 0)
-        return Integer.compare(player.countAll(), this.countAll());
+        return Long.compare(player.countAll(), this.countAll());
         else
             return Boolean.compare(this.isEliminated(), player.isEliminated());
     }
@@ -102,24 +119,33 @@ public class Player extends PlayerInfo implements Comparable<Player> {
 /*
 * ******************* Stats
 * */
+
+    public int hits() {
+        int count = 0;
+        for (long i : getTosses()) {
+            if (i != 0) count++;
+        }
+        return count;
+    }
+
+    public int hitsPct() {
+        return Math.round(100 * (float) hits() / (float) getTosses().size());
+    }
+
     public float mean() {
         int sum = 0;
-        for (int i : tosses) {
+        for (long i : tosses) {
             sum += i;
         }
         return (float) sum / (float) tosses.size();
     }
 
-
-    public int mode() {
-        int max_freq = 0;
-        int mode = 0;
-        for (int i = 0; i < 13; i++) {
-            int freq = Collections.frequency(tosses, i);
-            if (freq > max_freq)
-                mode = i;
+    public int countWinningChances () {
+        int count = 0;
+        for (int i = tosses.size()-2; i > 2; i--) {
+            if (winningChance(i)) count++;
         }
-        return mode;
+        return count;
     }
 
     public int countExcesses() {

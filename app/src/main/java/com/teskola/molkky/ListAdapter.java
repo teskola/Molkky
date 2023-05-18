@@ -4,49 +4,45 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.imageview.ShapeableImageView;
 
-import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
+public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static final int ADD_PLAYER_VIEW = 0;
     public static final int SELECT_PLAYER_VIEW = 1;
     public static final int SAVED_GAMES_ACTIVITY = 2;
     public static final int STATS_ACTIVITY = 3;
+    public static final int GAME_ACTIVITY = 4;
 
-    private ArrayList<PlayerInfo> players;
-    private ArrayList<GameInfo> games = null;
-    private ArrayList<PlayerStats> playerStats = null;
+    private Context context;
+    private int viewId;
 
-    private final Context context;
-    private final int viewId;
+    private List<? extends PlayerInfo> players;
+    private List<SavedGamesActivity.GameInfo> games;
+
     private int statID = 0;
-    private final boolean showImages;
+    private boolean showImages, showTosses, onlyGray;
+    private List<Boolean> selected;
 
-    private ArrayList<Boolean> selected = null;
-    private int selected_position = RecyclerView.NO_POSITION;
-    private onItemClickListener mListener;
-
-
-    public void setSelected_position(int selected_position) {
-        this.selected_position = selected_position;
-    }
-    public int getSelected_position() {
-        return selected_position;
-    }
+    private final OnItemClickListener onItemClickListener;
 
     public void setStatID(int statID) {
         this.statID = statID;
@@ -55,121 +51,206 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
 
     @NonNull
     @Override
-    public ListAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View view = inflater.inflate(R.layout.player_card, parent, false);
-
-        return new MyViewHolder(view);
+        View view;
+        if (viewId == GAME_ACTIVITY) {
+            view = inflater.inflate(R.layout.vertical_player_view, parent, false);
+            return new GameViewHolder(view);
+        }
+        view = inflater.inflate(R.layout.player_card, parent, false);
+        return new DefaultViewHolder(view);
     }
 
     @SuppressLint("DefaultLocale")
     @Override
-    public void onBindViewHolder(@NonNull ListAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+
+        DefaultViewHolder defaultViewHolder = null;
+        if (viewId != GAME_ACTIVITY)
+            defaultViewHolder = (DefaultViewHolder) holder;
+
+        switch (viewId) {
+            case ADD_PLAYER_VIEW:
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
+                break;
+            case SELECT_PLAYER_VIEW:
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
+                if (selected.get(position))
+                    defaultViewHolder.playerView.setBackgroundResource(R.drawable.beige_white_background);
+                else
+                    defaultViewHolder.playerView.setBackgroundResource(R.drawable.gray_background);
+                break;
+            case SAVED_GAMES_ACTIVITY:
+                defaultViewHolder.nameTV.setText(games.get(position).toString());
+                break;
+            case STATS_ACTIVITY:
+                defaultViewHolder.nameTV.setText(players.get(position).getName());
+                defaultViewHolder.valueTV.setVisibility(View.VISIBLE);
+                PlayerStats playerStats = (PlayerStats) players.get(position);
+                switch (statID) {
+                    case R.string.games:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getGamesCount()));
+                        break;
+                    case R.string.wins:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWins()));
+                        break;
+                    case R.string.points:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getPoints()));
+                        break;
+                    case R.string.tosses:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getTossesCount()));
+                        break;
+                    case R.string.points_per_toss:
+                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
+                        break;
+                    case R.string.hits_percentage:
+                        int hitsPct = Math.round(100 * playerStats.getHitsPct());
+                        defaultViewHolder.valueTV.setText(String.valueOf(hitsPct));
+                        break;
+                    case R.string.elimination_percentage:
+                        int elimPct = Math.round(100 * playerStats.getEliminationsPct());
+                        defaultViewHolder.valueTV.setText(String.valueOf(elimPct));
+                        break;
+                    case R.string.excesses_per_game:
+                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getExcessesPerGame()));
+                        break;
+                    case R.string.winning_chances:
+                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWinningChances()));
+                        break;
+                }
+                break;
+            case GAME_ACTIVITY:
+
+                GameViewHolder gameViewHolder = (GameViewHolder) holder;
+
+                Player player = (Player) players.get(position);
+                int total = player.countAll();
+                gameViewHolder.playerNameTextView.setText(player.getName());
+                gameViewHolder.totalPointsTextView.setText(String.valueOf(total));
+                if (showTosses) {
+                    gameViewHolder.pointsTV.setVisibility(View.VISIBLE);
+                    gameViewHolder.pointsTV.setText(buildTossesString(position));
+                }
+                else
+                    gameViewHolder.pointsTV.setVisibility(View.GONE);
+                gameViewHolder.playerCardView.setBackgroundResource(Colors.selectBackground(player, onlyGray));
+                break;
+        }
 
         // Add images
 
-        if (showImages && (viewId != SAVED_GAMES_ACTIVITY)) {
-            ImageHandler imageHandler = new ImageHandler(context);
-            String path = "";
-            if (players != null)
-                path = imageHandler.getImagePath(players.get(position).getName());
-            else if (playerStats != null)
-                path = imageHandler.getImagePath(playerStats.get(position).getName());
-            if (path != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(path);
-                holder.playerImageView.setImageBitmap(bitmap);
-                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            }
-            else {
-                holder.playerImageView.setImageResource(R.drawable.camera);
-                holder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
-            }
-        }
+        if (showImages && (viewId == ADD_PLAYER_VIEW || viewId == SELECT_PLAYER_VIEW || viewId == STATS_ACTIVITY)) {
+           if (ImageHandler.getInstance(context).hasImage(players.get(position).getId())) {
+               GlideApp
+                       .with(context)
+                       .load(ImageHandler.getInstance(context).getStorageReference(players.get(position).getId()))
+                       .signature(new ObjectKey(ImageHandler.getInstance(context).getTimestamp(players.get(position).getId())))
+                       .centerCrop()
+                       .placeholder(R.color.gray)
+                       .into(Objects.requireNonNull(defaultViewHolder).playerImageView);
+           }
+           else {
+               defaultViewHolder.playerImageView.setScaleType(ImageView.ScaleType.CENTER);
+               defaultViewHolder.playerImageView.setImageResource(R.drawable.camera);
+           }
 
-        if (viewId == ADD_PLAYER_VIEW) {
-            holder.nameTV.setText(players.get(position).getName());
-            holder.playerView.setSelected(selected_position == position);
-        }
-        if (viewId == SELECT_PLAYER_VIEW) {
-            holder.nameTV.setText(players.get(position).getName());
-            if (selected.get(position)) holder.playerView.setBackgroundResource(R.drawable.beige_white_background);
-            else
-                holder.playerView.setBackgroundResource(R.drawable.gray_background);
-        }
-
-        if (viewId == SAVED_GAMES_ACTIVITY) {
-            holder.nameTV.setText(games.get(position).getData());
-        }
-
-        if (viewId == STATS_ACTIVITY) {
-            holder.valueTV.setVisibility(View.VISIBLE);
-            holder.nameTV.setText(playerStats.get(position).getName());
-            switch (statID) {
-                case R.string.games:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getGamesCount()));
-                    break;
-                case R.string.wins:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getWins()));
-                    break;
-                case R.string.points:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getPoints()));
-                    break;
-                case R.string.tosses:
-                    holder.valueTV.setText(String.valueOf(playerStats.get(position).getTossesCount()));
-                    break;
-                case R.string.points_per_toss:
-                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getPointsPerToss()));
-                    break;
-                case R.string.hits_percentage:
-                    int hitsPct = Math.round(100*playerStats.get(position).getHitsPct());
-                    holder.valueTV.setText(String.valueOf(hitsPct));
-                    break;
-                case R.string.elimination_percentage:
-                    int elimPct = Math.round(100*playerStats.get(position).getEliminationsPct());
-                    holder.valueTV.setText(String.valueOf(elimPct));
-                    break;
-                case R.string.excesses_per_game:
-                    holder.valueTV.setText(String.format("%.1f", playerStats.get(position).getExcessesPerGame()));
-                    break;
-            }
         }
     }
 
     @Override
     public int getItemCount() {
-        if (players != null) return players.size();
-        if (games != null) return games.size();
-        return playerStats.size();
+        if (viewId == SAVED_GAMES_ACTIVITY)
+            return games.size();
+        else
+            return players.size();
     }
 
-    public interface onItemClickListener {
+    public interface OnItemClickListener {
         void onSelectClicked(int position);
+
         void onDeleteClicked(int position);
-        void onImageClicked(int position);
+
+        void onImageClicked(PlayerInfo playerInfo, int position, ImageHandler.OnImageAdded listener);
     }
-    public void setOnItemClickListener (onItemClickListener listener) { mListener = listener;}
 
-
-    public ListAdapter (Context context, ArrayList<?> data, boolean showImages, int viewId) {
+    @SuppressWarnings("unchecked")
+    public ListAdapter(Context context, List<?> data, boolean showImages, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
         this.context = context;
-        this.viewId = viewId;
         this.showImages = showImages;
-
-        this.players = (ArrayList<PlayerInfo>) data;
-        this.playerStats = (ArrayList<PlayerStats>)  data;
-        this.games = (ArrayList<GameInfo>) data;
-
+        switch (context.getClass().getName()) {
+            case ("com.teskola.molkky.MainActivity"):
+                viewId = ADD_PLAYER_VIEW;
+                this.players = (List<PlayerInfo>) data;
+                break;
+            case ("com.teskola.molkky.SelectPlayersActivity"):
+                viewId = SELECT_PLAYER_VIEW;
+                this.players = (List<PlayerInfo>) data;
+                break;
+            case ("com.teskola.molkky.SavedGamesActivity"):
+                viewId = SAVED_GAMES_ACTIVITY;
+                this.games = (List<SavedGamesActivity.GameInfo>) data;
+                break;
+            case ("com.teskola.molkky.AllStatsActivity"):
+                viewId = STATS_ACTIVITY;
+                this.players = (List<PlayerStats>) data;
+                break;
+            case ("com.teskola.molkky.GameActivity"):
+                viewId = GAME_ACTIVITY;
+                this.players = (List<Player>) data;
+                break;
+        }
     }
 
-    public ListAdapter (Context context, ArrayList<PlayerInfo> players, ArrayList<Boolean> selected, boolean showImages) {
+    public ListAdapter(Context context, List<PlayerInfo> players, List<Boolean> selected, boolean showImages, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
         this.viewId = SELECT_PLAYER_VIEW;
         this.players = players;
         this.selected = selected;
         this.showImages = showImages;
-        this.context =context;
+        this.context = context;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    public ListAdapter(List<Player> playersList, boolean onlyGray, boolean showTosses, OnItemClickListener listener) {
+        this.onItemClickListener = listener;
+        this.viewId = GAME_ACTIVITY;
+        this.showTosses = showTosses;
+        this.onlyGray = onlyGray;
+        this.players = playersList;
+    }
+
+    public class GameViewHolder extends RecyclerView.ViewHolder {
+        private final TextView playerNameTextView;
+        private final TextView totalPointsTextView;
+        private final TextView pointsTV;
+        private final View playerCardView;
+
+        @SuppressLint("ClickableViewAccessibility")
+        public GameViewHolder(@NonNull View itemView) {
+            super(itemView);
+            playerCardView = itemView.findViewById(R.id.playerCardView);
+            playerNameTextView = itemView.findViewById(R.id.playerNameTextView);
+            totalPointsTextView = itemView.findViewById(R.id.totalPointsTextView);
+            pointsTV = itemView.findViewById(R.id.pointsTV);
+
+            // https://stackoverflow.com/questions/38741787/scroll-textview-inside-recyclerview
+
+            pointsTV.setOnTouchListener((view, motionEvent) -> {
+                view.getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            });
+            pointsTV.setMovementMethod(new ScrollingMovementMethod());
+            playerCardView.setOnClickListener(view -> {
+                int position = getAbsoluteAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && onItemClickListener != null) {
+                    onItemClickListener.onSelectClicked(position);
+                }
+            });
+        }
+    }
+
+    public class DefaultViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView nameTV;
         private final TextView valueTV;
@@ -177,7 +258,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
         private final ShapeableImageView playerImageView;
 
         @SuppressLint("ClickableViewAccessibility")
-        public MyViewHolder (View itemView) {
+        public DefaultViewHolder(View itemView) {
             super(itemView);
             nameTV = itemView.findViewById(R.id.nameTV);
             valueTV = itemView.findViewById(R.id.valueTV);
@@ -192,68 +273,81 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.MyViewHolder>{
             if (showImages && viewId != SAVED_GAMES_ACTIVITY) {
                 playerImageView.setVisibility(View.VISIBLE);
                 playerImageView.setOnClickListener(view -> {
-                    int position = getAbsoluteAdapterPosition();
+                    int position = DefaultViewHolder.this.getAbsoluteAdapterPosition();
                     if (position != RecyclerView.NO_POSITION)
-                        mListener.onImageClicked(position);
+                        onItemClickListener.onImageClicked(players.get(position), position, new ImageHandler.OnImageAdded() {
+                            @Override
+                            public void onSuccess() {
+                                GlideApp
+                                        .with(context)
+                                        .load(ImageHandler.getInstance(context).getStorageReference(players.get(position).getId()))
+                                        .signature(new ObjectKey(ImageHandler.getInstance(context).getTimestamp(players.get(position).getId())))
+                                        .centerCrop()
+                                        .placeholder(R.color.gray)
+                                        .into(playerImageView);
+                            }
+
+                            @Override
+                            public void onError() {
+                                Toast.makeText(context, R.string.picture_upload_failed, Toast.LENGTH_SHORT).show();
+                            };
+                        });
                 });
-            }
-            else playerImageView.setVisibility(View.GONE);
+            } else playerImageView.setVisibility(View.GONE);
 
 
             nameTV.setOnClickListener(view -> {
                 int position = getAbsoluteAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && (viewId == SAVED_GAMES_ACTIVITY || viewId == STATS_ACTIVITY)) {
-                    mListener.onSelectClicked(position);
-                }
-                if (position != RecyclerView.NO_POSITION && viewId==SELECT_PLAYER_VIEW) {
-                    selected.set(position, !selected.get(position));
-                    notifyItemChanged(position);
-                }
-                if (position != RecyclerView.NO_POSITION && viewId==ADD_PLAYER_VIEW) {
-                    notifyItemChanged(selected_position);
-                    selected_position = position;
-                    notifyItemChanged(selected_position);
-                    mListener.onSelectClicked(position);
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClickListener.onSelectClicked(position);
                 }
             });
+
             if (removePlayer.getVisibility() == View.VISIBLE) {
-            removePlayer.setOnTouchListener((view, motionEvent) -> {
-                int background;
-                if (playerView.isSelected())
-                    background = R.drawable.yellow_background;
-                else
-                    background = R.drawable.beige_white_background;
-                switch (motionEvent.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                    {
-                        playerView.setBackgroundResource(R.drawable.orange_background);
-                        break;
-                    }
-                    case MotionEvent.ACTION_UP:
-                    {
-                        if (mListener != null) {
-                            int position = getAbsoluteAdapterPosition();
-                            if (selected_position == position) {
-                                selected_position = RecyclerView.NO_POSITION;
-                            } else if (selected_position > position) {
-                                selected_position -= 1;
-                            }
-                            if (position != RecyclerView.NO_POSITION) {
-                                mListener.onDeleteClicked(position);
-                            }
+                removePlayer.setOnTouchListener((view, motionEvent) -> {
+                    int background;
+                    if (playerView.isSelected())
+                        background = R.drawable.yellow_background;
+                    else
+                        background = R.drawable.beige_white_background;
+                    switch (motionEvent.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            playerView.setBackgroundResource(R.drawable.orange_background);
+                            break;
                         }
-                        playerView.setBackgroundResource(R.drawable.beige_white_background);
-                        break;
+                        case MotionEvent.ACTION_UP: {
+                            if (onItemClickListener != null) {
+                                int position = getAbsoluteAdapterPosition();
+                                if (position != RecyclerView.NO_POSITION) {
+                                    onItemClickListener.onDeleteClicked(position);
+                                }
+                            }
+                            playerView.setBackgroundResource(R.drawable.beige_white_background);
+                            break;
+                        }
+                        case MotionEvent.ACTION_CANCEL: {
+                            playerView.setBackgroundResource(background);
+                            break;
+                        }
                     }
-                    case MotionEvent.ACTION_CANCEL:
-                    {
-                        playerView.setBackgroundResource(background);
-                        break;
-                    }
-                }
-                return true;
-            });
+                    return true;
+                });
             }
         }
     }
+
+    public String buildTossesString(int position) {
+        Player player = (Player) players.get(position);
+        List<Long> tosses =  player.getTosses();
+        StringBuilder sb = new StringBuilder();
+        for (long toss : tosses) {
+            if (toss < 10)
+                sb.append(" ").append(toss);
+            else
+                sb.append(toss);
+            sb.append("  ");
+        }
+        return sb.toString();
+    }
+
 }

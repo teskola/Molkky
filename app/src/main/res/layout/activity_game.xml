@@ -13,7 +13,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/select_button_background"
         android:enabled="true"
@@ -21,7 +20,7 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
 
@@ -35,21 +34,21 @@
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/beige_white_background"
-        app:layout_constraintBottom_toTopOf="@+id/congratsView"
+        app:layout_constraintBottom_toTopOf="@+id/throwingPinContainer"
         app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/game_IW"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="1dp"
-            android:layout_marginLeft="1dp"
             android:layout_marginTop="1dp"
             android:layout_marginBottom="1dp"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="2:3"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/roundedLeft"
@@ -60,7 +59,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@android:color/transparent"
-            android:fontFamily="@font/josefin_sans"
+            android:fontFamily="@font/josefin_sans_light"
             android:gravity="center"
             android:textColor="@color/black"
             android:textSize="34sp"
@@ -76,7 +75,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="1dp"
-            android:fontFamily="@font/josefin_sans"
+            android:fontFamily="@font/josefin_sans_light"
             android:text="@string/points_to_win"
             android:textColor="@color/black"
             android:visibility="invisible"
@@ -88,7 +87,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/congratsView"
+        android:id="@+id/throwingPinContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -102,7 +101,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
-            android:id="@+id/imageView2"
+            android:id="@+id/throwingPinIW"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerInside"
@@ -170,7 +169,7 @@
         android:padding="10dp"
         android:text="@android:string/ok"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/chartButton"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -183,5 +182,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <TextView
+        android:id="@+id/gameIdTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:layout_marginBottom="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "542348721777",
+    "firebase_url": "https://molkky-8a33a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "molkky-8a33a",
+    "storage_bucket": "molkky-8a33a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542348721777:android:f5a4ac7cfd72f06b8f25d0",
+        "android_client_info": {
+          "package_name": "com.teskola.molkky"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "542348721777-oaferuk9r04t28v9q6iasdlc9ts72d07.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACmcw4mAbxrcuUfT7g7rdT-0pqWYJmIGc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "542348721777-oaferuk9r04t28v9q6iasdlc9ts72d07.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
