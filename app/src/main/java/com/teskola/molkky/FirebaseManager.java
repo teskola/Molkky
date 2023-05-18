@@ -431,15 +431,19 @@ public class FirebaseManager {
 
     public void fetchGamesAndWins (PlayerStats player) {
         for (String dbid : userRefs.keySet()) {
-            userRefs.get(dbid).child("players/" + player.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
+            userRefs.get(dbid).child("players/" + player.getId()).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    statsListener.onGamesReceived(dbid, player, snapshot);
+                    if (snapshot.exists()) {
+                        if (statsListener != null)
+                            statsListener.onGamesReceived(dbid, player, snapshot);
+                        userRefs.get(dbid).child("players/" + player.getId()).removeEventListener(this);
+                    }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-
+                    userRefs.get(dbid).child("players/" + player.getId()).removeEventListener(this);
                 }
             });
         }
