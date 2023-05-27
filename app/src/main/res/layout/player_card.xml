@@ -39,6 +39,7 @@
             android:fontFamily="@font/crimson_text_bold"
             android:gravity="center"
             android:minEms="2"
+            android:textColor="@color/black"
             android:textSize="28sp"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"

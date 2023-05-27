@@ -32,6 +32,7 @@
         android:background="@drawable/start_button"
         android:padding="10dp"
         android:text="@string/show_all_games"
+        android:textColor="@color/black"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

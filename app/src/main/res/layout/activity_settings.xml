@@ -25,6 +25,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
                 android:text="@string/games"
+                android:textColor="@color/black"
                 android:textSize="20sp" />
 
             <TextView
@@ -32,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-
+                android:textColor="@color/black"
                 android:fontFamily="@font/josefin_sans_light"
                 android:textSize="20sp" />
         </TableRow>
@@ -46,6 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text="@string/players"
                 android:textSize="20sp" />
 
@@ -55,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
-
+                android:textColor="@color/black"
                 android:textSize="20sp" />
         </TableRow>
 
@@ -67,6 +69,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text="@string/tosses"
                 android:textSize="20sp" />
 
@@ -76,6 +79,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text=""
                 android:textSize="20sp" />
         </TableRow>
@@ -88,6 +92,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text="@string/created"
                 android:textSize="20sp" />
 
@@ -97,6 +102,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:textSize="20sp" />
         </TableRow>
 
@@ -109,6 +115,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text="@string/updated"
                 android:textSize="20sp" />
 
@@ -118,6 +125,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="@font/josefin_sans_light"
+                android:textColor="@color/black"
                 android:text=""
                 android:textSize="20sp" />
         </TableRow>
@@ -134,6 +142,7 @@
         android:layout_marginEnd="32dp"
         android:padding="16dp"
         android:text="@string/show_images"
+        android:textColor="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -145,27 +154,34 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:hint="@string/database_id"
+        android:textColorHint="@color/black"
         app:boxStrokeColor="@color/teal"
         app:counterEnabled="true"
         app:counterMaxLength="6"
+        app:counterTextColor="@color/black"
         app:endIconDrawable="@drawable/checkmark"
         app:endIconMode="custom"
         app:endIconTint="@color/checkmark_tint"
         app:errorIconDrawable="@drawable/error"
         app:expandedHintEnabled="false"
+        app:helperTextTextColor="@color/black"
         app:hintTextColor="@color/teal"
         app:layout_constraintEnd_toEndOf="@+id/imageSwitch"
         app:layout_constraintStart_toStartOf="@+id/imageSwitch"
         app:layout_constraintTop_toBottomOf="@+id/imageSwitch"
+        app:placeholderTextColor="@color/black"
+        app:prefixTextColor="@color/black"
         app:startIconDrawable="@drawable/info_button"
-        app:startIconTint="@color/info_tint">
+        app:startIconTint="@color/info_tint"
+        app:suffixTextColor="@color/black">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editDBID"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textVisiblePassword|textNoSuggestions"
-            android:maxLength="6" />
+            android:maxLength="6"
+            android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
