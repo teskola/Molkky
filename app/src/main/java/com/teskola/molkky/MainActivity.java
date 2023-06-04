@@ -108,7 +108,6 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             }
         });
 
-        createRecyclerView();
         selectButton.setOnClickListener(view -> selectPlayers());
         startButton.setOnClickListener(view -> startGame());
 
@@ -130,6 +129,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
             editor.apply();
             startActivity(intent);
         }
+        createRecyclerView();
     }
 
     @Override
