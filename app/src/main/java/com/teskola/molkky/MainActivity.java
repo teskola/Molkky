@@ -190,7 +190,7 @@ public class MainActivity extends OptionsActivity implements ListAdapter.OnItemC
         nameChangeDialog.setNegativeButton(R.string.cancel, null);
         nameChangeDialog.setPositiveButton(R.string.save, (dialogInterface, i) -> {
             String newName = editText.getText().toString();
-            if (newName.length() == 0 || playerHandler.nameInDatabase(newName))
+            if (newName.isEmpty() || playerHandler.nameInDatabase(newName))
                 return;
             playerHandler.changeName(player, newName);
             listAdapter.notifyItemChanged(position);

@@ -59,7 +59,7 @@ public class Player extends PlayerInfo implements Comparable<Player> {
         tosses.add(points);
     }
 /*
-* Removes player's last toss. Returns value of the removed toss.
+* Removes player"s last toss. Returns value of the removed toss.
 * */
     public long removeToss() {
         long removed_toss_points = tosses.get(tosses.size() -1);
