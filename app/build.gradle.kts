@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.teskola.molkky"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.teskola.molkky"
         minSdk = 21
-        targetSdk = 34
-        versionCode = 141
+        targetSdk = 36
+        versionCode = 149
         versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
