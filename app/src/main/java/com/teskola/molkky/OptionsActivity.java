@@ -87,38 +87,38 @@ public abstract class OptionsActivity extends ImagesActivity {
         return true;
     }
 
-    @SuppressLint("NonConstantResourceId")
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            getOnBackPressedDispatcher().onBackPressed();
+            return true;
+        }
+        else if (id == R.id.spectate) {
+            if (FirebaseAuth.getInstance().getUid() != null)
+                showSpectateDialog();
+            else
+                Toast.makeText(this, getString(R.string.database_connection_failed), Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == R.id.stats) {
+            if (PlayerHandler.getInstance(this).noSavedPlayers()) {
+                Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.spectate:
-                if (FirebaseAuth.getInstance().getUid() != null)
-                    showSpectateDialog();
-                else
-                    Toast.makeText(this, getString(R.string.database_connection_failed), Toast.LENGTH_SHORT).show();
+            }
+            startActivity(new Intent(this, AllStatsActivity.class));
+            return true;
+        } else if (id == R.id.saved_games) {
+            if (PlayerHandler.getInstance(this).noSavedPlayers()) {
+                Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.stats:
-                if (PlayerHandler.getInstance(this).noSavedPlayers()) {
-                    Toast.makeText(this, getString(R.string.no_saved_players), Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-                startActivity(new Intent(this, AllStatsActivity.class));
-                return true;
-            case R.id.saved_games:
-                if (PlayerHandler.getInstance(this).noSavedPlayers()) {
-                    Toast.makeText(this, getString(R.string.no_saved_games), Toast.LENGTH_SHORT).show();
-                    return true;
-                }
-                startActivity(new Intent(this, SavedGamesActivity.class));
-                return true;
-            case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            case R.id.rules:
-                startActivity(new Intent(this, RulesActivity.class));
-                return true;
+            }
+            startActivity(new Intent(this, SavedGamesActivity.class));
+            return true;
+        } else if (id == R.id.settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        } else if (id == R.id.rules) {
+            startActivity(new Intent(this, RulesActivity.class));
+            return true;
         }
         return false;
     }

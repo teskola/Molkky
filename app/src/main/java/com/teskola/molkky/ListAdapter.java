@@ -81,36 +81,26 @@ public class ListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 defaultViewHolder.nameTV.setText(players.get(position).getName());
                 defaultViewHolder.valueTV.setVisibility(View.VISIBLE);
                 PlayerStats playerStats = (PlayerStats) players.get(position);
-                switch (statID) {
-                    case R.string.games:
-                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getGamesCount()));
-                        break;
-                    case R.string.wins:
-                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWins()));
-                        break;
-                    case R.string.points:
-                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getPoints()));
-                        break;
-                    case R.string.tosses:
-                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getTossesCount()));
-                        break;
-                    case R.string.points_per_toss:
-                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
-                        break;
-                    case R.string.hits_percentage:
-                        int hitsPct = Math.round(100 * playerStats.getHitsPct());
-                        defaultViewHolder.valueTV.setText(String.valueOf(hitsPct));
-                        break;
-                    case R.string.elimination_percentage:
-                        int elimPct = Math.round(100 * playerStats.getEliminationsPct());
-                        defaultViewHolder.valueTV.setText(String.valueOf(elimPct));
-                        break;
-                    case R.string.excesses_per_game:
-                        defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getExcessesPerGame()));
-                        break;
-                    case R.string.winning_chances:
-                        defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWinningChances()));
-                        break;
+                if (statID == R.string.games) {
+                    defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getGamesCount()));
+                } else if (statID == R.string.wins) {
+                    defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWins()));
+                } else if (statID == R.string.points) {
+                    defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getPoints()));
+                } else if (statID == R.string.tosses) {
+                    defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getTossesCount()));
+                } else if (statID == R.string.points_per_toss) {
+                    defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getPointsPerToss()));
+                } else if (statID == R.string.hits_percentage) {
+                    int hitsPct = Math.round(100 * playerStats.getHitsPct());
+                    defaultViewHolder.valueTV.setText(String.valueOf(hitsPct));
+                } else if (statID == R.string.elimination_percentage) {
+                    int elimPct = Math.round(100 * playerStats.getEliminationsPct());
+                    defaultViewHolder.valueTV.setText(String.valueOf(elimPct));
+                } else if (statID == R.string.excesses_per_game) {
+                    defaultViewHolder.valueTV.setText(String.format("%.1f", playerStats.getExcessesPerGame()));
+                } else if (statID == R.string.winning_chances) {
+                    defaultViewHolder.valueTV.setText(String.valueOf(playerStats.getWinningChances()));
                 }
                 break;
             case GAME_ACTIVITY:

@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 android {
@@ -11,8 +11,8 @@ android {
         applicationId = "com.teskola.molkky"
         minSdk = 21
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 141
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

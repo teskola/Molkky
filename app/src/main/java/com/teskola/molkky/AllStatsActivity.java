@@ -109,34 +109,26 @@ public class AllStatsActivity extends OptionsActivity implements ListAdapter.OnI
     public void updateUI() {
         statTv.setText(getString(stats[statID]));
 
-        switch (stats[statID]) {
-            case R.string.games:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
-                break;
-            case R.string.wins:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWins(), b.getWins()));
-                break;
-            case R.string.points:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getPoints(), b.getPoints()));
-                break;
-            case R.string.tosses:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
-                break;
-            case R.string.points_per_toss:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
-                break;
-            case R.string.hits_percentage:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
-                break;
-            case R.string.elimination_percentage:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
-                break;
-            case R.string.excesses_per_game:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
-                break;
-            case R.string.winning_chances:
-                Collections.sort(statsHandler.getPlayers(), (b,a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
-                break;
+        int stat = stats[statID];
+
+        if (stat == R.string.games) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Integer.compare(a.getGamesCount(), b.getGamesCount()));
+        } else if (stat == R.string.wins) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Integer.compare(a.getWins(), b.getWins()));
+        } else if (stat == R.string.points) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Integer.compare(a.getPoints(), b.getPoints()));
+        } else if (stat == R.string.tosses) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Integer.compare(a.getTossesCount(), b.getTossesCount()));
+        } else if (stat == R.string.points_per_toss) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Float.compare(a.getPointsPerToss(), b.getPointsPerToss()));
+        } else if (stat == R.string.hits_percentage) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Float.compare(a.getHitsPct(), b.getHitsPct()));
+        } else if (stat == R.string.elimination_percentage) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Float.compare(a.getEliminationsPct(), b.getEliminationsPct()));
+        } else if (stat == R.string.excesses_per_game) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Float.compare(a.getExcessesPerGame(), b.getExcessesPerGame()));
+        } else if (stat == R.string.winning_chances) {
+            Collections.sort(statsHandler.getPlayers(), (b, a) -> Integer.compare(a.getWinningChances(), b.getWinningChances()));
         }
         listAdapter.setStatID(stats[statID]);
         listAdapter.notifyDataSetChanged();
